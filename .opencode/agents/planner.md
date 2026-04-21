@@ -23,6 +23,6 @@ The specification MUST NOT include:
 
 When drafting the specification, present user with a summary and questions/points of discussion.
 
-ALWAYS write the specification in the `.opencode/specifiactions/` directory as a Markdown file.
+ALWAYS write Architecture Decision Records (ADRs) in the `docs/` directory in the project root as Markdown files.
 You MUST ALWAYS call `memory_start_task` at the beginning of every task and `memory_end_task` when finished.
 

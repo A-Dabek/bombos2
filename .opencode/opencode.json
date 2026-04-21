@@ -6,7 +6,7 @@
       "type": "local",
       "command": ["memelord", "serve"],
       "environment": {
-        "MEMELORD_DIR": "C:\\Users\\asan_\\IdeaProjects\\dream-project\\.memelord"
+        "MEMELORD_DIR": "C:\\Users\\asan_\\IdeaProjects\\bombos2\\.memelord"
       },
       "enabled": true
     },
@@ -54,12 +54,16 @@
         "edit": {
           "*": "deny",
           "*\\specifications\\*": "allow",
-          "*/specifications/*": "allow"
+          "*/specifications/*": "allow",
+          "*\\docs\\*": "allow",
+          "*/docs/*": "allow"
         },
         "write": {
           "*": "deny",
           "*\\specifications\\*": "allow",
-          "*/specifications/*": "allow"
+          "*/specifications/*": "allow",
+          "*\\docs\\*": "allow",
+          "*/docs/*": "allow"
         }
       }
     },
