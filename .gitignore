@@ -12,11 +12,13 @@ node_modules
 # Cache
 .cache
 .mf
-.rollup.cache
+.vite
+.vite-node
 tsconfig.tsbuildinfo
 
 # Logs
 logs
+tmp
 *.log
 npm-debug.log*
 yarn-debug.log*
