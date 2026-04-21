@@ -1,0 +1,80 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["@tarquinen/opencode-dcp@3.1.9"],
+  "mcp": {
+    "memelord": {
+      "type": "local",
+      "command": ["memelord", "serve"],
+      "environment": {
+        "MEMELORD_DIR": "C:\\Users\\asan_\\IdeaProjects\\dream-project\\.memelord"
+      },
+      "enabled": true
+    },
+    "angular-cli": {
+      "type": "local",
+      "enabled": true,
+      "command": ["npx", "-y", "@angular/cli", "mcp"]
+    },
+    "serena": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "C:\\Users\\asan_\\IdeaProjects\\serena\\.venv\\Scripts\\serena.exe",
+        "start-mcp-server",
+        "--project-from-cwd",
+        "--context",
+        "ide"
+      ]
+    }
+  },
+  "command": {
+    "atomic": {
+      "agent": "planner",
+      "description": "Plan the next steps",
+      "template": "Based on the plan, create another document where you define this plan a series of atomic tasks/changes, so that each one can be done as a separate change."
+    }
+  },
+  "permission": {
+    "bash": {
+      "npm i*": "deny"
+    }
+  },
+  "agent": {
+    "planner": {
+      "description": "{file:./agents/planner.md}",
+      "mode": "primary",
+      "tools": {
+        "serena": true,
+        "memelord": true
+      },
+      "permission": {
+        "skill": {
+          "*": "allow"
+        },
+        "edit": {
+          "*": "deny",
+          "*\\specifications\\*": "allow",
+          "*/specifications/*": "allow"
+        },
+        "write": {
+          "*": "deny",
+          "*\\specifications\\*": "allow",
+          "*/specifications/*": "allow"
+        }
+      }
+    },
+    "caveman": {
+      "description": "{file:./agents/caveman.md}",
+      "mode": "all",
+      "permission": {
+        "skill": {
+          "*": "allow"
+        }
+      },
+      "tools": {
+        "serena": true,
+        "memelord": true
+      }
+    }
+  }
+}
