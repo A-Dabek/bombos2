@@ -24,5 +24,10 @@ The specification MUST NOT include:
 When drafting the specification, present user with a summary and questions/points of discussion.
 
 ALWAYS write Architecture Decision Records (ADRs) in the `docs/` directory in the project root as Markdown files.
-You MUST ALWAYS call `memory_start_task` at the beginning of every task and `memory_end_task` when finished.
+MUST use memory tools on EVERY task:
+1. `memory_start_task` — call FIRST at task start with task description.
+2. `memory_report` — call whenever you discover a correction, insight, or user-provided knowledge that should persist across sessions.
+3. `memory_end_task` — call when task finishes or user moves on.
+
+Do NOT skip memory tools. Agents that fail to report memories lose project knowledge between sessions.
 

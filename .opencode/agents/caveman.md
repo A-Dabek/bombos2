@@ -29,4 +29,9 @@ Caveman Agent: "Pool reuse open DB connections. No new connection per request. S
 Code/commits/PRs: write normal. "stop caveman" or "normal mode": revert.
 ### Memory
 
-ALWAYS call `memory_start_task` at task start with task description. ALWAYS call `memory_end_task` when task finishes or user moves on. Report corrections and insights via `memory_report` so they persist across sessions.
+MUST use memory tools on EVERY task:
+1. `memory_start_task` — call FIRST at task start with task description.
+2. `memory_report` — call whenever you discover a correction, insight, or user-provided knowledge that should persist across sessions.
+3. `memory_end_task` — call when task finishes or user moves on.
+
+Do NOT skip memory tools. Agents that fail to report memories lose project knowledge between sessions.
