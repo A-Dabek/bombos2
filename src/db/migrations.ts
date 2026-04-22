@@ -1,7 +1,8 @@
-import { DB } from "sqlite";
+import Database from "better-sqlite3";
+import { readdirSync, readFileSync } from "node:fs";
 
-export async function runMigrations(db: DB): Promise<void> {
-  db.execute(`
+export function runMigrations(db: Database.Database): void {
+  db.exec(`
     CREATE TABLE IF NOT EXISTS _migrations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE,
@@ -9,12 +10,13 @@ export async function runMigrations(db: DB): Promise<void> {
     );
   `);
 
-  const appliedRows = [...db.query("SELECT name FROM _migrations")];
-  const applied = new Set(appliedRows.map((row) => row[0] as string));
+  const appliedRows = db.prepare("SELECT name FROM _migrations").raw(true).all() as string[][];
+  const applied = new Set(appliedRows.map((row) => row[0]));
 
+  const entries = readdirSync("src/db/migrations", { withFileTypes: true });
   const migrationFiles: string[] = [];
-  for await (const entry of Deno.readDir("src/db/migrations")) {
-    if (entry.isFile && entry.name.endsWith(".sql")) {
+  for (const entry of entries) {
+    if (entry.isFile() && entry.name.endsWith(".sql")) {
       migrationFiles.push(entry.name);
     }
   }
@@ -23,14 +25,12 @@ export async function runMigrations(db: DB): Promise<void> {
   for (const file of migrationFiles) {
     if (applied.has(file)) continue;
 
-    const sql = await Deno.readTextFile(`src/db/migrations/${file}`);
+    const sql = readFileSync(`src/db/migrations/${file}`, "utf-8");
 
-    db.transaction(() => {
-      db.execute(sql);
-      db.query(
-        "INSERT INTO _migrations (name, applied_at) VALUES (?, ?)",
-        [file, Date.now()],
-      );
+    const tx = db.transaction(() => {
+      db.exec(sql);
+      db.prepare("INSERT INTO _migrations (name, applied_at) VALUES (?, ?)").run(file, Date.now());
     });
+    tx();
   }
 }

@@ -1,15 +1,5 @@
-import { component$ } from "@builder.io/qwik";
-import type { DocumentHead } from "@builder.io/qwik-city";
+import type { RequestHandler } from "@builder.io/qwik-city";
 
-export default component$(() => {
-  return (
-    <div class="p-4">
-      <h1 class="text-xl font-semibold">Parcels</h1>
-      <p class="mt-2 text-gray-600">Placeholder for parcels module.</p>
-    </div>
-  );
-});
-
-export const head: DocumentHead = {
-  title: "Parcels",
+export const onGet: RequestHandler = async ({ redirect }) => {
+  throw redirect(302, "/parcels/incoming");
 };

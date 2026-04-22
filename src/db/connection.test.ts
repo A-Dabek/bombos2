@@ -1,32 +1,32 @@
-import { assertEquals, assertExists } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { test, expect } from "vitest";
 import { getDb, openDb, resetDb } from "./connection.ts";
 
-Deno.test("openDb returns a DB instance", async () => {
-  const db = await openDb(":memory:");
-  assertExists(db);
+test("openDb returns a DB instance", () => {
+  const db = openDb(":memory:");
+  expect(db).toBeDefined();
   db.close();
 });
 
-Deno.test("openDb auto-runs migrations", async () => {
-  const db = await openDb(":memory:");
-  const rows = [...db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='_migrations'")];
-  assertEquals(rows.length, 1);
+test("openDb auto-runs migrations", () => {
+  const db = openDb(":memory:");
+  const rows = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='_migrations'").raw(true).all() as unknown[][];
+  expect(rows.length).toBe(1);
   db.close();
 });
 
-Deno.test("getDb returns singleton", async () => {
+test("getDb returns singleton", () => {
   resetDb();
-  const db1 = await getDb();
-  const db2 = await getDb();
-  assertEquals(db1, db2);
+  const db1 = getDb();
+  const db2 = getDb();
+  expect(db1).toBe(db2);
   db1.close();
   resetDb();
 });
 
-Deno.test("getDb creates data/app.db", async () => {
+test("getDb creates data/app.db", () => {
   resetDb();
-  const db = await getDb();
-  assertExists(db);
+  const db = getDb();
+  expect(db).toBeDefined();
   db.close();
   resetDb();
 });

@@ -1,70 +1,74 @@
-import { DB } from "sqlite";
+import Database from "better-sqlite3";
 import { runMigrations } from "./migrations.ts";
-import { assertEquals, assertExists } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { test, expect } from "vitest";
+import { writeFile, rm } from "node:fs/promises";
 
-Deno.test("runMigrations applies new migrations", async () => {
-  const db = new DB();
-  await runMigrations(db);
+test("runMigrations applies new migrations", () => {
+  const db = new Database(":memory:");
+  runMigrations(db);
 
-  const rows = [...db.query("SELECT name FROM _migrations")];
-  assertEquals(rows.length, 1);
-  assertEquals(rows[0][0], "001_init.sql");
-
-  db.close();
-});
-
-Deno.test("runMigrations skips already applied migrations", async () => {
-  const db = new DB();
-  await runMigrations(db);
-  await runMigrations(db);
-
-  const rows = [...db.query("SELECT name FROM _migrations")];
-  assertEquals(rows.length, 1);
+  const rows = db.prepare("SELECT name FROM _migrations").raw(true).all() as string[][];
+  expect(rows.length).toBe(2);
+  expect(rows[0][0]).toBe("001_init.sql");
+  expect(rows[1][0]).toBe("002_parcels.sql");
 
   db.close();
 });
 
-Deno.test("runMigrations applies custom migration files", async () => {
-  const db = new DB();
-  const tempFile = "src/db/migrations/002_test.sql";
-  await Deno.writeTextFile(tempFile, "CREATE TABLE test_table (id INTEGER PRIMARY KEY);");
+test("runMigrations skips already applied migrations", () => {
+  const db = new Database(":memory:");
+  runMigrations(db);
+  runMigrations(db);
+
+  const rows = db.prepare("SELECT name FROM _migrations").raw(true).all() as string[][];
+  expect(rows.length).toBe(2);
+
+  db.close();
+});
+
+test("runMigrations applies custom migration files", async () => {
+  const db = new Database(":memory:");
+  const tempFile = "src/db/migrations/003_test.sql";
+  await writeFile(tempFile, "CREATE TABLE test_table (id INTEGER PRIMARY KEY);");
 
   try {
-    await runMigrations(db);
+    runMigrations(db);
 
-    const rows = [...db.query("SELECT name FROM _migrations ORDER BY name")];
-    assertEquals(rows.length, 2);
-    assertEquals(rows[0][0], "001_init.sql");
-    assertEquals(rows[1][0], "002_test.sql");
+    const rows = db.prepare("SELECT name FROM _migrations ORDER BY name").raw(true).all() as string[][];
+    expect(rows.length).toBe(3);
+    expect(rows[0][0]).toBe("001_init.sql");
+    expect(rows[1][0]).toBe("002_parcels.sql");
+    expect(rows[2][0]).toBe("003_test.sql");
 
-    const tableCheck = [...db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='test_table'")];
-    assertEquals(tableCheck.length, 1);
+    const tableCheck = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='test_table'").raw(true).all() as unknown[][];
+    expect(tableCheck.length).toBe(1);
   } finally {
-    await Deno.remove(tempFile).catch(() => {});
+    await rm(tempFile).catch(() => {});
     db.close();
   }
 });
 
-Deno.test("runMigrations does not record failed migrations", async () => {
-  const db = new DB();
-  const tempFile = "src/db/migrations/002_bad.sql";
-  await Deno.writeTextFile(tempFile, "INVALID SQL SYNTAX;");
+test("runMigrations does not record failed migrations", async () => {
+  const db = new Database(":memory:");
+  const tempFile = "src/db/migrations/999_bad.sql";
+  await writeFile(tempFile, "INVALID SQL SYNTAX;");
 
   try {
     let errorCaught = false;
     try {
-      await runMigrations(db);
+      runMigrations(db);
     } catch (_e) {
       errorCaught = true;
     }
 
-    assertEquals(errorCaught, true);
+    expect(errorCaught).toBe(true);
 
-    const rows = [...db.query("SELECT name FROM _migrations")];
-    assertEquals(rows.length, 1);
-    assertEquals(rows[0][0], "001_init.sql");
+    const rows = db.prepare("SELECT name FROM _migrations").raw(true).all() as string[][];
+    expect(rows.length).toBe(2);
+    expect(rows[0][0]).toBe("001_init.sql");
+    expect(rows[1][0]).toBe("002_parcels.sql");
   } finally {
-    await Deno.remove(tempFile).catch(() => {});
+    await rm(tempFile).catch(() => {});
     db.close();
   }
 });

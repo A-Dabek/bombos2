@@ -1,21 +1,21 @@
-import { DB } from "sqlite";
-import { ensureDir } from "https://deno.land/std@0.224.0/fs/mod.ts";
+import Database from "better-sqlite3";
+import { mkdirSync } from "node:fs";
 import { runMigrations } from "./migrations.ts";
 
-let dbInstance: DB | null = null;
+let dbInstance: Database.Database | null = null;
 
-export async function getDb(): Promise<DB> {
+export function getDb(): Database.Database {
   if (dbInstance) return dbInstance;
-  dbInstance = await openDb("./data/app.db");
+  dbInstance = openDb("./data/app.db");
   return dbInstance;
 }
 
-export async function openDb(path: string): Promise<DB> {
+export function openDb(path: string): Database.Database {
   if (path === "./data/app.db") {
-    await ensureDir("./data");
+    mkdirSync("./data", { recursive: true });
   }
-  const db = new DB(path);
-  await runMigrations(db);
+  const db = new Database(path);
+  runMigrations(db);
   return db;
 }
 
