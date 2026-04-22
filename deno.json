@@ -11,18 +11,20 @@
     "undici": "npm:undici@6.0.0",
     "@qwikest/icons": "npm:@qwikest/icons@0.0.13",
     "playwright": "npm:playwright@1.51.0",
-    "@playwright/test": "npm:@playwright/test@1.51.0"
+    "@playwright/test": "npm:@playwright/test@1.51.0",
+    "sqlite": "https://deno.land/x/sqlite/mod.ts"
   },
   "tasks": {
     "dev": "deno run -A npm:vite --mode ssr",
     "build": "deno run -A npm:vite build",
     "build.preview": "deno run -A npm:vite build --ssr src/entry.preview.tsx",
-    "build.types": "deno run -A npm:typescript@5.4.5/tsc --incremental --noEmit",
+    "build.types": "deno run -A npm:typescript@5.4.5/tsc --incremental --noEmit && deno check src/db/connection.ts src/db/migrations.ts",
     "preview": "deno run -A npm:vite preview",
     "lint": "deno run -A npm:eslint@9.32.0 src/**/*.ts*",
     "fmt": "deno run -A npm:prettier@3.6.2 --write .",
     "fmt.check": "deno run -A npm:prettier@3.6.2 --check .",
-    "e2e": "npx @playwright/test test"
+    "e2e": "npx @playwright/test test",
+    "test.db": "deno test --allow-read=src/db/migrations,./data --allow-write=src/db/migrations,./data src/db/"
   },
   "compilerOptions": {
     "lib": ["deno.window", "dom", "dom.iterable"],
