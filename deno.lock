@@ -5,8 +5,9 @@
     "npm:@builder.io/qwik@^1.19.2": "1.19.2_vite@7.3.1__@types+node@20.19.0_@types+node@20.19.0",
     "npm:@tailwindcss/vite@*": "4.2.4_vite@7.3.1__@types+node@20.19.0_@types+node@20.19.0",
     "npm:tailwindcss@*": "4.2.4",
+    "npm:typescript@5.4.5": "5.4.5",
     "npm:undici@6": "6.25.0",
-    "npm:vite-tsconfig-paths@*": "6.1.1_vite@7.3.1__@types+node@20.19.0",
+    "npm:vite-tsconfig-paths@*": "6.1.1_vite@7.3.1__@types+node@20.19.0_typescript@5.4.5",
     "npm:vite@*": "7.3.1_@types+node@20.19.0",
     "npm:vite@7.3.1": "7.3.1_@types+node@20.19.0"
   },
@@ -1715,8 +1716,14 @@
     "trough@2.2.0": {
       "integrity": "sha512-tmMpK00BjZiUyVyvrBK7knerNgmgvcV/KLVyuma/SC+TQN167GrMRciANTz09+k3zW8L8t60jWO1GpfkZdjTaw=="
     },
-    "tsconfck@3.1.6": {
+    "tsconfck@3.1.6_typescript@5.4.5": {
       "integrity": "sha512-ks6Vjr/jEw0P1gmOVwutM3B7fWxoWBL2KRDb1JfqGVawBmO5UsvmWOQFGHBPl5yxYz4eERr19E6L7NMv+Fej4w==",
+      "dependencies": [
+        "typescript"
+      ],
+      "optionalPeers": [
+        "typescript"
+      ],
       "bin": true
     },
     "tslib@2.8.1": {
@@ -1814,7 +1821,7 @@
         "sharp"
       ]
     },
-    "vite-tsconfig-paths@6.1.1_vite@7.3.1__@types+node@20.19.0": {
+    "vite-tsconfig-paths@6.1.1_vite@7.3.1__@types+node@20.19.0_typescript@5.4.5": {
       "integrity": "sha512-2cihq7zliibCCZ8P9cKJrQBkfgdvcFkOOc3Y02o3GWUDLgqjWsZudaoiuOwO/gzTzy17cS5F7ZPo4bsnS4DGkg==",
       "dependencies": [
         "debug",
