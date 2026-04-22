@@ -48,3 +48,6 @@ lerna-debug.log*
 .serena
 
 .memelord
+
+# Playwright
+test-results/
