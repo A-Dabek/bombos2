@@ -8,7 +8,8 @@
     "vite": "npm:vite@7.3.1",
     "vite-tsconfig-paths": "npm:vite-tsconfig-paths",
     "tailwindcss": "npm:tailwindcss",
-    "undici": "npm:undici@^6.0.0"
+    "undici": "npm:undici@^6.0.0",
+    "@qwikest/icons": "npm:@qwikest/icons@^0.0.13"
   },
   "tasks": {
     "dev": "deno run -A npm:vite --mode ssr",
