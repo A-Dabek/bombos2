@@ -28,6 +28,11 @@
     }
   },
   "command": {
+    "implement": {
+      "agent": "caveman",
+      "description": "Implement the plan",
+      "template": "Implement latest ADR from docs directory. Create a feature branch first."
+    },
     "atomic": {
       "agent": "planner",
       "description": "Plan the next steps",
@@ -53,17 +58,11 @@
         },
         "edit": {
           "*": "deny",
-          "*\\specifications\\*": "allow",
-          "*/specifications/*": "allow",
-          "*\\docs\\*": "allow",
-          "*/docs/*": "allow"
+          "*.md": "allow"
         },
         "write": {
           "*": "deny",
-          "*\\specifications\\*": "allow",
-          "*/specifications/*": "allow",
-          "*\\docs\\*": "allow",
-          "*/docs/*": "allow"
+          "*.md": "allow"
         }
       }
     },
