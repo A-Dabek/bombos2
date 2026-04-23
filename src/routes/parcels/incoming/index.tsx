@@ -10,6 +10,7 @@ interface Parcel {
   imageBase64: string;
   contentType: string;
   createdAt: number;
+  completedAt: number | null;
 }
 
 export default component$(() => {
@@ -29,6 +30,17 @@ export default component$(() => {
 
   const closeLightbox = $(() => {
     selectedParcel.value = null;
+  });
+
+  const completeParcel = $(async () => {
+    if (!selectedParcel.value) return;
+    const res = await fetch(`/api/parcels/${selectedParcel.value.id}/complete`, {
+      method: "POST",
+    });
+    if (res.ok) {
+      selectedParcel.value = null;
+      await fetchParcels();
+    }
   });
 
   useVisibleTask$(() => {
@@ -54,7 +66,7 @@ export default component$(() => {
       )}
       {selectedParcel.value && (
         <div
-          class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 p-4"
+          class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-90 p-4"
           onClick$={closeLightbox}
         >
           <img
@@ -63,6 +75,15 @@ export default component$(() => {
             class="max-h-full max-w-full object-contain"
             onClick$={closeLightbox}
           />
+          <button
+            class="mt-4 rounded-lg bg-green-600 px-6 py-3 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            onClick$={(e: Event) => {
+              e.stopPropagation();
+              completeParcel();
+            }}
+          >
+            Mark as Completed
+          </button>
         </div>
       )}
     </div>

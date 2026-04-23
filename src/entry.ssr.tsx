@@ -15,6 +15,13 @@ import {
   type RenderToStreamOptions,
 } from "@builder.io/qwik/server";
 import Root from "./root";
+import { startScheduler } from "./server/scheduler.ts";
+
+const globalForScheduler = globalThis as Record<string, unknown>;
+if (!globalForScheduler.__schedulerStarted) {
+  globalForScheduler.__schedulerStarted = true;
+  startScheduler();
+}
 
 export default function (opts: RenderToStreamOptions) {
   return renderToStream(<Root />, {

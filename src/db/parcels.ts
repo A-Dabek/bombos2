@@ -7,6 +7,7 @@ export interface ParcelRow {
   image: Uint8Array;
   content_type: string;
   created_at: number;
+  completed_at: number | null;
 }
 
 export function getParcels(
@@ -15,7 +16,7 @@ export function getParcels(
 ): ParcelRow[] {
   const dbConn = db ?? getDb();
   const rows = dbConn.prepare(
-    "SELECT id, type, image, content_type, created_at FROM parcels WHERE type = ? ORDER BY created_at DESC",
+    "SELECT id, type, image, content_type, created_at, completed_at FROM parcels WHERE type = ? ORDER BY created_at DESC",
   ).raw(true).all(type) as unknown[][];
   return rows.map((row) => ({
     id: row[0] as number,
@@ -23,6 +24,7 @@ export function getParcels(
     image: new Uint8Array(row[2] as Buffer),
     content_type: row[3] as string,
     created_at: row[4] as number,
+    completed_at: row[5] as number | null,
   }));
 }
 
@@ -37,4 +39,25 @@ export function createParcel(
     "INSERT INTO parcels (type, image, content_type, created_at) VALUES (?, ?, ?, ?)",
   ).run(type, image, contentType, Date.now());
   return Number(result.lastInsertRowid);
+}
+
+export function completeParcel(
+  id: number,
+  db?: Database.Database,
+): boolean {
+  const dbConn = db ?? getDb();
+  const result = dbConn.prepare(
+    "UPDATE parcels SET completed_at = ? WHERE id = ? AND completed_at IS NULL",
+  ).run(Date.now(), id);
+  return result.changes > 0;
+}
+
+export function deleteCompletedParcels(
+  db?: Database.Database,
+): number {
+  const dbConn = db ?? getDb();
+  const result = dbConn.prepare(
+    "DELETE FROM parcels WHERE completed_at IS NOT NULL",
+  ).run();
+  return result.changes;
 }

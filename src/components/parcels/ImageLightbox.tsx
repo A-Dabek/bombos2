@@ -6,6 +6,7 @@ interface Parcel {
   imageBase64: string;
   contentType: string;
   createdAt: number;
+  completedAt: number | null;
 }
 
 interface Props {

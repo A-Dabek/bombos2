@@ -9,6 +9,7 @@ export const onGet: RequestHandler = async ({ json }) => {
     imageBase64: Buffer.from(row.image).toString("base64"),
     contentType: row.content_type,
     createdAt: row.created_at,
+    completedAt: row.completed_at,
   }));
   json(200, parcels);
 };

@@ -17,6 +17,7 @@
     "@qwikest/icons": "0.0.13",
     "@tailwindcss/vite": "4.2.4",
     "better-sqlite3": "^12.0.0",
+    "node-cron": "^4.2.1",
     "tailwindcss": "4.2.4",
     "undici": "6.0.0",
     "vite": "7.3.1",
@@ -26,6 +27,7 @@
     "@playwright/test": "1.51.0",
     "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^22.0.0",
+    "@types/node-cron": "^3.0.11",
     "playwright": "1.51.0",
     "typescript": "5.4.5",
     "vitest": "^3.0.0"

@@ -1,0 +1,1 @@
+ALTER TABLE parcels ADD COLUMN completed_at INTEGER;
