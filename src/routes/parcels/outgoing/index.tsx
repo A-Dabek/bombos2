@@ -11,11 +11,13 @@ interface Parcel {
   contentType: string;
   createdAt: number;
   completedAt: number | null;
+  note: string | null;
 }
 
 export default component$(() => {
   const parcels = useSignal<Parcel[]>([]);
   const selectedParcel = useSignal<Parcel | null>(null);
+  const noteTimeout = useSignal<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchParcels = $(async () => {
     const res = await fetch("/api/parcels/outgoing");
@@ -43,6 +45,23 @@ export default component$(() => {
     }
   });
 
+  const updateNote = $((id: number, note: string) => {
+    parcels.value = parcels.value.map((p) =>
+      p.id === id ? { ...p, note } : p,
+    );
+
+    if (noteTimeout.value) {
+      clearTimeout(noteTimeout.value);
+    }
+    noteTimeout.value = setTimeout(async () => {
+      await fetch(`/api/parcels/${id}/note`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note }),
+      });
+    }, 300);
+  });
+
   useVisibleTask$(() => {
     fetchParcels();
   });
@@ -62,6 +81,7 @@ export default component$(() => {
         <ParcelList
           parcels={parcels.value}
           onSelect$={selectParcel}
+          onNoteChange$={updateNote}
         />
       )}
       {selectedParcel.value && (

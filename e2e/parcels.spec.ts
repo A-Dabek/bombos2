@@ -94,4 +94,54 @@ test.describe("parcels", () => {
       page.getByRole("button", { name: "Mark as Completed" })
     ).not.toBeVisible();
   });
+
+  test("add note to incoming parcel", async ({ page }) => {
+    await page.goto("/parcels/incoming");
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles("e2e/fixtures/test-parcel.png");
+    await expect(page.locator("img[alt='Parcel']").first()).toBeVisible();
+
+    const noteInput = page.locator('input[type="text"]').first();
+    await noteInput.fill("the big one");
+    await expect(noteInput).toHaveValue("the big one");
+  });
+
+  test("note persists after reload", async ({ page }) => {
+    await page.goto("/parcels/incoming");
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles("e2e/fixtures/test-parcel.png");
+    await expect(page.locator("img[alt='Parcel']").first()).toBeVisible();
+
+    const noteInput = page.locator('input[type="text"]').first();
+    await noteInput.fill("4 packages on this QR");
+    await expect(noteInput).toHaveValue("4 packages on this QR");
+
+    await page.waitForTimeout(500);
+
+    await page.reload();
+    await expect(page.locator('input[type="text"]').first()).toHaveValue(
+      "4 packages on this QR"
+    );
+  });
+
+  test("add note to outgoing parcel", async ({ page }) => {
+    await page.goto("/parcels/outgoing");
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles("e2e/fixtures/test-parcel.png");
+    await expect(page.locator("img[alt='Parcel']").first()).toBeVisible();
+
+    const noteInput = page.locator('input[type="text"]').first();
+    await noteInput.fill("urgent delivery");
+    await expect(noteInput).toHaveValue("urgent delivery");
+  });
+
+  test("note input enforces max length", async ({ page }) => {
+    await page.goto("/parcels/incoming");
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles("e2e/fixtures/test-parcel.png");
+    await expect(page.locator("img[alt='Parcel']").first()).toBeVisible();
+
+    const noteInput = page.locator('input[type="text"]').first();
+    await expect(noteInput).toHaveAttribute("maxLength", "100");
+  });
 });

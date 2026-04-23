@@ -8,6 +8,7 @@ export interface ParcelRow {
   content_type: string;
   created_at: number;
   completed_at: number | null;
+  note: string | null;
 }
 
 export function getParcels(
@@ -16,7 +17,7 @@ export function getParcels(
 ): ParcelRow[] {
   const dbConn = db ?? getDb();
   const rows = dbConn.prepare(
-    "SELECT id, type, image, content_type, created_at, completed_at FROM parcels WHERE type = ? ORDER BY created_at DESC",
+    "SELECT id, type, image, content_type, created_at, completed_at, note FROM parcels WHERE type = ? ORDER BY created_at DESC",
   ).raw(true).all(type) as unknown[][];
   return rows.map((row) => ({
     id: row[0] as number,
@@ -25,6 +26,7 @@ export function getParcels(
     content_type: row[3] as string,
     created_at: row[4] as number,
     completed_at: row[5] as number | null,
+    note: row[6] as string | null,
   }));
 }
 
@@ -60,4 +62,17 @@ export function deleteCompletedParcels(
     "DELETE FROM parcels WHERE completed_at IS NOT NULL",
   ).run();
   return result.changes;
+}
+
+
+export function updateParcelNote(
+  id: number,
+  note: string,
+  db?: Database.Database,
+): boolean {
+  const dbConn = db ?? getDb();
+  const result = dbConn.prepare(
+    "UPDATE parcels SET note = ? WHERE id = ?",
+  ).run(note, id);
+  return result.changes > 0;
 }

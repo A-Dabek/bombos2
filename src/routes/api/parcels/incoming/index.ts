@@ -10,6 +10,7 @@ export const onGet: RequestHandler = async ({ json }) => {
     contentType: row.content_type,
     createdAt: row.created_at,
     completedAt: row.completed_at,
+    note: row.note,
   }));
   json(200, parcels);
 };
