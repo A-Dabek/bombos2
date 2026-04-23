@@ -75,15 +75,17 @@ export default component$(() => {
             class="max-h-full max-w-full object-contain"
             onClick$={closeLightbox}
           />
-          <button
-            class="mt-4 rounded-lg bg-green-600 px-6 py-3 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-            onClick$={(e: Event) => {
-              e.stopPropagation();
-              completeParcel();
-            }}
-          >
-            Mark as Completed
-          </button>
+          {selectedParcel.value.completedAt === null && (
+            <button
+              class="mt-4 rounded-lg bg-green-600 px-6 py-3 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+              onClick$={(e: Event) => {
+                e.stopPropagation();
+                completeParcel();
+              }}
+            >
+              Mark as Completed
+            </button>
+          )}
         </div>
       )}
     </div>

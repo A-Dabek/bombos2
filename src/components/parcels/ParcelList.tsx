@@ -21,7 +21,7 @@ export default component$<Props>((props) => {
       {props.parcels.map((parcel) => (
         <button
           key={parcel.id}
-          class={`aspect-square overflow-hidden rounded-lg border border-gray-200 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 relative ${parcel.completedAt !== null ? "opacity-50" : ""}`}
+          class={`aspect-square overflow-hidden rounded-lg border border-gray-200 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 relative ${parcel.completedAt !== null ? "brightness-50" : ""}`}
           onClick$={() => props.onSelect$(parcel)}
         >
           <img

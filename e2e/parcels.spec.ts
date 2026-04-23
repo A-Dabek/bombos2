@@ -66,4 +66,32 @@ test.describe("parcels", () => {
     await page.reload();
     await expect(page.locator("img[alt='Parcel']").first()).toBeVisible();
   });
+
+  test("mark parcel as completed", async ({ page }) => {
+    await page.goto("/parcels/incoming");
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles("e2e/fixtures/test-parcel.png");
+    await expect(page.locator("img[alt='Parcel']").first()).toBeVisible();
+
+    await page.locator("img[alt='Parcel']").first().click();
+    await expect(
+      page.locator("img[alt='Full size parcel']")
+    ).toBeVisible();
+
+    await page.getByRole("button", { name: "Mark as Completed" }).click();
+    await expect(
+      page.locator("img[alt='Full size parcel']")
+    ).not.toBeVisible();
+
+    const parcelButton = page.locator("button:has(img[alt='Parcel'])").first();
+    await expect(parcelButton).toHaveClass(/brightness-50/);
+
+    await parcelButton.click();
+    await expect(
+      page.locator("img[alt='Full size parcel']")
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Mark as Completed" })
+    ).not.toBeVisible();
+  });
 });
