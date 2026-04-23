@@ -37,6 +37,11 @@
       "agent": "planner",
       "description": "Plan the next steps",
       "template": "Based on the plan, create another document where you define this plan a series of atomic tasks/changes, so that each one can be done as a separate change."
+    },
+    "finish": {
+      "agent": "caveman",
+      "description": "Finish the plan",
+      "template": "Commit unstaged changes, merge the feature branch to develop, and interact with memory if needed."
     }
   },
   "permission": {
