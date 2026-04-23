@@ -31,7 +31,7 @@
     "implement": {
       "agent": "caveman",
       "description": "Implement the plan",
-      "template": "Implement latest ADR from docs directory. Create a feature branch first."
+      "template": "Implement latest ADR from docs directory. Create a feature branch first. Write e2e tests afterwards to validate implementation."
     },
     "atomic": {
       "agent": "planner",
