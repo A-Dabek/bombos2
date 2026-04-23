@@ -12,8 +12,8 @@ test.describe("navigation", () => {
     await page.goto("/");
   });
 
-  test("home redirects to /parcels", async ({ page }) => {
-    await expect(page).toHaveURL(/\/parcels\/?$/);
+  test("home redirects to /parcels/incoming", async ({ page }) => {
+    await expect(page).toHaveURL(/\/parcels\/incoming\/?$/);
   });
 
   test("all four nav tabs are visible", async ({ page }) => {
@@ -27,7 +27,8 @@ test.describe("navigation", () => {
   test("clicking each tab navigates to correct URL", async ({ page }) => {
     for (const tab of TABS) {
       await page.getByRole("link", { name: tab.label }).click();
-      await expect(page).toHaveURL(new RegExp(`\\${tab.path}/?$`));
+      const expectedPath = tab.path === "/parcels" ? "/parcels/incoming" : tab.path;
+      await expect(page).toHaveURL(new RegExp(`\\${expectedPath}/?$`));
     }
   });
 

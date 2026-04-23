@@ -42,10 +42,16 @@ export default component$(() => {
         apiPath="/api/parcels/incoming"
         onUpload$={fetchParcels}
       />
-      <ParcelList
-        parcels={parcels.value}
-        onSelect$={selectParcel}
-      />
+      {parcels.value.length === 0 ? (
+        <div class="p-8 text-center text-gray-500">
+          No parcels yet
+        </div>
+      ) : (
+        <ParcelList
+          parcels={parcels.value}
+          onSelect$={selectParcel}
+        />
+      )}
       {selectedParcel.value && (
         <div
           class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 p-4"

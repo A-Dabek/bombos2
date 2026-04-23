@@ -21,7 +21,8 @@ export default component$(() => {
     <>
       <nav class="flex border-b border-gray-200">
         {TABS.map((tab) => {
-          const isActive = loc.url.pathname.replace(/\/$/, "") === tab.path;
+          const pathname = loc.url.pathname.replace(/\/$/, "");
+          const isActive = pathname === tab.path || (tab.path !== "/" && pathname.startsWith(tab.path + "/"));
           const Icon = tab.Icon;
           return (
             <a

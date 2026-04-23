@@ -14,14 +14,6 @@ interface Props {
 }
 
 export default component$<Props>((props) => {
-  if (props.parcels.length === 0) {
-    return (
-      <div class="p-8 text-center text-gray-500">
-        No parcels yet
-      </div>
-    );
-  }
-
   return (
     <div class="grid grid-cols-3 gap-2 p-2 sm:grid-cols-4 md:grid-cols-5">
       {props.parcels.map((parcel) => (
