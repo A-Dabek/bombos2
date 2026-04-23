@@ -1,15 +1,6 @@
 import { component$, type PropFunction } from "@builder.io/qwik";
 import { HiCheckCircleSolid } from "@qwikest/icons/heroicons";
-
-interface Parcel {
-  id: number;
-  type: string;
-  imageBase64: string;
-  contentType: string;
-  createdAt: number;
-  completedAt: number | null;
-  note: string | null;
-}
+import type { Parcel } from "./types";
 
 interface Props {
   parcels: Parcel[];
