@@ -1,4 +1,4 @@
-pnpm install --prod
+pnpm install --prod --os=android
 
 # Important: This is required for CSRF protection
 export ORIGIN=https://your-domain.com
@@ -10,6 +10,6 @@ export NODE_ENV=production
 export PORT=3000
 
 # For Fastify
-pnpm build.server
+pnpm build.server || true
 
 pnpm serve
