@@ -1,6 +1,5 @@
 import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
 import { HiArrowPathSolid } from "@qwikest/icons/heroicons";
-import ParcelSubNav from "./ParcelSubNav";
 import ParcelList from "./ParcelList";
 import UploadButton from "./UploadButton";
 import ParcelLightbox from "./ParcelLightbox";
@@ -21,16 +20,22 @@ export default component$<Props>(({ type, title }) => {
   const listVisible = useSignal(false);
 
   const fetchParcels = $(async () => {
+    listVisible.value = false;
     const res = await fetch(`/api/parcels/${type}`);
     if (res.ok) {
       parcels.value = await res.json();
     }
     isLoading.value = false;
+    setTimeout(() => {
+      listVisible.value = true;
+    }, 0);
   });
 
   const selectParcel = $((parcel: Parcel) => {
     selectedParcel.value = parcel;
-    isLightboxVisible.value = true;
+    setTimeout(() => {
+      isLightboxVisible.value = true;
+    }, 10);
   });
 
   const closeLightbox = $(() => {
@@ -75,14 +80,10 @@ export default component$<Props>(({ type, title }) => {
 
   useVisibleTask$(() => {
     fetchParcels();
-    setTimeout(() => {
-      listVisible.value = true;
-    }, 50);
   });
 
   return (
     <div>
-      <ParcelSubNav />
       <UploadButton
         apiPath={`/api/parcels/${type}`}
         onUpload$={fetchParcels}
@@ -97,15 +98,15 @@ export default component$<Props>(({ type, title }) => {
           No parcels yet
         </div>
       )}
-      {parcels.value.length > 0 && (
-        <div class={`transition-opacity duration-300 ${listVisible.value ? "opacity-100" : "opacity-0"}`}>
+      <div class={`transition-opacity duration-300 ${parcels.value.length > 0 && listVisible.value ? "opacity-100" : "opacity-0"}`}>
+        {parcels.value.length > 0 && (
           <ParcelList
             parcels={parcels.value}
             onSelect$={selectParcel}
             onNoteChange$={updateNote}
           />
-        </div>
-      )}
+        )}
+      </div>
       <ParcelLightbox
         parcel={selectedParcel.value}
         isVisible={isLightboxVisible.value}
