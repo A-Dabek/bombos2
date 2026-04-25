@@ -1,7 +1,7 @@
 pnpm install --prod --os=android
 
 # Important: This is required for CSRF protection
-export ORIGIN=https://termux.bombos.site.com
+export ORIGIN=https://termux.bombos.site
 
 # Set production mode
 export NODE_ENV=production
