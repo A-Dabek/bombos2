@@ -1,8 +1,11 @@
 import { component$, type PropFunction } from "@builder.io/qwik";
+import { HiArrowPathSolid } from "@qwikest/icons/heroicons";
 import type { Parcel } from "./types";
 
 interface Props {
   parcel: Parcel | null;
+  isVisible: boolean;
+  isCompleting: boolean;
   onClose$: PropFunction<() => void>;
   onComplete$?: PropFunction<() => void>;
 }
@@ -14,7 +17,7 @@ export default component$<Props>((props) => {
 
   return (
     <div
-      class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-90 p-4"
+      class={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-90 p-4 transition-all duration-300 ${props.isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"}`}
       onClick$={props.onClose$}
     >
       <img
@@ -25,13 +28,21 @@ export default component$<Props>((props) => {
       />
       {props.onComplete$ && props.parcel.completedAt === null && (
         <button
-          class="mt-4 rounded-lg bg-green-600 px-6 py-3 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+          class="mt-4 rounded-lg bg-green-600 px-6 py-3 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={props.isCompleting}
           onClick$={(e: Event) => {
             e.stopPropagation();
             props.onComplete$?.();
           }}
         >
-          Mark as Completed
+          {props.isCompleting ? (
+            <span class="flex items-center gap-2">
+              <HiArrowPathSolid class="h-5 w-5 animate-spin" />
+              Saving...
+            </span>
+          ) : (
+            "Mark as Completed"
+          )}
         </button>
       )}
     </div>

@@ -1,6 +1,10 @@
 import { test, expect } from "@playwright/test";
+import { clearParcels } from "./setup";
 
 test.describe("parcels", () => {
+  test.beforeEach(() => {
+    clearParcels();
+  });
   test("redirects /parcels to /parcels/incoming", async ({ page }) => {
     await page.goto("/parcels");
     await expect(page).toHaveURL(/\/parcels\/incoming\/?$/);
@@ -27,6 +31,7 @@ test.describe("parcels", () => {
 
   test("empty state is visible on fresh state", async ({ page }) => {
     await page.goto("/parcels/incoming");
+    await expect(page.locator("svg.animate-spin")).toBeVisible();
     await expect(page.getByText("No parcels yet")).toBeVisible();
   });
 
@@ -143,5 +148,65 @@ test.describe("parcels", () => {
 
     const noteInput = page.locator('input[type="text"]').first();
     await expect(noteInput).toHaveAttribute("maxLength", "100");
+  });
+
+  test("loading spinner shown while parcels load", async ({ page }) => {
+    await page.goto("/parcels/incoming");
+    await expect(page.locator("svg.animate-spin")).toBeVisible();
+    await expect(page.locator("img[alt='Parcel']").first()).toBeHidden();
+  });
+
+  test("mark as completed shows loading state", async ({ page }) => {
+    await page.goto("/parcels/incoming");
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles("e2e/fixtures/test-parcel.png");
+    await expect(page.locator("img[alt='Parcel']").first()).toBeVisible();
+
+    await page.locator("img[alt='Parcel']").first().click();
+    await expect(
+      page.locator("img[alt='Full size parcel']")
+    ).toBeVisible();
+
+    await page.route("**/api/parcels/*/complete", async (route) => {
+      await new Promise((r) => setTimeout(r, 1000));
+      await route.continue();
+    });
+
+    const completeBtn = page.getByRole("button", { name: "Mark as Completed" });
+    await completeBtn.click();
+
+    await expect(
+      page.getByRole("button", { name: "Saving..." })
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Saving..." })
+    ).toBeDisabled();
+
+    await expect(completeBtn).toBeHidden();
+    await expect(
+      page.locator("img[alt='Full size parcel']")
+    ).not.toBeVisible();
+  });
+
+  test("image is compressed on upload", async ({ page }) => {
+    await page.goto("/parcels/incoming");
+
+    const responsePromise = page.waitForResponse(
+      (res) =>
+        res.url().includes("/api/parcels/incoming") && res.request().method() === "POST"
+    );
+
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles("e2e/fixtures/test-parcel.jpg");
+
+    const response = await responsePromise;
+    expect(response.status()).toBe(201);
+    await expect(page.locator("img[alt='Parcel']").first()).toBeVisible();
+
+    const imgSrc = await page
+      .locator("img[alt='Parcel']")
+      .first()
+      .getAttribute("src");
+    expect(imgSrc).toMatch(/^data:image\/png;base64,/);
   });
 });
