@@ -1,5 +1,5 @@
 import { component$ } from "@builder.io/qwik";
-import { useLocation } from "@builder.io/qwik-city";
+import { useLocation, Link } from "@builder.io/qwik-city";
 
 const TABS = [
   { label: "Incoming", path: "/parcels/incoming" },
@@ -10,11 +10,11 @@ export default component$(() => {
   const loc = useLocation();
 
   return (
-    <nav class="flex border-b border-gray-200 bg-white">
+    <nav class="flex border-b border-gray-200 bg-white animate-[fadeIn_0.3s_ease-out]">
       {TABS.map((tab) => {
         const isActive = loc.url.pathname.replace(/\/$/, "") === tab.path;
         return (
-          <a
+          <Link
             key={tab.path}
             href={tab.path}
             class={[
@@ -25,7 +25,7 @@ export default component$(() => {
             ]}
           >
             {tab.label}
-          </a>
+          </Link>
         );
       })}
     </nav>

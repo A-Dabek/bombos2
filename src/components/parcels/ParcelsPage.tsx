@@ -1,4 +1,5 @@
 import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
+import { HiArrowPathSolid } from "@qwikest/icons/heroicons";
 import ParcelSubNav from "./ParcelSubNav";
 import ParcelList from "./ParcelList";
 import UploadButton from "./UploadButton";
@@ -13,30 +14,46 @@ interface Props {
 export default component$<Props>(({ type, title }) => {
   const parcels = useSignal<Parcel[]>([]);
   const selectedParcel = useSignal<Parcel | null>(null);
+  const isLightboxVisible = useSignal(false);
+  const isLoading = useSignal(true);
+  const isCompleting = useSignal(false);
   const noteTimeout = useSignal<ReturnType<typeof setTimeout> | null>(null);
+  const listVisible = useSignal(false);
 
   const fetchParcels = $(async () => {
     const res = await fetch(`/api/parcels/${type}`);
     if (res.ok) {
       parcels.value = await res.json();
     }
+    isLoading.value = false;
   });
 
   const selectParcel = $((parcel: Parcel) => {
     selectedParcel.value = parcel;
+    setTimeout(() => {
+      isLightboxVisible.value = true;
+    }, 10);
   });
 
   const closeLightbox = $(() => {
-    selectedParcel.value = null;
+    isLightboxVisible.value = false;
+    setTimeout(() => {
+      selectedParcel.value = null;
+    }, 300);
   });
 
   const completeParcel = $(async () => {
     if (!selectedParcel.value) return;
+    isCompleting.value = true;
     const res = await fetch(`/api/parcels/${selectedParcel.value.id}/complete`, {
       method: "POST",
     });
+    isCompleting.value = false;
     if (res.ok) {
-      selectedParcel.value = null;
+      isLightboxVisible.value = false;
+      setTimeout(() => {
+        selectedParcel.value = null;
+      }, 300);
       await fetchParcels();
     }
   });
@@ -60,28 +77,40 @@ export default component$<Props>(({ type, title }) => {
 
   useVisibleTask$(() => {
     fetchParcels();
+    setTimeout(() => {
+      listVisible.value = true;
+    }, 50);
   });
 
   return (
     <div>
-      <ParcelSubNav />
       <UploadButton
         apiPath={`/api/parcels/${type}`}
         onUpload$={fetchParcels}
       />
-      {parcels.value.length === 0 ? (
+      {isLoading.value && parcels.value.length === 0 && (
+        <div class="flex items-center justify-center p-8">
+          <HiArrowPathSolid class="h-8 w-8 animate-spin text-blue-500" />
+        </div>
+      )}
+      {!isLoading.value && parcels.value.length === 0 && (
         <div class="p-8 text-center text-gray-500">
           No parcels yet
         </div>
-      ) : (
-        <ParcelList
-          parcels={parcels.value}
-          onSelect$={selectParcel}
-          onNoteChange$={updateNote}
-        />
+      )}
+      {parcels.value.length > 0 && (
+        <div class={`transition-opacity duration-300 ${listVisible.value ? "opacity-100" : "opacity-0"}`}>
+          <ParcelList
+            parcels={parcels.value}
+            onSelect$={selectParcel}
+            onNoteChange$={updateNote}
+          />
+        </div>
       )}
       <ParcelLightbox
         parcel={selectedParcel.value}
+        isVisible={isLightboxVisible.value}
+        isCompleting={isCompleting.value}
         onClose$={closeLightbox}
         onComplete$={completeParcel}
       />

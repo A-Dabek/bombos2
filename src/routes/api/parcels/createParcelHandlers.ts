@@ -1,4 +1,5 @@
 import type { RequestHandler } from "@builder.io/qwik-city";
+import sharp from "sharp";
 import { getParcels, createParcel } from "~/db/parcels";
 
 export function createParcelHandlers(type: "incoming" | "outgoing") {
@@ -25,8 +26,13 @@ export function createParcelHandlers(type: "incoming" | "outgoing") {
       return;
     }
 
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    const id = createParcel(type, bytes, file.type);
+    const raw = Buffer.from(await file.arrayBuffer());
+    const compressed = await sharp(raw)
+      .resize(800, 800, { fit: "inside" })
+      .png({ compressionLevel: 9, adaptiveFiltering: true })
+      .toBuffer();
+
+    const id = createParcel(type, new Uint8Array(compressed), "image/png");
     json(201, { id });
   };
 
