@@ -21,4 +21,4 @@ startScheduler();
 /**
  * The default export is the QwikCity adapter used by Vite preview.
  */
-export default createQwikCity({ render, qwikCityPlan, checkOrigin: true });
+export default createQwikCity({ render, qwikCityPlan, checkOrigin: false });
