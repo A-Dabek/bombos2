@@ -3,7 +3,7 @@ import { HiArrowPathSolid } from "@qwikest/icons/heroicons";
 import type { Parcel } from "./types";
 
 interface Props {
-  parcel: Parcel | null;
+  parcel: Parcel;
   isVisible: boolean;
   isCompleting: boolean;
   onClose$: PropFunction<() => void>;
@@ -11,13 +11,9 @@ interface Props {
 }
 
 export default component$<Props>((props) => {
-  if (!props.parcel) {
-    return <div class="hidden" />;
-  }
-
   return (
     <div
-      class={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-90 p-4 transition-all duration-300 ${props.isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"}`}
+      class={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-90 p-4 transition-all duration-300 starting:opacity-0 starting:scale-95 ${props.isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"}`}
       onClick$={props.onClose$}
     >
       <img

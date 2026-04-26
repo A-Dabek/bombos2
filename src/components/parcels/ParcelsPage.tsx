@@ -18,7 +18,6 @@ export default component$<Props>(({ type, title }) => {
   const isLoading = useSignal(true);
   const isCompleting = useSignal(false);
   const noteTimeout = useSignal<ReturnType<typeof setTimeout> | null>(null);
-  const listVisible = useSignal(false);
 
   const fetchParcels = $(async () => {
     const res = await fetch(`/api/parcels/${type}`);
@@ -30,9 +29,7 @@ export default component$<Props>(({ type, title }) => {
 
   const selectParcel = $((parcel: Parcel) => {
     selectedParcel.value = parcel;
-    setTimeout(() => {
-      isLightboxVisible.value = true;
-    }, 10);
+    isLightboxVisible.value = true;
   });
 
   const closeLightbox = $(() => {
@@ -77,9 +74,6 @@ export default component$<Props>(({ type, title }) => {
 
   useVisibleTask$(() => {
     fetchParcels();
-    setTimeout(() => {
-      listVisible.value = true;
-    }, 50);
   });
 
   return (
@@ -99,21 +93,21 @@ export default component$<Props>(({ type, title }) => {
         </div>
       )}
       {parcels.value.length > 0 && (
-        <div class={`transition-opacity duration-300 ${listVisible.value ? "opacity-100" : "opacity-0"}`}>
-          <ParcelList
-            parcels={parcels.value}
-            onSelect$={selectParcel}
-            onNoteChange$={updateNote}
-          />
-        </div>
+        <ParcelList
+          parcels={parcels.value}
+          onSelect$={selectParcel}
+          onNoteChange$={updateNote}
+        />
       )}
-      <ParcelLightbox
-        parcel={selectedParcel.value}
-        isVisible={isLightboxVisible.value}
-        isCompleting={isCompleting.value}
-        onClose$={closeLightbox}
-        onComplete$={completeParcel}
-      />
+      {selectedParcel.value && (
+        <ParcelLightbox
+          parcel={selectedParcel.value}
+          isVisible={isLightboxVisible.value}
+          isCompleting={isCompleting.value}
+          onClose$={closeLightbox}
+          onComplete$={completeParcel}
+        />
+      )}
     </div>
   );
 });

@@ -1,4 +1,5 @@
 import { component$, useSignal, type PropFunction } from "@builder.io/qwik";
+import { HiArrowPathSolid } from "@qwikest/icons/heroicons";
 
 interface Props {
   apiPath: string;
@@ -7,6 +8,7 @@ interface Props {
 
 export default component$<Props>((props) => {
   const inputRef = useSignal<HTMLInputElement | undefined>();
+  const isUploading = useSignal(false);
 
   return (
     <div class="p-4">
@@ -15,10 +17,13 @@ export default component$<Props>((props) => {
         type="file"
         accept="image/*"
         class="hidden"
+        disabled={isUploading.value}
         onChange$={async (event: Event) => {
           const target = event.target as HTMLInputElement;
           const file = target.files?.[0];
           if (!file) return;
+
+          isUploading.value = true;
 
           const formData = new FormData();
           formData.append("image", file);
@@ -32,14 +37,23 @@ export default component$<Props>((props) => {
             props.onUpload$();
           }
 
+          isUploading.value = false;
           target.value = "";
         }}
       />
       <button
-        class="w-full rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="w-full rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={isUploading.value}
         onClick$={() => inputRef.value?.click()}
       >
-        Upload Image
+        {isUploading.value ? (
+          <span class="flex items-center justify-center gap-2">
+            <HiArrowPathSolid class="h-5 w-5 animate-spin" />
+            Uploading...
+          </span>
+        ) : (
+          "Upload Image"
+        )}
       </button>
     </div>
   );
