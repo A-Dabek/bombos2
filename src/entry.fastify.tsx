@@ -28,21 +28,36 @@ const PORT = parseInt(process.env.PORT ?? "3000");
 const HOST = process.env.HOST ?? "0.0.0.0";
 
 const start = async () => {
-  // Create the fastify server
-  // https://fastify.dev/docs/latest/Guides/Getting-Started/
   const fastify = Fastify({
-    logger: true,
+    logger: {
+      level: "info",
+      transport: {
+        target: "pino-pretty",
+        options: {
+          colorize: false,
+          translateTime: "SYS:mm-dd HH:MM:ss",
+          ignore: "pid,hostname",
+          singleLine: true,
+          hideObject: true,
+        },
+      },
+    },
+    disableRequestLogging: true,
   });
 
-  // Enable compression
-  // https://github.com/fastify/fastify-compress
-  // IMPORTANT NOTE: THIS MUST BE REGISTERED BEFORE THE fastify-qwik PLUGIN
-  // await fastify.register(import('@fastify/compress'))
+  fastify.addHook("onRequest", async (request) => {
+    request.log.info(
+      `${request.method} ${request.url} from ${request.hostname}\n`,
+    );
+  });
 
-  // Handle Qwik City using a plugin
+  fastify.addHook("onResponse", async (request, reply) => {
+    request.log.info(
+      `${request.method} ${request.url} ${reply.statusCode}\n`,
+    );
+  });
+
   await fastify.register(FastifyQwik, { distDir, buildDir, assetsDir });
-
-  // Start the fastify server
   await fastify.listen({ port: PORT, host: HOST });
 };
 

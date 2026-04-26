@@ -1,19 +1,38 @@
 import cron from "node-cron";
-import { getDb } from "../db/connection.ts";
 import { deleteCompletedParcels } from "../db/parcels.ts";
 
 let started = false;
 
+function log(label: string, message: string): void {
+  const timestamp = new Date().toISOString();
+  console.log(`[scheduler] [${timestamp}] [${label}] ${message}`);
+}
+
+function runCleanup(): void {
+  log("cleanup", "Starting cleanup of completed parcels");
+  try {
+    const deleted = deleteCompletedParcels();
+    log("cleanup", `Deleted ${deleted} completed parcels`);
+  } catch (err) {
+    log("error", `Failed to clean up completed parcels: ${err}`);
+  }
+}
+
 export function startScheduler(): void {
-  if (started) return;
+  if (started) {
+    log("init", "Scheduler already started, skipping");
+    return;
+  }
   started = true;
 
+  log("init", "Scheduler starting");
+
+  // Run once immediately so we know it works after deploy/restart
+  runCleanup();
+
   cron.schedule("0 4 * * *", () => {
-    try {
-      const deleted = deleteCompletedParcels();
-      console.log(`[scheduler] Cleaned up ${deleted} completed parcels`);
-    } catch (err) {
-      console.error("[scheduler] Failed to clean up completed parcels:", err);
-    }
+    runCleanup();
   });
+
+  log("init", "Scheduled daily cleanup at 04:00 UTC");
 }
