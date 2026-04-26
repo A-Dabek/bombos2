@@ -27,7 +27,12 @@ test.describe("navigation", () => {
   test("clicking each tab navigates to correct URL", async ({ page }) => {
     for (const tab of TABS) {
       await page.getByRole("link", { name: tab.label }).click();
-      const expectedPath = tab.path === "/parcels" ? "/parcels/incoming" : tab.path;
+      const expectedPath =
+        tab.path === "/parcels"
+          ? "/parcels/incoming"
+          : tab.path === "/meals"
+            ? "/meals/breakfast"
+            : tab.path;
       await expect(page).toHaveURL(new RegExp(`\\${expectedPath}/?$`));
     }
   });
