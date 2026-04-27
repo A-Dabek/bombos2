@@ -1,11 +1,11 @@
 import { component$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
-import MealPage from "~/components/meals/MealPage";
+import MealAdmin from "~/components/meals/MealAdmin";
 
 export default component$(() => {
-  return <MealPage category="dinner" />;
+  return <MealAdmin category="supper" />;
 });
 
 export const head: DocumentHead = {
-  title: "Dinner - Meals",
+  title: "Supper Admin - Meals",
 };
