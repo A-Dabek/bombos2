@@ -2,7 +2,6 @@ import { component$ } from "@builder.io/qwik";
 import { useLocation, Link } from "@builder.io/qwik-city";
 
 const TABS = [
-  { label: "Breakfast", path: "/meals/breakfast" },
   { label: "Dinner", path: "/meals/dinner" },
   { label: "Supper", path: "/meals/supper" },
 ];
@@ -13,7 +12,7 @@ export default component$(() => {
   return (
     <nav class="flex border-b border-gray-200 bg-white animate-[fadeIn_0.3s_ease-out]">
       {TABS.map((tab) => {
-        const isActive = loc.url.pathname.replace(/\/$/, "") === tab.path;
+        const isActive = loc.url.pathname.replace(/\/$/, "").startsWith(tab.path);
         return (
           <Link
             key={tab.path}

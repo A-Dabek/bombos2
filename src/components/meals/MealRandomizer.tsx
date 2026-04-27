@@ -3,7 +3,7 @@ import { HiSparklesSolid } from "@qwikest/icons/heroicons";
 import type { MealRow } from "~/db/meals";
 
 interface MealRandomizerProps {
-  category: "breakfast" | "dinner" | "supper";
+  category: "dinner" | "supper";
 }
 
 export default component$<MealRandomizerProps>((props) => {
@@ -73,31 +73,37 @@ export default component$<MealRandomizerProps>((props) => {
 
   return (
     <div class="flex flex-col items-center justify-center p-8">
-      <button
-        key={clickKey.value}
-        onClick$={handleClick}
-        class="flex flex-col items-center justify-center w-32 h-32 rounded-full bg-blue-50 hover:bg-blue-100 transition-colors animate-[scaleUpDown_0.2s_ease-out]"
-      >
-        <HiSparklesSolid class="w-16 h-16 text-blue-600" />
-        <span class="text-xs text-blue-600 font-medium">Roll</span>
-      </button>
+      {isLoaded.value && meals.value.length === 0 ? (
+        <p class="text-lg text-gray-500">No meals yet</p>
+      ) : (
+        <>
+          <button
+            key={clickKey.value}
+            onClick$={handleClick}
+            class="flex flex-col items-center justify-center w-32 h-32 rounded-full bg-blue-50 hover:bg-blue-100 transition-colors animate-[scaleUpDown_0.2s_ease-out]"
+          >
+            <HiSparklesSolid class="w-16 h-16 text-blue-600" />
+            <span class="text-xs text-blue-600 font-medium">Roll</span>
+          </button>
 
-      {currentMeal && (
-        <p
-          key={currentMeal.id}
-          class="mt-6 text-2xl font-semibold text-gray-800 animate-[fadeIn_0.3s_ease-out]"
-        >
-          {currentMeal.name}
-        </p>
-      )}
+          {currentMeal && (
+            <p
+              key={currentMeal.id}
+              class="mt-6 text-2xl font-semibold text-gray-800 animate-[fadeIn_0.3s_ease-out]"
+            >
+              {currentMeal.name}
+            </p>
+          )}
 
-      {isExhausted.value && (
-        <p
-          key="picky-eater"
-          class="mt-6 text-lg text-gray-600 italic animate-[fadeIn_0.3s_ease-out]"
-        >
-          You're a picky eater
-        </p>
+          {isExhausted.value && (
+            <p
+              key="picky-eater"
+              class="mt-6 text-lg text-gray-600 italic animate-[fadeIn_0.3s_ease-out]"
+            >
+              You're a picky eater
+            </p>
+          )}
+        </>
       )}
     </div>
   );
