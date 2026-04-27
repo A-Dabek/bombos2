@@ -1,6 +1,6 @@
 import { component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
 import { Link } from "@builder.io/qwik-city";
-import { HiCog6ToothOutline } from "@qwikest/icons/heroicons";
+import { HiCog6ToothSolid } from "@qwikest/icons/heroicons";
 import type { PlanList } from "~/db/plan";
 
 export default component$(() => {
@@ -24,8 +24,6 @@ export default component$(() => {
 
   return (
     <div class="min-h-screen">
-      <h1 class="text-2xl font-bold text-gray-800 px-4 py-4">Plan</h1>
-
       {isLoaded.value && lists.value.length === 0 ? (
         <p class="text-lg text-gray-500 px-4">No lists yet</p>
       ) : (
@@ -45,10 +43,10 @@ export default component$(() => {
 
       <Link
         href="/plan/admin"
-        class="fixed bottom-4 right-4 flex items-center justify-center w-14 h-14 bg-gray-200 rounded-full shadow-lg"
+        class="fixed bottom-4 right-4 flex items-center justify-center w-14 h-14 bg-red-500 rounded-full shadow-lg"
         aria-label="Admin"
       >
-        <HiCog6ToothOutline class="w-7 h-7 text-gray-700" />
+        <HiCog6ToothSolid class="w-7 h-7 text-white" />
       </Link>
     </div>
   );

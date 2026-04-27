@@ -12,10 +12,6 @@ export default component$<MealPageProps>((props) => {
 
   return (
     <div class="relative min-h-screen">
-      <div class="flex items-center justify-between px-4 py-4">
-        <h1 class="text-2xl font-bold text-gray-800">{title}</h1>
-      </div>
-
       <MealRandomizer category={props.category} />
 
       <Link
