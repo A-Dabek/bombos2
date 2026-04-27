@@ -3,6 +3,7 @@ import { useLocation } from "@builder.io/qwik-city";
 import {
   HiCubeOutline,
   HiFireOutline,
+  HiListBulletOutline,
   HiBanknotesOutline,
   HiShoppingCartOutline,
 } from "@qwikest/icons/heroicons";
@@ -10,6 +11,7 @@ import {
 const TABS = [
   { label: "Parcels", path: "/parcels", Icon: HiCubeOutline },
   { label: "Meals", path: "/meals", Icon: HiFireOutline },
+  { label: "Plan", path: "/plan", Icon: HiListBulletOutline },
   { label: "Money", path: "/money", Icon: HiBanknotesOutline },
   { label: "Shopping", path: "/shopping", Icon: HiShoppingCartOutline },
 ];
