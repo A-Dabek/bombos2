@@ -72,10 +72,11 @@ export default component$<MealAdminProps>((props) => {
       {meals.value.length === 0 ? (
         <p class="text-lg text-gray-500">No meals yet</p>
       ) : (
-        <ul class="space-y-2">
+        <ul>
           {meals.value.map((meal) => (
             <li
               key={meal.id}
+              role="listitem"
               class="flex items-center justify-between p-3 bg-white border rounded"
             >
               <span class="text-gray-800">{meal.name}</span>

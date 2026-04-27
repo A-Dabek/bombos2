@@ -72,8 +72,8 @@ test.describe("meals", () => {
     await page.getByPlaceholder("Add new dish...").fill(testDishName);
     await page.getByRole("button", { name: "Add" }).click();
     await expect(page.getByText(testDishName)).toBeVisible();
-    // Delete it
-    await page.getByRole("button", { name: "Delete" }).click();
+    // Delete the specific test dish by using aria-label in the listitem
+    await page.locator("li[role='listitem']").filter({ hasText: testDishName }).getByLabel("Delete").click();
     // Should be removed
     await expect(page.getByText(testDishName)).not.toBeVisible();
   });

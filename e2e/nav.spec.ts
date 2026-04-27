@@ -31,7 +31,7 @@ test.describe("navigation", () => {
         tab.path === "/parcels"
           ? "/parcels/incoming"
           : tab.path === "/meals"
-            ? "/meals/breakfast"
+            ? "/meals/dinner"
             : tab.path;
       await expect(page).toHaveURL(new RegExp(`\\${expectedPath}/?$`));
     }
