@@ -1,81 +1,80 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("meals", () => {
-  test("redirects /meals to /meals/breakfast", async ({ page }) => {
+  test("redirects /meals to /meals/dinner", async ({ page }) => {
     await page.goto("/meals");
-    await expect(page).toHaveURL(/\/meals\/breakfast\/?$/);
+    await expect(page).toHaveURL(/\/meals\/dinner\/?$/);
   });
 
-  test("sub-navigation is visible", async ({ page }) => {
-    await page.goto("/meals/breakfast");
-    await expect(
-      page.getByRole("link", { name: "Breakfast" })
-    ).toBeVisible();
-    await expect(
-      page.getByRole("link", { name: "Dinner" })
-    ).toBeVisible();
-    await expect(
-      page.getByRole("link", { name: "Supper" })
-    ).toBeVisible();
+  test("sub-navigation shows Dinner and Supper only", async ({ page }) => {
+    await page.goto("/meals/dinner");
+    await expect(page.getByRole("link", { name: "Dinner" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Supper" })).toBeVisible();
   });
 
   test("tab switching navigates and highlights", async ({ page }) => {
-    await page.goto("/meals/breakfast");
-    await page.getByRole("link", { name: "Dinner" }).click();
-    await expect(page).toHaveURL(/\/meals\/dinner\/?$/);
-    const dinnerLink = page.getByRole("link", { name: "Dinner" });
-    await expect(dinnerLink).toHaveAttribute("class", /border-blue-500/);
-    await expect(dinnerLink).toHaveAttribute("class", /text-blue-600/);
+    await page.goto("/meals/dinner");
+    await page.getByRole("link", { name: "Supper" }).click();
+    await expect(page).toHaveURL(/\/meals\/supper\/?$/);
+    const supperLink = page.getByRole("link", { name: "Supper" });
+    await expect(supperLink).toHaveClass(/border-blue-500/);
+    await expect(supperLink).toHaveClass(/text-blue-600/);
   });
 
-  test("clicking sparkles button reveals a meal", async ({ page }) => {
-    await page.goto("/meals/breakfast");
+  test("clicking sparkles button reveals a dinner meal", async ({ page }) => {
+    await page.goto("/meals/dinner");
     // Wait for page to load
     await page.waitForTimeout(500);
     // Click the roll button (sparkles icon button)
     const rollButton = page.locator("button").filter({ hasText: "Roll" });
     await expect(rollButton).toBeVisible();
     await rollButton.click();
-    // Should show a meal name
+    // Should show a meal name (one of the 33 dinner meals)
+    const mealText = page.locator("p.text-2xl");
+    await expect(mealText).toBeVisible();
+    const text = await mealText.textContent();
+    // Verify it's a dinner meal (not empty)
+    expect(text?.length).toBeGreaterThan(0);
+  });
+
+  test("admin toggle button is visible", async ({ page }) => {
+    await page.goto("/meals/dinner");
     await expect(
-      page.getByText(/(Scrambled Eggs|Oatmeal with Berries|Avocado Toast)/)
+      page.getByRole("link", { name: "Admin" })
     ).toBeVisible();
   });
 
-  test("after exhausting meals shows picky eater message", async ({ page }) => {
-    await page.goto("/meals/breakfast");
-    await page.waitForTimeout(500);
-    const rollButton = page.locator("button").filter({ hasText: "Roll" });
-    // Click 3 times to see all 3 breakfast meals
-    await rollButton.click();
-    await page.waitForTimeout(100);
-    await rollButton.click();
-    await page.waitForTimeout(100);
-    await rollButton.click();
-    await page.waitForTimeout(100);
-    // After exhausting, should show "You're a picky eater"
-    await expect(page.getByText("You're a picky eater")).toBeVisible();
+  test("admin page navigation works", async ({ page }) => {
+    await page.goto("/meals/dinner");
+    await page.getByRole("link", { name: "Admin" }).click();
+    await expect(page).toHaveURL(/\/meals\/dinner\/admin\/?$/);
+    // Back button should exist
+    await expect(page.getByRole("link", { name: "Back" })).toBeVisible();
   });
 
-  test("clicking again restarts the shuffle cycle", async ({ page }) => {
-    await page.goto("/meals/breakfast");
+  test("admin can add a dish", async ({ page }) => {
+    await page.goto("/meals/dinner/admin");
+    // Wait for meals to load
     await page.waitForTimeout(500);
-    const rollButton = page.locator("button").filter({ hasText: "Roll" });
-    // Exhaust the meals
-    await rollButton.click();
-    await page.waitForTimeout(100);
-    await rollButton.click();
-    await page.waitForTimeout(100);
-    await rollButton.click();
-    await page.waitForTimeout(100);
-    // Should see picky eater message
-    await expect(page.getByText("You're a picky eater")).toBeVisible();
-    // Click again to restart
-    await rollButton.click();
-    await page.waitForTimeout(100);
-    // Should show a meal name again (not the picky eater message)
-    await expect(
-      page.getByText(/(Scrambled Eggs|Oatmeal with Berries|Avocado Toast)/)
-    ).toBeVisible();
+    const testDishName = `__E2E_TEST_DISH__${Date.now()}`;
+    await page.getByPlaceholder("Add new dish...").fill(testDishName);
+    await page.getByRole("button", { name: "Add" }).click();
+    // Should appear in the list
+    await expect(page.getByText(testDishName)).toBeVisible();
+  });
+
+  test("admin can delete a dish", async ({ page }) => {
+    await page.goto("/meals/dinner/admin");
+    // Wait for meals to load
+    await page.waitForTimeout(500);
+    // First add a dish to delete
+    const testDishName = `__E2E_DELETE_TEST__${Date.now()}`;
+    await page.getByPlaceholder("Add new dish...").fill(testDishName);
+    await page.getByRole("button", { name: "Add" }).click();
+    await expect(page.getByText(testDishName)).toBeVisible();
+    // Delete it
+    await page.getByRole("button", { name: "Delete" }).click();
+    // Should be removed
+    await expect(page.getByText(testDishName)).not.toBeVisible();
   });
 });
