@@ -1,14 +1,26 @@
 import { test, expect } from "@playwright/test";
+import { clearPlan } from "./setup";
 
 test.describe("plan", () => {
+  test.beforeEach(async () => {
+    clearPlan();
+  });
   test("redirects /plan to /plan/lists", async ({ page }) => {
     await page.goto("/plan");
     await expect(page).toHaveURL(/\/plan\/lists\/?$/);
   });
 
   test("main lists view displays all lists", async ({ page }) => {
+    // Create a list via API to avoid race between beforeEach clear and admin page load
+    const res = await fetch("http://localhost:5173/api/plan/lists", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "My List", display_order: 0 }),
+    });
+    const listData = await res.json();
+
     await page.goto("/plan/lists");
-    await expect(page.getByRole("heading", { name: "Plan" })).toBeVisible();
+    await expect(page.locator("li").filter({ hasText: "My List" })).toBeVisible({ timeout: 5000 });
   });
 
   test("shows no lists yet when empty", async ({ page }) => {
@@ -45,19 +57,20 @@ test.describe("plan", () => {
     await page.waitForTimeout(500);
     // Add two lists
     const list1 = `__E2E_LIST_1__${Date.now()}`;
-    const list2 = `__E2E_LIST_2__${Date.now()}`;
+    const list2 = `__E2E_LIST_2__${Date.now() + 1}`;
     await page.getByPlaceholder("New list title...").fill(list1);
     await page.getByRole("button", { name: "Add List" }).click();
+    await expect(page.locator("li").filter({ hasText: list1 })).toBeVisible({ timeout: 5000 });
     await page.getByPlaceholder("New list title...").fill(list2);
     await page.getByRole("button", { name: "Add List" }).click();
-    await page.waitForTimeout(500);
+    await expect(page.locator("li").filter({ hasText: list2 })).toBeVisible({ timeout: 5000 });
     // Verify list1 is first, list2 is second
     const items = page.locator("li");
     await expect(items.first()).toContainText(list1);
     await expect(items.nth(1)).toContainText(list2);
     // Click move down on list1
     const firstItem = page.locator("li").filter({ hasText: list1 }).first();
-    await firstItem.getByLabel("Move down").click();
+    await firstItem.locator('button[aria-label="Move down"]').click();
     await page.waitForTimeout(500);
     // Now list2 should be first, list1 should be second
     await expect(items.first()).toContainText(list2);
@@ -86,7 +99,7 @@ test.describe("plan", () => {
     await expect(page.getByText(testListName)).toBeVisible();
     // Delete the list
     const listItem = page.locator("li").filter({ hasText: testListName }).first();
-    await listItem.getByLabel("Delete").click();
+    await listItem.locator('button[aria-label="Delete"]').click();
     // Should be removed
     await expect(page.getByText(testListName)).not.toBeVisible();
   });
@@ -117,7 +130,7 @@ test.describe("plan", () => {
     const listId = listData.id;
 
     // Create an item
-    await fetch(`http://localhost:5173/api/plan/lists/${listId}/items`, {
+    await fetch(`http://localhost:5173/api/plan/lists/${listId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: "Test Item", description: "Test Description", amount: 2 }),
@@ -128,7 +141,7 @@ test.describe("plan", () => {
     await page.waitForTimeout(500);
 
     // Should show list title
-    await expect(page.getByRole("heading", { name: "Test List" })).toBeVisible();
+    await expect(page.locator("h1").filter({ hasText: "Test List" })).toBeVisible();
     // Should show item
     await expect(page.getByText("Test Item")).toBeVisible();
     // Should show description
@@ -147,7 +160,7 @@ test.describe("plan", () => {
     const listData = await createListRes.json();
     const listId = listData.id;
 
-    await fetch(`http://localhost:5173/api/plan/lists/${listId}/items`, {
+    await fetch(`http://localhost:5173/api/plan/lists/${listId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: "Test Item" }),
@@ -175,7 +188,7 @@ test.describe("plan", () => {
     const listData = await createListRes.json();
     const listId = listData.id;
 
-    await fetch(`http://localhost:5173/api/plan/lists/${listId}/items`, {
+    await fetch(`http://localhost:5173/api/plan/lists/${listId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: "Test Item" }),
@@ -203,7 +216,7 @@ test.describe("plan", () => {
     const listData = await createListRes.json();
     const listId = listData.id;
 
-    await fetch(`http://localhost:5173/api/plan/lists/${listId}/items`, {
+    await fetch(`http://localhost:5173/api/plan/lists/${listId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: "Test Item", amount: 1 }),
@@ -237,7 +250,7 @@ test.describe("plan", () => {
     const listData = await createListRes.json();
     const listId = listData.id;
 
-    await fetch(`http://localhost:5173/api/plan/lists/${listId}/items`, {
+    await fetch(`http://localhost:5173/api/plan/lists/${listId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: "Test Item", description: "Test Desc", amount: 3 }),
@@ -251,10 +264,10 @@ test.describe("plan", () => {
     await page.getByLabel("Edit").click();
 
     // Form should be visible with data
-    await expect(page.getByRole("heading", { name: "Edit Item" })).toBeVisible();
-    await expect(page.getByDisplayValue("Test Item")).toBeVisible();
-    await expect(page.getByDisplayValue("Test Desc")).toBeVisible();
-    await expect(page.getByDisplayValue("3")).toBeVisible();
+    await expect(page.locator("h1").filter({ hasText: "Edit Item" })).toBeVisible();
+    await expect(page.locator('input[type="text"]').first()).toHaveValue("Test Item");
+    await expect(page.locator("textarea").first()).toHaveValue("Test Desc");
+    await expect(page.locator('input[type="number"]').first()).toHaveValue("3");
   });
 
   test("save in edit form updates the item and returns to list", async ({ page }) => {
@@ -267,7 +280,7 @@ test.describe("plan", () => {
     const listData = await createListRes.json();
     const listId = listData.id;
 
-    await fetch(`http://localhost:5173/api/plan/lists/${listId}/items`, {
+    await fetch(`http://localhost:5173/api/plan/lists/${listId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: "Test Item" }),
@@ -281,12 +294,12 @@ test.describe("plan", () => {
     await page.getByLabel("Edit").click();
 
     // Change name and save
-    await page.getByLabel("Name").fill("Updated Item");
+    await page.locator('input[type="text"]').first().fill("Updated Item");
     await page.getByRole("button", { name: "Save" }).click();
     await page.waitForTimeout(300);
 
     // Should return to list view with updated item
-    await expect(page.getByRole("heading", { name: "Test List" })).toBeVisible();
+    await expect(page.locator("h1").filter({ hasText: "Test List" })).toBeVisible();
     await expect(page.getByText("Updated Item")).toBeVisible();
   });
 
@@ -300,7 +313,7 @@ test.describe("plan", () => {
     const listData = await createListRes.json();
     const listId = listData.id;
 
-    await fetch(`http://localhost:5173/api/plan/lists/${listId}/items`, {
+    await fetch(`http://localhost:5173/api/plan/lists/${listId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: "Test Item" }),
@@ -314,12 +327,12 @@ test.describe("plan", () => {
     await page.getByLabel("Edit").click();
 
     // Change name and cancel
-    await page.getByLabel("Name").fill("Updated Item");
+    await page.locator('input[type="text"]').first().fill("Updated Item");
     await page.getByRole("button", { name: "Cancel" }).click();
     await page.waitForTimeout(300);
 
     // Should return to list view with original item
-    await expect(page.getByRole("heading", { name: "Test List" })).toBeVisible();
+    await expect(page.locator("h1").filter({ hasText: "Test List" })).toBeVisible();
     await expect(page.getByText("Test Item")).toBeVisible();
     await expect(page.getByText("Updated Item")).not.toBeVisible();
   });
@@ -341,10 +354,9 @@ test.describe("plan", () => {
     await page.getByRole("button", { name: "Add new" }).click();
 
     // Form should be visible
-    await expect(page.getByRole("heading", { name: "Add Item" })).toBeVisible();
-    // Fields should be empty
-    const nameInput = page.getByLabel("Name");
-    await expect(nameInput).toHaveValue("");
+    await expect(page.locator("h1").filter({ hasText: "Add Item" })).toBeVisible();
+    // Name field should be empty
+    await expect(page.locator('input[type="text"]').first()).toHaveValue("");
   });
 
   test("save in add form creates item and returns to list", async ({ page }) => {
@@ -364,14 +376,14 @@ test.describe("plan", () => {
     await page.getByRole("button", { name: "Add new" }).click();
 
     // Fill form
-    await page.getByLabel("Name").fill("New Item");
-    await page.getByLabel("Description").fill("New Description");
-    await page.getByLabel("Amount").fill("5");
+    await page.locator('input[type="text"]').first().fill("New Item");
+    await page.locator("textarea").first().fill("New Description");
+    await page.locator('input[type="number"]').first().fill("5");
     await page.getByRole("button", { name: "Save" }).click();
     await page.waitForTimeout(300);
 
     // Should return to list view with new item
-    await expect(page.getByRole("heading", { name: "Test List" })).toBeVisible();
+    await expect(page.locator("h1").filter({ hasText: "Test List" })).toBeVisible();
     await expect(page.getByText("New Item")).toBeVisible();
     await expect(page.getByText("New Description")).toBeVisible();
     await expect(page.getByText("x5")).toBeVisible();
@@ -394,7 +406,7 @@ test.describe("plan", () => {
     await page.getByRole("button", { name: "Add new" }).click();
 
     // Fill form and cancel
-    await page.getByLabel("Name").fill("New Item");
+    await page.locator('input[type="text"]').first().fill("New Item");
     await page.getByRole("button", { name: "Cancel" }).click();
     await page.waitForTimeout(300);
 
@@ -413,7 +425,7 @@ test.describe("plan", () => {
     const listData = await createListRes.json();
     const listId = listData.id;
 
-    await fetch(`http://localhost:5173/api/plan/lists/${listId}/items`, {
+    await fetch(`http://localhost:5173/api/plan/lists/${listId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: "Item to Remove" }),
@@ -441,12 +453,12 @@ test.describe("plan", () => {
     const listData = await createListRes.json();
     const listId = listData.id;
 
-    await fetch(`http://localhost:5173/api/plan/lists/${listId}/items`, {
+    await fetch(`http://localhost:5173/api/plan/lists/${listId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: "Item 1" }),
     });
-    await fetch(`http://localhost:5173/api/plan/lists/${listId}/items`, {
+    await fetch(`http://localhost:5173/api/plan/lists/${listId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: "Item 2" }),

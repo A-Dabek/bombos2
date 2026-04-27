@@ -1,6 +1,11 @@
 import { test, expect } from "@playwright/test";
+import { clearMeals, clearPlan } from "./setup";
 
 test.describe("meals", () => {
+  test.beforeEach(async () => {
+    clearPlan();
+    clearMeals();
+  });
   test("redirects /meals to /meals/dinner", async ({ page }) => {
     await page.goto("/meals");
     await expect(page).toHaveURL(/\/meals\/dinner\/?$/);
