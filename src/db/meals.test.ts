@@ -3,41 +3,37 @@ import { test, expect } from "vitest";
 import Database from "better-sqlite3";
 import { runMigrations } from "./migrations.ts";
 
-test("getMealsByCategory returns exactly 3 rows for breakfast", () => {
+test("getMealsByCategory returns 0 rows for breakfast (no seed data)", () => {
   const db = new Database(":memory:");
   runMigrations(db);
 
   const meals = getMealsByCategory("breakfast", db);
-  expect(meals).toHaveLength(3);
-  expect(meals[0].name).toBe("Scrambled Eggs");
-  expect(meals[1].name).toBe("Oatmeal with Berries");
-  expect(meals[2].name).toBe("Avocado Toast");
+  expect(meals).toHaveLength(0);
 
   db.close();
 });
 
-test("getMealsByCategory returns exactly 3 rows for dinner", () => {
+test("getMealsByCategory returns 33 rows for dinner", () => {
   const db = new Database(":memory:");
   runMigrations(db);
 
   const meals = getMealsByCategory("dinner", db);
-  expect(meals).toHaveLength(3);
-  expect(meals[0].name).toBe("Grilled Chicken Salad");
-  expect(meals[1].name).toBe("Pasta Carbonara");
-  expect(meals[2].name).toBe("Vegetable Stir-Fry");
+  expect(meals).toHaveLength(33);
+  expect(meals[0].name).toBe("Potrawka");
+  expect(meals[1].name).toBe("Kotlety z fasoli");
+  expect(meals[32].name).toBe("Naleśniki ze szpinakiem");
 
   db.close();
 });
 
-test("getMealsByCategory returns exactly 3 rows for supper", () => {
+test("getMealsByCategory returns 20 rows for supper", () => {
   const db = new Database(":memory:");
   runMigrations(db);
 
   const meals = getMealsByCategory("supper", db);
-  expect(meals).toHaveLength(3);
-  expect(meals[0].name).toBe("Greek Yogurt");
-  expect(meals[1].name).toBe("Tomato Soup");
-  expect(meals[2].name).toBe("Cheese Sandwich");
+  expect(meals).toHaveLength(20);
+  expect(meals[0].name).toBe("Warzywa z humusem");
+  expect(meals[19].name).toBe("Tosty");
 
   db.close();
 });
