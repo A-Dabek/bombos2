@@ -20,10 +20,10 @@ export default component$<MealPageProps>((props) => {
 
       <Link
         href={`/meals/${props.category}/admin`}
-        class="fixed bottom-4 right-4 flex items-center justify-center w-12 h-12 bg-red-50 rounded-full shadow-lg hover:bg-red-100 transition-colors"
+        class="fixed bottom-4 right-4 flex items-center justify-center w-14 h-14 bg-red-500 rounded-full shadow-lg"
         aria-label="Admin"
       >
-        <HiCog6ToothSolid class="w-6 h-6 text-red-500" />
+        <HiCog6ToothSolid class="w-7 h-7 text-white" />
       </Link>
     </div>
   );
