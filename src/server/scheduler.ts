@@ -35,4 +35,11 @@ export function startScheduler(): void {
   });
 
   log("init", "Scheduled daily cleanup at 04:00 UTC");
+
+  // Heartbeat: log every minute to verify scheduler is running
+  cron.schedule("* * * * *", () => {
+    log("heartbeat", "Scheduler alive - tick every minute");
+  });
+
+  log("init", "Scheduled heartbeat every minute");
 }
