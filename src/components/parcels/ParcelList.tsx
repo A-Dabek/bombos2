@@ -18,6 +18,7 @@ export default component$<Props>((props) => {
             onClick$={() => props.onSelect$(parcel)}
           >
             <img
+              data-testid="parcel-image"
               src={`data:${parcel.contentType};base64,${parcel.imageBase64}`}
               alt="Parcel"
               class="h-full w-full object-cover"
@@ -30,6 +31,7 @@ export default component$<Props>((props) => {
           </button>
           <input
             type="text"
+            data-testid="parcel-note-input"
             value={parcel.note ?? ""}
             placeholder="Note..."
             maxLength={100}

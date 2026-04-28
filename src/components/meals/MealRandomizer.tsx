@@ -79,6 +79,7 @@ export default component$<MealRandomizerProps>((props) => {
         <>
           <button
             key={clickKey.value}
+            data-testid="meal-roll-button"
             onClick$={handleClick}
             class="flex flex-col items-center justify-center w-32 h-32 rounded-full bg-blue-50 hover:bg-blue-100 transition-colors animate-[scaleUpDown_0.2s_ease-out]"
           >

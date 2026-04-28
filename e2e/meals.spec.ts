@@ -29,7 +29,8 @@ test.describe("meals", () => {
   test("clicking sparkles button reveals a dinner meal", async ({ page }) => {
     await page.goto("/meals/dinner");
     // Wait for page to load
-    await page.waitForTimeout(500);
+    await page.getByRole("button", { name: "Roll" }).waitFor();
+    await page.waitForLoadState("networkidle");
     // Click the roll button (sparkles icon button)
     const rollButton = page.locator("button").filter({ hasText: "Roll" });
     await expect(rollButton).toBeVisible();
@@ -60,7 +61,8 @@ test.describe("meals", () => {
   test("admin can add a dish", async ({ page }) => {
     await page.goto("/meals/dinner/admin");
     // Wait for meals to load
-    await page.waitForTimeout(500);
+    await page.waitForSelector("li[role='listitem']", { state: "visible" }).catch(() => {});
+    await page.waitForLoadState("networkidle");
     const testDishName = `__E2E_TEST_DISH__${Date.now()}`;
     await page.getByPlaceholder("Add new dish...").fill(testDishName);
     await page.getByRole("button", { name: "Add" }).click();
@@ -71,7 +73,8 @@ test.describe("meals", () => {
   test("admin can delete a dish", async ({ page }) => {
     await page.goto("/meals/dinner/admin");
     // Wait for meals to load
-    await page.waitForTimeout(500);
+    await page.waitForSelector("li[role='listitem']", { state: "visible" }).catch(() => {});
+    await page.waitForLoadState("networkidle");
     // First add a dish to delete
     const testDishName = `__E2E_DELETE_TEST__${Date.now()}`;
     await page.getByPlaceholder("Add new dish...").fill(testDishName);

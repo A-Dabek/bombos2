@@ -70,7 +70,7 @@ export default component$(() => {
   });
 
   return (
-    <div class="min-h-screen p-4">
+    <div class="min-h-screen p-4" data-testid="plan-admin">
       <div class="flex items-center mb-4">
         <Link
           href="/plan/lists"

@@ -121,7 +121,9 @@ test.describe("parcels", () => {
     await noteInput.fill("4 packages on this QR");
     await expect(noteInput).toHaveValue("4 packages on this QR");
 
-    await page.waitForTimeout(500);
+    await page.waitForResponse(
+      (res) => res.url().includes("/api/parcels") && res.request().method() === "POST"
+    );
 
     await page.reload();
     await expect(page.locator('input[type="text"]').first()).toHaveValue(

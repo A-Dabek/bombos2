@@ -23,7 +23,7 @@ export default component$(() => {
   });
 
   return (
-    <div class="min-h-screen">
+    <div class="min-h-screen" data-testid="plan-lists">
       {isLoaded.value && lists.value.length === 0 ? (
         <p class="text-lg text-gray-500 px-4">No lists yet</p>
       ) : (

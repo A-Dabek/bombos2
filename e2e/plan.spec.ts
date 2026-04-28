@@ -25,7 +25,7 @@ test.describe("plan", () => {
 
   test("shows no lists yet when empty", async ({ page }) => {
     await page.goto("/plan/lists");
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-lists"]');
     await expect(page.getByText("No lists yet")).toBeVisible();
   });
 
@@ -44,7 +44,7 @@ test.describe("plan", () => {
 
   test("admin can add a new list", async ({ page }) => {
     await page.goto("/plan/admin");
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-admin"]');
     const testListName = `__E2E_TEST_LIST__${Date.now()}`;
     await page.getByPlaceholder("New list title...").fill(testListName);
     await page.getByRole("button", { name: "Add List" }).click();
@@ -54,7 +54,7 @@ test.describe("plan", () => {
 
   test("admin can reorder lists with up/down buttons", async ({ page }) => {
     await page.goto("/plan/admin");
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-admin"]');
     // Add two lists
     const list1 = `__E2E_LIST_1__${Date.now()}`;
     const list2 = `__E2E_LIST_2__${Date.now() + 1}`;
@@ -71,19 +71,19 @@ test.describe("plan", () => {
     // Click move down on list1
     const firstItem = page.locator("li").filter({ hasText: list1 }).first();
     await firstItem.locator('button[aria-label="Move down"]').click();
-    await page.waitForTimeout(500);
+    await page.waitForSelector("li");
     // Now list2 should be first, list1 should be second
     await expect(items.first()).toContainText(list2);
     await expect(items.nth(1)).toContainText(list1);
     // Navigate to normal view and verify order persists
     await page.goto("/plan/lists");
-    await page.waitForTimeout(500);
+    await page.waitForSelector("li");
     const normalItems = page.locator("li");
     await expect(normalItems.first()).toContainText(list2);
     await expect(normalItems.nth(1)).toContainText(list1);
     // Go back to admin and verify order still persists
     await page.goto("/plan/admin");
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-admin"]');
     const adminItems = page.locator("li");
     await expect(adminItems.first()).toContainText(list2);
     await expect(adminItems.nth(1)).toContainText(list1);
@@ -91,7 +91,7 @@ test.describe("plan", () => {
 
   test("admin can delete a list", async ({ page }) => {
     await page.goto("/plan/admin");
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-admin"]');
     // Add a list to delete
     const testListName = `__E2E_DELETE_LIST__${Date.now()}`;
     await page.getByPlaceholder("New list title...").fill(testListName);
@@ -107,11 +107,11 @@ test.describe("plan", () => {
   test("clicking a list navigates to list items view", async ({ page }) => {
     // First create a list in admin
     await page.goto("/plan/admin");
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-admin"]');
     const testListName = `__E2E_NAV_LIST__${Date.now()}`;
     await page.getByPlaceholder("New list title...").fill(testListName);
     await page.getByRole("button", { name: "Add List" }).click();
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-admin"]');
 
     // Go to lists view and click the list
     await page.goto("/plan/lists");
@@ -138,7 +138,7 @@ test.describe("plan", () => {
 
     // Navigate to list
     await page.goto(`/plan/${listId}`);
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-items"]');
 
     // Should show list title
     await expect(page.locator("h1").filter({ hasText: "Test List" })).toBeVisible();
@@ -167,7 +167,7 @@ test.describe("plan", () => {
     });
 
     await page.goto(`/plan/${listId}`);
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-items"]');
 
     // Click the item
     await page.getByText("Test Item").click();
@@ -195,7 +195,7 @@ test.describe("plan", () => {
     });
 
     await page.goto(`/plan/${listId}`);
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-items"]');
 
     // Click the item to show buttons
     await page.getByText("Test Item").click();
@@ -223,7 +223,7 @@ test.describe("plan", () => {
     });
 
     await page.goto(`/plan/${listId}`);
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-items"]');
 
     // Show buttons
     await page.getByText("Test Item").click();
@@ -257,7 +257,7 @@ test.describe("plan", () => {
     });
 
     await page.goto(`/plan/${listId}`);
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-items"]');
 
     // Click item, then edit
     await page.getByText("Test Item").click();
@@ -287,7 +287,7 @@ test.describe("plan", () => {
     });
 
     await page.goto(`/plan/${listId}`);
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-items"]');
 
     // Click item, then edit
     await page.getByText("Test Item").click();
@@ -320,7 +320,7 @@ test.describe("plan", () => {
     });
 
     await page.goto(`/plan/${listId}`);
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-items"]');
 
     // Click item, then edit
     await page.getByText("Test Item").click();
@@ -348,7 +348,7 @@ test.describe("plan", () => {
     const listId = listData.id;
 
     await page.goto(`/plan/${listId}`);
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-items"]');
 
     // Click Add new button
     await page.getByRole("button", { name: "Add new" }).click();
@@ -370,7 +370,7 @@ test.describe("plan", () => {
     const listId = listData.id;
 
     await page.goto(`/plan/${listId}`);
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-items"]');
 
     // Click Add new button
     await page.getByRole("button", { name: "Add new" }).click();
@@ -400,7 +400,7 @@ test.describe("plan", () => {
     const listId = listData.id;
 
     await page.goto(`/plan/${listId}`);
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-items"]');
 
     // Click Add new button
     await page.getByRole("button", { name: "Add new" }).click();
@@ -432,7 +432,7 @@ test.describe("plan", () => {
     });
 
     await page.goto(`/plan/${listId}`);
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-items"]');
 
     // Click item, then remove
     await page.getByText("Item to Remove").click();
@@ -465,7 +465,7 @@ test.describe("plan", () => {
     });
 
     await page.goto(`/plan/${listId}`);
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-items"]');
 
     // Click Remove all button
     await page.getByRole("button", { name: "Remove all" }).click();
@@ -486,7 +486,7 @@ test.describe("plan", () => {
     const listId = listData.id;
 
     await page.goto(`/plan/${listId}`);
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-items"]');
 
     // Click Back button
     await page.getByRole("link", { name: "Back" }).click();
@@ -497,7 +497,7 @@ test.describe("plan", () => {
 
   test("back button returns to lists view from admin", async ({ page }) => {
     await page.goto("/plan/admin");
-    await page.waitForTimeout(500);
+    await page.waitForSelector('[data-testid="plan-admin"]');
 
     // Click Back button
     await page.getByRole("link", { name: "Back" }).click();

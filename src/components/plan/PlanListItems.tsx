@@ -148,7 +148,7 @@ export default component$(() => {
   // Form mode - show form instead of list
   if (formMode.value !== "none") {
     return (
-      <div class="min-h-screen p-4">
+      <div class="min-h-screen p-4" data-testid="edit-form">
         <div class="flex items-center mb-4">
           <Link
             href="/plan/lists"
@@ -224,7 +224,7 @@ export default component$(() => {
 
   // Normal mode - show list
   return (
-    <div class="min-h-screen p-4">
+    <div class="min-h-screen p-4" data-testid="plan-items">
       <div class="flex items-center mb-4">
         <Link
           href="/plan/lists"
