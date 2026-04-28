@@ -16,15 +16,16 @@ test.describe("navigation", () => {
     await expect(page).toHaveURL(/\/parcels\/incoming\/?$/);
   });
 
-  test("all four nav tabs are visible", async ({ page }) => {
-    for (const tab of TABS) {
-      await expect(
-        page.getByRole("link", { name: tab.label })
-      ).toBeVisible();
-    }
-  });
+  test("navigation works correctly", async ({ page }) => {
+    // Home redirect
+    await expect(page).toHaveURL(/\/parcels\/incoming\/?$/);
 
-  test("clicking each tab navigates to correct URL", async ({ page }) => {
+    // All tabs visible + navigation loop covers visibility checks
+    for (const tab of TABS) {
+      await expect(page.getByRole("link", { name: tab.label })).toBeVisible();
+    }
+
+    // Navigation and active state
     for (const tab of TABS) {
       await page.getByRole("link", { name: tab.label }).click();
       const expectedPath =
@@ -34,21 +35,9 @@ test.describe("navigation", () => {
             ? "/meals/dinner"
             : tab.path;
       await expect(page).toHaveURL(new RegExp(`\\${expectedPath}/?$`));
-    }
-  });
-
-  test("active tab has correct visual state", async ({ page }) => {
-    for (const tab of TABS) {
-      await page.getByRole("link", { name: tab.label }).click();
       const link = page.getByRole("link", { name: tab.label });
-      await expect(link).toHaveAttribute(
-        "class",
-        /border-blue-500/
-      );
-      await expect(link).toHaveAttribute(
-        "class",
-        /text-blue-600/
-      );
+      await expect(link).toHaveAttribute("class", /border-blue-500/);
+      await expect(link).toHaveAttribute("class", /text-blue-600/);
     }
   });
 });

@@ -11,14 +11,12 @@ test.describe("meals", () => {
     await expect(page).toHaveURL(/\/meals\/dinner\/?$/);
   });
 
-  test("sub-navigation shows Dinner and Supper only", async ({ page }) => {
+  test("sub-navigation and tab switching", async ({ page }) => {
     await page.goto("/meals/dinner");
+    // Dinner and Supper visible
     await expect(page.getByRole("link", { name: "Dinner" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Supper" })).toBeVisible();
-  });
-
-  test("tab switching navigates and highlights", async ({ page }) => {
-    await page.goto("/meals/dinner");
+    // Tab switching + highlighting
     await page.getByRole("link", { name: "Supper" }).click();
     await expect(page).toHaveURL(/\/meals\/supper\/?$/);
     const supperLink = page.getByRole("link", { name: "Supper" });
@@ -43,44 +41,28 @@ test.describe("meals", () => {
     expect(text?.length).toBeGreaterThan(0);
   });
 
-  test("admin toggle button is visible", async ({ page }) => {
+  test("admin navigation and toggle button", async ({ page }) => {
     await page.goto("/meals/dinner");
-    await expect(
-      page.getByRole("link", { name: "Admin" })
-    ).toBeVisible();
-  });
-
-  test("admin page navigation works", async ({ page }) => {
-    await page.goto("/meals/dinner");
+    // Admin button visible
+    await expect(page.getByRole("link", { name: "Admin" })).toBeVisible();
+    // Navigation works
     await page.getByRole("link", { name: "Admin" }).click();
     await expect(page).toHaveURL(/\/meals\/dinner\/admin\/?$/);
-    // Back button should exist
+    // Back button exists
     await expect(page.getByRole("link", { name: "Back" })).toBeVisible();
   });
 
-  test("admin can add a dish", async ({ page }) => {
+  test("admin CRUD: add and delete dish", async ({ page }) => {
     await page.goto("/meals/dinner/admin");
     // Wait for meals to load
     await page.waitForSelector("li[role='listitem']", { state: "visible" }).catch(() => {});
     await page.waitForLoadState("networkidle");
+    // Add dish
     const testDishName = `__E2E_TEST_DISH__${Date.now()}`;
     await page.getByPlaceholder("Add new dish...").fill(testDishName);
     await page.getByRole("button", { name: "Add" }).click();
-    // Should appear in the list
     await expect(page.getByText(testDishName)).toBeVisible();
-  });
-
-  test("admin can delete a dish", async ({ page }) => {
-    await page.goto("/meals/dinner/admin");
-    // Wait for meals to load
-    await page.waitForSelector("li[role='listitem']", { state: "visible" }).catch(() => {});
-    await page.waitForLoadState("networkidle");
-    // First add a dish to delete
-    const testDishName = `__E2E_DELETE_TEST__${Date.now()}`;
-    await page.getByPlaceholder("Add new dish...").fill(testDishName);
-    await page.getByRole("button", { name: "Add" }).click();
-    await expect(page.getByText(testDishName)).toBeVisible();
-    // Delete the specific test dish by using aria-label in the listitem
+    // Delete the dish
     await page.locator("li[role='listitem']").filter({ hasText: testDishName }).getByLabel("Delete").click();
     // Should be removed
     await expect(page.getByText(testDishName)).not.toBeVisible();
