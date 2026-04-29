@@ -246,6 +246,7 @@ export default component$(() => {
                 : "bg-red-500 text-white hover:bg-red-600"
             }`}
             aria-label="Remove all"
+            data-testid="remove-all-btn"
           >
             {removeAllConfirm.value ? (
               <HiCheckCircleSolid class="w-5 h-5 mr-1" />
@@ -310,6 +311,7 @@ export default component$(() => {
                           onClick$={() => handleRemove(item.id)}
                           class={`p-1 ${itemConfirm.value === item.id ? "text-green-500 animate-bounce" : "text-red-500 hover:text-red-700"}`}
                           aria-label="Remove"
+                          data-testid="item-remove-btn"
                         >
                           {itemConfirm.value === item.id ? (
                             <HiCheckCircleSolid class="w-5 h-5" />

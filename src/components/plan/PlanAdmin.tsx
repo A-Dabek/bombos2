@@ -162,6 +162,7 @@ export default component$(() => {
                   onClick$={() => handleDelete(list.id)}
                   class={`p-1 ${deleteConfirm.value === list.id ? "text-green-500 animate-bounce" : "text-red-500 hover:text-red-700"}`}
                   aria-label="Delete"
+                  data-testid="admin-delete-btn"
                 >
                   {deleteConfirm.value === list.id ? (
                     <HiCheckCircleSolid class="w-5 h-5" />

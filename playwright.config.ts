@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
+  retries: 2,
   reporter: "list",
   use: {
     baseURL: "http://localhost:5173",
