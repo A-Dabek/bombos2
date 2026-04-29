@@ -1,11 +1,5 @@
-import { component$ } from "@builder.io/qwik";
-import type { DocumentHead } from "@builder.io/qwik-city";
-import PlanListItems from "~/components/plan/PlanListItems";
+import type { RequestHandler } from "@builder.io/qwik-city";
 
-export default component$(() => {
-  return <PlanListItems />;
-});
-
-export const head: DocumentHead = {
-  title: "Plan List",
+export const onGet: RequestHandler = async ({ redirect }) => {
+  throw redirect(302, "/plan/lists");
 };

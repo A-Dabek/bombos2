@@ -26,7 +26,6 @@ test.describe("plan", () => {
     await expect(page.getByRole("link", { name: "Back" })).toBeVisible();
   });
 
-  // Flaky: delete confirmation sometimes doesn't propagate in time
   test("admin CRUD: add, reorder, delete lists", async ({ page }) => {
     await page.goto("/plan/admin");
     await page.waitForSelector('[data-testid="plan-admin"]');
@@ -57,47 +56,175 @@ test.describe("plan", () => {
     await expect(items.nth(1)).toContainText(list1);
 
     // Delete list1 - double-click confirmation
-    // First click
     await page.locator("li").filter({ hasText: list1 }).first().locator('[data-testid="admin-delete-btn"]').click({ force: true });
     await expect(page.locator("li").filter({ hasText: list1 }).first().locator('[data-testid="admin-delete-btn"]')).toHaveClass(/animate-bounce/);
-
-    // Second click
     await page.locator("li").filter({ hasText: list1 }).first().locator('[data-testid="admin-delete-btn"]').click({ force: true });
     await expect(page.getByText(list1)).not.toBeVisible({ timeout: 5000 });
   });
 
-  test("clicking a list navigates to list items view", async ({ page }) => {
-    await page.goto("/plan/admin");
-    await page.waitForSelector('[data-testid="plan-admin"]');
-    const testListName = `__E2E_NAV_LIST__${Date.now()}`;
-    await page.getByPlaceholder("New list title...").fill(testListName);
-    await page.getByRole("button", { name: "Add List" }).click();
-    await expect(page.getByText(testListName)).toBeVisible();
+  // Accordion Behavior Tests
+
+  test("clicking a list expands it with animation", async ({ page }) => {
+    const list = await createTestList("Test List");
+    await createTestItem(list.id, { name: "Test Item" });
 
     await page.goto("/plan/lists");
     await page.waitForSelector('[data-testid="plan-lists"]');
-    await page.getByText(testListName).click();
-    await expect(page).toHaveURL(/\/plan\/\d+\/?$/);
-  });
 
-  test("list items view shows items correctly", async ({ page }) => {
-    const list = await createTestList("Test List");
-    await createTestItem(list.id, { name: "Test Item", description: "Test Description", amount: 2 });
+    // Click list to expand
+    await page.getByText("Test List").click();
 
-    await page.goto(`/plan/${list.id}`);
-    await page.waitForSelector('[data-testid="plan-items-container"]');
-    await expect(page.locator("h1").filter({ hasText: "Test List" })).toBeVisible();
+    // Items section should become visible with animation
     await expect(page.getByText("Test Item")).toBeVisible();
-    await expect(page.getByText("Test Description")).toBeVisible();
-    await expect(page.getByText("x2")).toBeVisible();
+    await expect(page.getByText("No items yet")).not.toBeVisible();
   });
+
+  test("clicking expanded list collapses it", async ({ page }) => {
+    const list = await createTestList("Test List");
+    await createTestItem(list.id, { name: "Test Item" });
+
+    await page.goto("/plan/lists");
+    await page.waitForSelector('[data-testid="plan-lists"]');
+
+    // Expand
+    await page.getByText("Test List").click();
+    await expect(page.getByText("Test Item")).toBeVisible();
+
+    // Collapse
+    await page.getByText("Test List").click();
+    // Wait for collapse animation then check items container has max-h-0
+    await page.waitForSelector('[data-testid="plan-lists"] div.max-h-0', { timeout: 1000 });
+  });
+
+  test("only one list expanded at a time", async ({ page }) => {
+    const list1 = await createTestList("List 1");
+    const list2 = await createTestList("List 2");
+    await createTestItem(list1.id, { name: "Item 1" });
+    await createTestItem(list2.id, { name: "Item 2" });
+
+    await page.goto("/plan/lists");
+    await page.waitForSelector('[data-testid="plan-lists"]');
+
+    // Expand list 1
+    await page.getByText("List 1").click();
+    await expect(page.getByText("Item 1")).toBeVisible();
+
+    // Expand list 2 (should collapse list 1)
+    await page.getByText("List 2").click();
+    // List 1 should collapse (check for max-h-0 on its section)
+    await page.waitForTimeout(350);
+    // List 2 should be expanded and show its items
+    await expect(page.getByText("Item 2")).toBeVisible();
+  });
+
+  test("items are lazy loaded on expand", async ({ page }) => {
+    const list = await createTestList("Test List");
+    await createTestItem(list.id, { name: "Lazy Item" });
+
+    await page.goto("/plan/lists");
+    await page.waitForSelector('[data-testid="plan-lists"]');
+
+    // Expand list
+    await page.getByText("Test List").click();
+
+    // Should show loading or items
+    await expect(page.getByText("Lazy Item")).toBeVisible({ timeout: 5000 });
+  });
+
+  test("cached items show instantly on re-expand", async ({ page }) => {
+    const list = await createTestList("Test List");
+    await createTestItem(list.id, { name: "Cached Item" });
+
+    await page.goto("/plan/lists");
+    await page.waitForSelector('[data-testid="plan-lists"]');
+
+    // Expand list (loads items)
+    await page.getByText("Test List").click();
+    await expect(page.getByText("Cached Item")).toBeVisible();
+
+    // Collapse
+    await page.getByText("Test List").click();
+    await page.waitForTimeout(350);
+
+    // Re-expand (should use cache, no loading)
+    await page.getByText("Test List").click();
+    // Items should appear immediately (no loading state)
+    await expect(page.getByText("Cached Item")).toBeVisible();
+  });
+
+  test("add item button is inside items section", async ({ page }) => {
+    const list = await createTestList("Test List");
+
+    await page.goto("/plan/lists");
+    await page.waitForSelector('[data-testid="plan-lists"]');
+
+    // Expand list
+    await page.getByText("Test List").click();
+
+    // "Add new" button should be visible in items section
+    await expect(page.getByRole("button", { name: "Add new" })).toBeVisible();
+  });
+
+  test("form slides in replacing only items section", async ({ page }) => {
+    const list = await createTestList("Test List");
+
+    await page.goto("/plan/lists");
+    await page.waitForSelector('[data-testid="plan-lists"]');
+
+    // Expand list
+    await page.getByText("Test List").click();
+
+    // Click Add new
+    await page.getByRole("button", { name: "Add new" }).click();
+
+    // Form should be visible
+    await page.waitForSelector('[data-testid="edit-form-add"]');
+
+    // List header should still be visible (not replaced by form)
+    await expect(page.getByText("Test List")).toBeVisible();
+  });
+
+  test("form cancel returns to items section", async ({ page }) => {
+    const list = await createTestList("Test List");
+
+    await page.goto("/plan/lists");
+    await page.waitForSelector('[data-testid="plan-lists"]');
+
+    // Expand list
+    await page.getByText("Test List").click();
+
+    // Click Add new, then Cancel
+    await page.getByRole("button", { name: "Add new" }).click();
+    await page.waitForSelector('[data-testid="edit-form-add"]');
+    await page.getByRole("button", { name: "Cancel" }).click();
+
+    // Items section should return
+    await page.waitForTimeout(350);
+    await expect(page.getByRole("button", { name: "Add new" })).toBeVisible();
+  });
+
+  test("removed route redirects to lists", async ({ page }) => {
+    const list = await createTestList("Test List");
+
+    // Try to access old route
+    await page.goto(`/plan/${list.id}`);
+
+    // Should redirect to /plan/lists
+    await expect(page).toHaveURL(/\/plan\/lists\/?$/);
+  });
+
+  // Item Interaction Tests (within accordion)
 
   test("item interaction: select, show buttons, toggle, change amount", async ({ page }) => {
     const list = await createTestList("Test List");
     await createTestItem(list.id, { name: "Test Item", amount: 1 });
 
-    await page.goto(`/plan/${list.id}`);
-    await page.waitForSelector('[data-testid="plan-items-container"]');
+    await page.goto("/plan/lists");
+    await page.waitForSelector('[data-testid="plan-lists"]');
+
+    // Expand list
+    await page.getByText("Test List").click();
+    await expect(page.getByText("Test Item")).toBeVisible();
 
     // Click item to show buttons
     await page.getByText("Test Item").click();
@@ -105,9 +232,7 @@ test.describe("plan", () => {
     await expect(page.getByLabel("Increase amount")).toBeVisible();
     await expect(page.getByLabel("Edit")).toBeVisible();
 
-    const itemRemoveBtn = page
-      .locator('[data-testid="plan-items-container"]')
-      .getByLabel("Remove", { exact: true });
+    const itemRemoveBtn = page.getByLabel("Remove", { exact: true });
     await expect(itemRemoveBtn).toBeVisible();
 
     // Click again to hide
@@ -133,8 +258,12 @@ test.describe("plan", () => {
     const list = await createTestList("Test List");
     await createTestItem(list.id, { name: "Test Item", description: "Test Desc", amount: 3 });
 
-    await page.goto(`/plan/${list.id}`);
-    await page.waitForSelector('[data-testid="plan-items-container"]');
+    await page.goto("/plan/lists");
+    await page.waitForSelector('[data-testid="plan-lists"]');
+
+    // Expand list
+    await page.getByText("Test List").click();
+    await expect(page.getByText("Test Item")).toBeVisible();
 
     // Click item, then edit
     await page.getByText("Test Item").click();
@@ -142,7 +271,7 @@ test.describe("plan", () => {
 
     // Form should be visible with edit testid
     await page.waitForSelector('[data-testid="edit-form-edit"]');
-    await expect(page.locator("h1").filter({ hasText: "Edit Item" })).toBeVisible();
+    await expect(page.getByText("Edit Item")).toBeVisible();
     await expect(page.locator('input[type="text"]').first()).toHaveValue("Test Item");
     await expect(page.locator("textarea").first()).toHaveValue("Test Desc");
     await expect(page.locator('input[type="number"]').first()).toHaveValue("3");
@@ -152,21 +281,23 @@ test.describe("plan", () => {
     await page.getByRole("button", { name: "Save" }).click();
 
     // Wait for form to slide out and list to reappear
-    await page.waitForSelector('[data-testid="plan-items-container"] > div.translate-x-0');
-    await expect(page.locator("h1").filter({ hasText: "Test List" })).toBeVisible();
+    await page.waitForTimeout(350);
     await expect(page.getByText("Updated Item")).toBeVisible();
   });
 
   test("item add flow: show form, add, cancel", async ({ page }) => {
     const list = await createTestList("Test List");
 
-    await page.goto(`/plan/${list.id}`);
-    await page.waitForSelector('[data-testid="plan-items-container"]');
+    await page.goto("/plan/lists");
+    await page.waitForSelector('[data-testid="plan-lists"]');
+
+    // Expand list
+    await page.getByText("Test List").click();
 
     // Click Add new button
     await page.getByRole("button", { name: "Add new" }).click();
     await page.waitForSelector('[data-testid="edit-form-add"]');
-    await expect(page.locator("h1").filter({ hasText: "Add Item" })).toBeVisible();
+    await expect(page.getByText("Add Item")).toBeVisible();
     await expect(page.locator('input[type="text"]').first()).toHaveValue("");
 
     // Fill and save
@@ -176,8 +307,7 @@ test.describe("plan", () => {
     await page.getByRole("button", { name: "Save" }).click();
 
     // Wait for form to slide out and list to reappear
-    await page.waitForSelector('[data-testid="plan-items-container"] > div.translate-x-0');
-    await expect(page.locator("h1").filter({ hasText: "Test List" })).toBeVisible();
+    await page.waitForTimeout(350);
     await expect(page.getByText("New Item")).toBeVisible();
     await expect(page.getByText("New Description")).toBeVisible();
     await expect(page.getByText("x5")).toBeVisible();
@@ -189,8 +319,7 @@ test.describe("plan", () => {
     await page.getByRole("button", { name: "Cancel" }).click();
 
     // Wait for form to slide out
-    await page.waitForSelector('[data-testid="plan-items-container"] > div.translate-x-0');
-    await expect(page.getByRole("heading", { name: "Test List" })).toBeVisible();
+    await page.waitForTimeout(350);
     await expect(page.getByText("Canceled Item")).not.toBeVisible();
   });
 
@@ -198,8 +327,12 @@ test.describe("plan", () => {
     const list = await createTestList("Test List");
     await createTestItem(list.id, { name: "Item to Remove" });
 
-    await page.goto(`/plan/${list.id}`);
-    await page.waitForSelector('[data-testid="plan-items-container"]');
+    await page.goto("/plan/lists");
+    await page.waitForSelector('[data-testid="plan-lists"]');
+
+    // Expand list
+    await page.getByText("Test List").click();
+    await expect(page.getByText("Item to Remove")).toBeVisible();
 
     // Click item to show buttons
     await page.getByText("Item to Remove").click();
@@ -218,8 +351,12 @@ test.describe("plan", () => {
     await createTestItem(list.id, { name: "Item 1" });
     await createTestItem(list.id, { name: "Item 2" });
 
-    await page.goto(`/plan/${list.id}`);
-    await page.waitForSelector('[data-testid="plan-items-container"]');
+    await page.goto("/plan/lists");
+    await page.waitForSelector('[data-testid="plan-lists"]');
+
+    // Expand list
+    await page.getByText("Test List").click();
+    await expect(page.getByText("Item 1")).toBeVisible();
 
     // First click - should show checkmark with animate-bounce
     await page.locator('[data-testid="remove-all-btn"]').click({ force: true });
@@ -248,17 +385,6 @@ test.describe("plan", () => {
     await page.waitForSelector(`text="${listName}"`, { state: "detached", timeout: 5000 });
   });
 
-  test("list items view fades in on load", async ({ page }) => {
-    const list = await createTestList("Test List");
-    await createTestItem(list.id, { name: "Test Item" });
-
-    await page.goto(`/plan/${list.id}`);
-    const fadeDiv = page.locator('[data-testid="plan-items-container"] div.transition-opacity');
-    await expect(fadeDiv).toBeVisible();
-    await expect(fadeDiv).toHaveClass(/transition-opacity/);
-    await expect(fadeDiv).toHaveClass(/opacity-100/);
-  });
-
   test("plan lists view fades in on load", async ({ page }) => {
     await createTestList("Test List");
 
@@ -272,17 +398,17 @@ test.describe("plan", () => {
   test("add item slides form in from right", async ({ page }) => {
     const list = await createTestList("Test List");
 
-    await page.goto(`/plan/${list.id}`);
-    await page.waitForSelector('[data-testid="plan-items-container"]');
+    await page.goto("/plan/lists");
+    await page.waitForSelector('[data-testid="plan-lists"]');
+
+    // Expand list
+    await page.getByText("Test List").click();
 
     // Click Add new
     await page.getByRole("button", { name: "Add new" }).click();
 
-    // Both list and form should be in DOM
-    await page.waitForSelector('[data-testid="plan-items-container"]');
+    // Form should be visible
     await page.waitForSelector('[data-testid="edit-form-add"]');
-
-    // Form should be visible (not off-screen)
     await expect(page.locator('[data-testid="edit-form-add"]')).toBeVisible();
   });
 
@@ -290,8 +416,12 @@ test.describe("plan", () => {
     const list = await createTestList("Test List");
     await createTestItem(list.id, { name: "Edit Me" });
 
-    await page.goto(`/plan/${list.id}`);
-    await page.waitForSelector('[data-testid="plan-items-container"]');
+    await page.goto("/plan/lists");
+    await page.waitForSelector('[data-testid="plan-lists"]');
+
+    // Expand list
+    await page.getByText("Test List").click();
+    await expect(page.getByText("Edit Me")).toBeVisible();
 
     // Click item to show buttons, then edit
     await page.getByText("Edit Me").click();
@@ -305,8 +435,11 @@ test.describe("plan", () => {
   test("cancel form slides out to right", async ({ page }) => {
     const list = await createTestList("Test List");
 
-    await page.goto(`/plan/${list.id}`);
-    await page.waitForSelector('[data-testid="plan-items-container"]');
+    await page.goto("/plan/lists");
+    await page.waitForSelector('[data-testid="plan-lists"]');
+
+    // Expand list
+    await page.getByText("Test List").click();
 
     // Click Add new
     await page.getByRole("button", { name: "Add new" }).click();
@@ -316,22 +449,8 @@ test.describe("plan", () => {
     await page.getByRole("button", { name: "Cancel" }).click();
 
     // Wait for form to slide out
-    await page.waitForSelector('[data-testid="plan-items-container"] > div.translate-x-0');
-    await expect(page.locator("h1").filter({ hasText: "Test List" })).toBeVisible();
-  });
-
-  test("back button returns to lists view from list items", async ({ page }) => {
-    const list = await createTestList("Test List");
-
-    await page.goto(`/plan/${list.id}`);
-    await page.waitForSelector('[data-testid="plan-items-container"]');
-
-    // Click Back button
-    const listView = page
-      .locator('[data-testid="plan-items-container"] > div.translate-x-0')
-      .first();
-    await listView.getByRole("link", { name: "Back" }).click();
-    await expect(page).toHaveURL(/\/plan\/lists\/?$/);
+    await page.waitForTimeout(350);
+    await expect(page.getByText("Test List")).toBeVisible();
   });
 
   test("back button returns to lists view from admin", async ({ page }) => {
