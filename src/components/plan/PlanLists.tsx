@@ -2,6 +2,7 @@ import { component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
 import { Link } from "@builder.io/qwik-city";
 import type { PlanList } from "~/db/plan";
 import AdminButton from "~/components/shared/AdminButton";
+import BackButton from "~/components/shared/BackButton";
 
 export default component$(() => {
   const lists = useSignal<PlanList[]>([]);

@@ -35,10 +35,14 @@ test.describe("plan", () => {
     const list1 = `__E2E_LIST_1__${Date.now()}`;
     const list2 = `__E2E_LIST_2__${Date.now() + 1}`;
     await page.getByPlaceholder("New list title...").fill(list1);
+    const addResp1 = page.waitForResponse(r => r.url().includes('/api/plan/lists') && r.request().method() === 'POST');
     await page.getByRole("button", { name: "Add List" }).click();
+    await addResp1;
     await expect(page.locator("li").filter({ hasText: list1 })).toBeVisible({ timeout: 5000 });
     await page.getByPlaceholder("New list title...").fill(list2);
+    const addResp2 = page.waitForResponse(r => r.url().includes('/api/plan/lists') && r.request().method() === 'POST');
     await page.getByRole("button", { name: "Add List" }).click();
+    await addResp2;
     await expect(page.locator("li").filter({ hasText: list2 })).toBeVisible({ timeout: 5000 });
     // Verify list1 is first, list2 is second
     const items = page.locator("li");
@@ -52,9 +56,12 @@ test.describe("plan", () => {
     await expect(items.first()).toContainText(list2);
     await expect(items.nth(1)).toContainText(list1);
     // Delete list1 - double-click confirmation
-    const deleteBtn = firstItem.locator('button[aria-label="Delete"]');
+    const deleteBtn = page.locator("li").filter({ hasText: list1 }).first().locator('button[aria-label="Delete"]');
     await deleteBtn.click();
-    await expect(deleteBtn).toHaveClass(/animate-pulse/);
+    await expect(deleteBtn).toHaveClass(/animate-bounce/);
+    // Small delay to let Qwik signal propagate
+    await page.waitForTimeout(100);
+    // Click again to confirm - locators are lazy, will re-query on click
     await deleteBtn.click();
     await expect(page.getByText(list1)).not.toBeVisible();
   });
@@ -65,7 +72,9 @@ test.describe("plan", () => {
     await page.waitForSelector('[data-testid="plan-admin"]');
     const testListName = `__E2E_NAV_LIST__${Date.now()}`;
     await page.getByPlaceholder("New list title...").fill(testListName);
+    const addResp = page.waitForResponse(r => r.url().includes('/api/plan/lists') && r.request().method() === 'POST');
     await page.getByRole("button", { name: "Add List" }).click();
+    await addResp;
     await expect(page.getByText(testListName)).toBeVisible();
 
     // Go to lists view and click the list
@@ -193,11 +202,11 @@ test.describe("plan", () => {
     // Get the remove button specifically for this item row
     const trashButton = page.locator("li").filter({ hasText: "Item to Remove" }).getByRole("button", { name: "Remove", exact: true });
 
-    // First click - should show checkmark (button gets animate-pulse)
+    // First click - should show checkmark (button gets animate-bounce)
     await trashButton.click();
-    await expect(trashButton).toHaveClass(/animate-pulse/);
+    await expect(trashButton).toHaveClass(/animate-bounce/);
 
-    // Click checkmark to confirm
+    // Click again to confirm - locators are lazy, will re-query on click
     await trashButton.click();
     // Wait for item to disappear
     await page.waitForSelector('text="Item to Remove"', { state: 'detached' });
@@ -212,11 +221,11 @@ test.describe("plan", () => {
     await page.waitForSelector('[data-testid="plan-items-container"]');
     const removeAllBtn = page.getByRole("button", { name: "Remove all" });
 
-    // First click - should show checkmark (button gets animate-pulse)
+    // First click - should show checkmark (button gets animate-bounce)
     await removeAllBtn.click();
-    await expect(removeAllBtn).toHaveClass(/animate-pulse/);
+    await expect(removeAllBtn).toHaveClass(/animate-bounce/);
 
-    // Click checkmark to confirm
+    // Click again to confirm - locators are lazy
     await removeAllBtn.click();
     // Wait for items to be removed
     await page.waitForSelector('text="No items yet"');
@@ -228,16 +237,18 @@ test.describe("plan", () => {
 
     const listName = `__E2E_LIST_${Date.now()}`;
     await page.getByPlaceholder("New list title...").fill(listName);
+    const addResp = page.waitForResponse(r => r.url().includes('/api/plan/lists') && r.request().method() === 'POST');
     await page.getByRole("button", { name: "Add List" }).click();
+    await addResp;
     await expect(page.getByText(listName)).toBeVisible();
 
     const trashButton = page.locator("li").filter({ hasText: listName }).locator('button[aria-label="Delete"]');
 
-    // First click - should show checkmark (button gets animate-pulse)
+    // First click - should show checkmark (button gets animate-bounce)
     await trashButton.click();
-    await expect(trashButton).toHaveClass(/animate-pulse/);
+    await expect(trashButton).toHaveClass(/animate-bounce/);
 
-    // Click checkmark to confirm
+    // Click again to confirm - locators are lazy
     await trashButton.click();
     // Wait for list to disappear
     await page.waitForSelector(`text="${listName}"`, { state: 'detached' });
