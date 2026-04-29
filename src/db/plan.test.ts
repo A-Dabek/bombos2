@@ -20,6 +20,7 @@ import { runMigrations } from "./migrations.ts";
 test("getPlanLists returns lists in display_order", () => {
   const db = new Database(":memory:");
   runMigrations(db);
+  db.exec("DELETE FROM plan_lists");
 
   createPlanList("List 1", 1, db);
   createPlanList("List 2", 0, db);
@@ -68,6 +69,7 @@ test("updatePlanListOrder updates order correctly", () => {
 test("deletePlanList removes list and cascades to items", () => {
   const db = new Database(":memory:");
   runMigrations(db);
+  db.exec("DELETE FROM plan_lists");
 
   const listId = createPlanList("Test List", 0, db);
   createPlanItem(listId, "Item 1", "Description 1", 1, db);
