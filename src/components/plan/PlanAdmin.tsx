@@ -1,12 +1,14 @@
 import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
 import { Link } from "@builder.io/qwik-city";
-import { HiArrowLeftOutline, HiPlusOutline, HiArrowUpOutline, HiArrowDownOutline, HiTrashOutline } from "@qwikest/icons/heroicons";
+import { HiArrowLeftOutline, HiPlusOutline, HiArrowUpOutline, HiArrowDownOutline, HiTrashOutline, HiCheckCircleSolid } from "@qwikest/icons/heroicons";
 import type { PlanList } from "~/db/plan";
 
 export default component$(() => {
   const lists = useSignal<PlanList[]>([]);
   const newListTitle = useSignal("");
   const isLoaded = useSignal(false);
+  const deleteConfirm = useSignal<number | null>(null);
+  const deleteTimers = useSignal<Map<number, number>>(new Map());
 
   useVisibleTask$(async () => {
     try {
@@ -60,6 +62,28 @@ export default component$(() => {
   });
 
   const handleDelete = $(async (id: number) => {
+    if (deleteConfirm.value !== id) {
+      // First click - show confirmation
+      deleteConfirm.value = id;
+      const timer = window.setTimeout(() => {
+        deleteConfirm.value = null;
+      }, 2000);
+      const timers = deleteTimers.value;
+      timers.set(id, timer);
+      deleteTimers.value = new Map(timers);
+      return;
+    }
+
+    // Second click within timeout - execute
+    const timers = deleteTimers.value;
+    const timer = timers.get(id);
+    if (timer) {
+      window.clearTimeout(timer);
+      timers.delete(id);
+      deleteTimers.value = new Map(timers);
+    }
+    deleteConfirm.value = null;
+
     const response = await fetch(`/api/plan/lists/${id}`, {
       method: "DELETE",
     });
@@ -67,6 +91,13 @@ export default component$(() => {
     if (response.ok) {
       lists.value = lists.value.filter((l) => l.id !== id);
     }
+  });
+
+  // Cleanup timers on unmount
+  useVisibleTask$(() => {
+    return () => {
+      deleteTimers.value.forEach((timer) => window.clearTimeout(timer));
+    };
   });
 
   return (
@@ -129,10 +160,14 @@ export default component$(() => {
                 </button>
                 <button
                   onClick$={() => handleDelete(list.id)}
-                  class="p-1 text-red-500 hover:text-red-700"
+                  class={`p-1 ${deleteConfirm.value === list.id ? "text-green-500 animate-bounce" : "text-red-500 hover:text-red-700"}`}
                   aria-label="Delete"
                 >
-                  <HiTrashOutline class="w-5 h-5" />
+                  {deleteConfirm.value === list.id ? (
+                    <HiCheckCircleSolid class="w-5 h-5" />
+                  ) : (
+                    <HiTrashOutline class="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </li>
