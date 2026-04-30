@@ -36,7 +36,7 @@
     "atomic": {
       "agent": "planner",
       "description": "Plan the next steps",
-      "template": "Based on the plan, create another document where you define this plan a series of atomic tasks/changes, so that each one can be done as a separate change."
+      "template": "Based on the plan, create another document where you define this plan a series of atomic tasks/changes, so that each one can be done as a separate change. The slices should be vertical so each is a delivarable."
     },
     "finish": {
       "agent": "caveman",

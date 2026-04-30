@@ -25,7 +25,6 @@ export function getAllowanceConfig(
     "SELECT id, day_of_month, monthly_amount, updated_at FROM allowance_config WHERE id = 1",
   ).raw(true).all() as unknown[][];
   if (rows.length === 0) {
-    // Seed defaults
     dbConn.prepare(
       "INSERT OR IGNORE INTO allowance_config (id, day_of_month, monthly_amount) VALUES (1, 15, 600)",
     ).run();
@@ -66,7 +65,6 @@ export function getTransactionsGroupedByPeriod(
 
   for (const tx of transactions) {
     if (tx.type === "allowance") {
-      // New period starts
       const date = new Date(tx.created_at * 1000);
       const monthName = date.toLocaleString("en-US", { month: "long" });
       const day = date.getDate();
@@ -83,7 +81,6 @@ export function getTransactionsGroupedByPeriod(
       currentGroup.transactions.push(tx);
       currentGroup.totalInGroup += tx.type === "expense" ? -tx.amount : tx.amount;
     } else {
-      // No allowance period yet — use "Transactions" as label
       if (!currentGroup) {
         currentGroup = {
           periodLabel: "Transactions",
@@ -142,4 +139,51 @@ export function addAllowanceTransaction(
   ).run(type, description, amount, newBalance);
 
   return Number(result.lastInsertRowid);
+}
+
+export function deleteLastTransaction(
+  db?: Database.Database,
+): { success: boolean; newBalance: number } {
+  const dbConn = db ?? getDb();
+
+  const lastRow = dbConn.prepare(
+    "SELECT id FROM allowance_transactions ORDER BY id DESC LIMIT 1",
+  ).raw(true).get() as unknown[][];
+
+  if (!lastRow) return { success: false, newBalance: 0 };
+
+  const lastId = lastRow[0] as number;
+
+  dbConn.prepare("DELETE FROM allowance_transactions WHERE id = ?").run(lastId);
+
+  // Recalculate all balances
+  const allTx = dbConn.prepare(
+    "SELECT id, type, amount FROM allowance_transactions ORDER BY id ASC",
+  ).raw(true).all() as unknown[][];
+
+  let runningBalance = 0;
+  for (const row of allTx) {
+    const type = row[1] as string;
+    const amount = row[2] as number;
+    runningBalance += type === "expense" ? -amount : amount;
+    dbConn.prepare(
+      "UPDATE allowance_transactions SET balance_after = ? WHERE id = ?",
+    ).run(runningBalance, row[0] as number);
+  }
+
+  return { success: true, newBalance: runningBalance };
+}
+
+export function updateAllowanceConfig(
+  day_of_month: number,
+  monthly_amount: number,
+  db?: Database.Database,
+): AllowanceConfig {
+  const dbConn = db ?? getDb();
+
+  dbConn.prepare(
+    "UPDATE allowance_config SET day_of_month = ?, monthly_amount = ?, updated_at = ? WHERE id = 1",
+  ).run(day_of_month, monthly_amount, Math.floor(Date.now() / 1000));
+
+  return getAllowanceConfig(dbConn);
 }

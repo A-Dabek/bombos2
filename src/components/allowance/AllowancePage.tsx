@@ -64,6 +64,34 @@ export default component$(() => {
     }
   });
 
+  const handleDelete = $(async (id: number) => {
+    error.value = null;
+    try {
+      const res = await fetch(`/api/allowance/transactions/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to delete");
+      }
+      await loadData();
+    } catch (e: any) {
+      error.value = e.message;
+    }
+  });
+
+  // Get the last transaction id (highest id) for delete button visibility
+  const getLastTransactionId = (): number | null => {
+    for (const group of groups.value) {
+      if (group.transactions && group.transactions.length > 0) {
+        return group.transactions[0].id; // transactions are in DESC order
+      }
+    }
+    return null;
+  };
+
+  const lastTxId = getLastTransactionId();
+
   return (
     <div class="p-4">
       <h1 class="text-xl font-semibold">Allowance</h1>
@@ -134,6 +162,17 @@ export default component$(() => {
                     <span class="ml-4 text-gray-500">
                       ({tx.balance_after >= 0 ? "+" : ""}{tx.balance_after})
                     </span>
+                    {/* Delete button - only on last transaction */}
+                    {tx.id === lastTxId && (
+                      <button
+                        data-testid="delete-last-tx"
+                        onClick$={() => handleDelete(tx.id)}
+                        class="ml-2 text-red-500 hover:text-red-700 text-xs"
+                        title="Delete"
+                      >
+                        X
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>

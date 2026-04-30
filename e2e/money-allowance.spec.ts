@@ -3,6 +3,11 @@ import { test, expect } from "@playwright/test";
 test.describe("allowance page - balance and config display", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/money/allowance");
+    // Reset config to defaults before each test
+    await page.request.post("/api/allowance/config", {
+      data: { day_of_month: 15, monthly_amount: 600 },
+    });
+    await page.reload();
   });
 
   test("balance shows 0 by default", async ({ page }) => {
@@ -18,6 +23,50 @@ test.describe("allowance page - balance and config display", () => {
     await expect(adminButton).toBeVisible();
     await adminButton.click();
     await expect(page).toHaveURL(/\/money\/allowance\/admin\/?$/);
+  });
+});
+
+test.describe("allowance admin page - config update", () => {
+  test.beforeEach(async ({ page }) => {
+    // Reset config to defaults first
+    await page.request.post("/api/allowance/config", {
+      data: { day_of_month: 15, monthly_amount: 600 },
+    });
+    await page.goto("/money/allowance/admin");
+    await page.waitForLoadState("networkidle");
+  });
+
+  test("config form loads with current values", async ({ page }) => {
+    const dayInput = page.locator("input[type='number']").first();
+    const amountInput = page.locator("input[type='number']").nth(1);
+    await expect(dayInput).toHaveValue("15");
+    await expect(amountInput).toHaveValue("600");
+  });
+
+  test("update day and amount, verify on allowance page", async ({ page }) => {
+    const dayInput = page.locator("input[type='number']").first();
+    const amountInput = page.locator("input[type='number']").nth(1);
+
+    // Update values
+    await dayInput.fill("20");
+    await amountInput.fill("800");
+
+    // Click save and wait for response
+    const saveButton = page.getByRole("button", { name: "Save" });
+    const responsePromise = page.waitForResponse(
+      (res) => res.url().includes("/api/allowance/config") && res.request().method() === "POST"
+    );
+    await saveButton.click();
+    await responsePromise;
+
+    // Wait for success message
+    await expect(page.getByTestId("save-success")).toBeVisible();
+
+    // Navigate back to allowance page
+    await page.goto("/money/allowance");
+
+    // Verify monthly income shows updated values
+    await expect(page.getByText("monthly: +800")).toBeVisible();
   });
 });
 
@@ -73,5 +122,30 @@ test.describe("allowance page - transaction list with grouping", () => {
     // Income amount should be green
     const incomeAmount = page.locator("text=+100").first();
     await expect(incomeAmount).toHaveClass(/text-green-600/);
+  });
+
+  test("delete last transaction removes it and updates balance", async ({ page }) => {
+    const ts = Date.now();
+    const firstDesc = `First-${ts}`;
+    const secondDesc = `Second-${ts}`;
+
+    // Add two transactions
+    await page.getByPlaceholder("Description").fill(firstDesc);
+    await page.getByPlaceholder("Amount (negative for expense)").fill("100");
+    await page.getByRole("button", { name: "Add" }).click();
+    await page.getByPlaceholder("Description").fill(secondDesc);
+    await page.getByPlaceholder("Amount (negative for expense)").fill("50");
+    await page.getByRole("button", { name: "Add" }).click();
+
+    // Wait for both to appear
+    await expect(page.getByText(firstDesc).first()).toBeVisible();
+    await expect(page.getByText(secondDesc).first()).toBeVisible();
+
+    // Click delete on the last transaction
+    await page.getByTestId("delete-last-tx").click();
+
+    // Wait for the second transaction to disappear
+    await expect(page.getByText(secondDesc)).not.toBeVisible();
+    await expect(page.getByText(firstDesc).first()).toBeVisible();
   });
 });

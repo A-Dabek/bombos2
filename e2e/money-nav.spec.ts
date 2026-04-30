@@ -21,8 +21,8 @@ test.describe("money navigation and sub-nav", () => {
     await expect(allowanceTab).toHaveAttribute("class", /text-blue-600/);
   });
 
-  test("Allowance placeholder text visible", async ({ page }) => {
-    await expect(page.getByText("Allowance coming soon.")).toBeVisible();
+  test("Allowance page heading visible", async ({ page }) => {
+    await expect(page.getByRole("heading", { name: "Allowance" })).toBeVisible();
   });
 
   test("navigate to Balance tab", async ({ page }) => {
