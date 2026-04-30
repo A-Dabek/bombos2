@@ -1,5 +1,6 @@
 import cron from "node-cron";
 import { deleteCompletedParcels } from "../db/parcels.ts";
+import { checkAndAddAllowance } from "../db/allowance.ts";
 
 let started = false;
 
@@ -18,6 +19,20 @@ function runCleanup(): void {
   }
 }
 
+function runAllowanceCheck(): void {
+  log("allowance", "Checking if allowance should be added");
+  try {
+    const result = checkAndAddAllowance();
+    if (result.added) {
+      log("allowance", `Added allowance. New balance: ${result.newBalance}`);
+    } else {
+      log("allowance", "No allowance to add today");
+    }
+  } catch (err) {
+    log("error", `Failed to check/add allowance: ${err}`);
+  }
+}
+
 export function startScheduler(): void {
   if (started) {
     log("init", "Scheduler already started, skipping");
@@ -29,7 +44,8 @@ export function startScheduler(): void {
 
   cron.schedule("0 4 * * *", () => {
     runCleanup();
+    runAllowanceCheck();
   });
 
-  log("init", "Scheduled daily cleanup at 04:00 UTC");
+  log("init", "Scheduled daily cleanup + allowance check at 04:00 UTC");
 }

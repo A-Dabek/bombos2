@@ -174,6 +174,36 @@ export function deleteLastTransaction(
   return { success: true, newBalance: runningBalance };
 }
 
+export function checkAndAddAllowance(
+  db?: Database.Database,
+): { added: boolean; newBalance: number } {
+  const dbConn = db ?? getDb();
+  const config = getAllowanceConfig(dbConn);
+  const now = new Date();
+  const today = now.getDate();
+
+  // Check if today is the allowance day
+  if (today !== config.day_of_month) {
+    return { added: false, newBalance: getCurrentBalance(dbConn) };
+  }
+
+  // Check if allowance already added for this month
+  const currentMonth = now.toISOString().slice(0, 7); // YYYY-MM
+  const existing = dbConn.prepare(
+    "SELECT id FROM allowance_transactions WHERE type = 'allowance' AND created_at >= ? AND created_at < ?",
+  ).raw(true).get() as unknown[][];
+
+  if (existing && existing.length > 0) {
+    return { added: false, newBalance: getCurrentBalance(dbConn) };
+  }
+
+  // Add allowance transaction
+  const description = `${now.toLocaleString("en-US", { month: "long" })} allowance`;
+  addAllowanceTransaction("allowance", description, config.monthly_amount, dbConn);
+
+  return { added: true, newBalance: getCurrentBalance(dbConn) };
+}
+
 export function updateAllowanceConfig(
   day_of_month: number,
   monthly_amount: number,
