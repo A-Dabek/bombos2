@@ -1,7 +1,7 @@
 # ADR-016: Money Module - Allowance Sub-Module
 
 ## Status
-Proposed
+Accepted (Implemented 2026-04-30)
 
 ## Context
 The Money module needs its first functional sub-module: Allowance. This tracks monthly allowance income and expenses as a simple account balance with transaction history. The user wants to see their current balance, monthly income setting, and a transaction list grouped by allowance periods.
@@ -62,8 +62,10 @@ Implement the Allowance sub-module with:
 
 ## Implementation Notes
 - Migration: `010_allowance.sql`
-- DB layer: `src/db/allowance.ts`
-- API routes: `/api/allowance/config`, `/api/allowance/transactions`
+- DB layer: `src/db/allowance.ts` (9 functions: getAllowanceConfig, getCurrentBalance, getTransactionsGroupedByPeriod, getAllowanceTransactions, addAllowanceTransaction, deleteLastTransaction, updateAllowanceConfig, checkAndAddAllowance)
+- API routes: `/api/allowance/config` (GET/POST), `/api/allowance/transactions` (GET/DELETE)
 - Pages: `/money/layout.tsx`, `/money/allowance/index.tsx`, `/money/allowance/admin/index.tsx`
-- Components: `MoneySubNav`, `AllowancePage`, `AllowanceAdmin`
-- Tests: `src/db/allowance.test.ts`
+- Components: `MoneySubNav`, `AllowancePage`, `AllowanceAdmin`, shared `SubNav` component
+- Tests: `src/db/allowance.test.ts` (16 unit tests), `e2e/money-allowance.spec.ts` (10 e2e tests), `e2e/money-nav.spec.ts` (7 e2e tests)
+- Scheduler: Integrated into `src/server/scheduler.ts` daily 04:00 cron job
+- All 45 DB tests pass, all 59 e2e tests pass
