@@ -45,16 +45,19 @@ export default component$(({
 }: PlanAccordionListProps) => {
   return (
     <div
-      class={`transition-[max-height] duration-300 ease-in-out ${
-        isExpanded ? "max-h-[1000px]" : "max-h-0"
-      } ${isExpanded && formMode !== "none" ? "overflow-visible" : "overflow-hidden"}`}
-      style={isExpanded && formMode !== "none" ? "min-height: 300px;" : ""}
+      class={`overflow-hidden transition-[max-height] duration-300 ease-in-out ${
+        isExpanded
+          ? formMode !== "none"
+            ? "max-h-[2000px]"
+            : "max-h-[1000px]"
+          : "max-h-0"
+      }`}
     >
       <div class="relative" style="min-height: 100px;">
         {/* Items View */}
         <div
           class={`transition-transform duration-300 ease-in-out ${
-            formMode === "none" ? "translate-x-0" : "-translate-x-full"
+            formMode === "none" ? "translate-x-0" : "-translate-x-full hidden"
           }`}
         >
           <div class="p-4">
@@ -121,7 +124,9 @@ export default component$(({
 
         {/* Form View - slides in from right */}
         <div
-          class={`absolute top-0 left-0 w-full transition-transform duration-300 ease-in-out bg-white ${
+          class={`${
+            formMode !== "none" ? "relative" : "absolute"
+          } top-0 left-0 w-full transition-transform duration-300 ease-in-out bg-white ${
             formMode !== "none" ? "translate-x-0" : "translate-x-full"
           }`}
           style={formMode !== "none" ? "min-height: 200px;" : ""}
