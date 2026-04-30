@@ -9,9 +9,10 @@ export default component$(() => {
   const description = useSignal("");
   const amount = useSignal<string>("");
   const loading = useSignal(false);
+  const groups = useSignal<any[]>([]);
   const nav = useNavigate();
 
-  useVisibleTask$(async () => {
+  const loadData = $(async () => {
     try {
       const res = await fetch("/api/allowance/config");
       if (!res.ok) throw new Error("Failed to load config");
@@ -25,10 +26,15 @@ export default component$(() => {
       if (res.ok) {
         const data = await res.json();
         balance.value = data.balance ?? 0;
+        groups.value = data.groups ?? [];
       }
     } catch {
-      // Balance stays 0
+      // Ignore
     }
+  });
+
+  useVisibleTask$(async () => {
+    await loadData();
   });
 
   const handleAdd = $(async () => {
@@ -48,9 +54,7 @@ export default component$(() => {
         const err = await res.json();
         throw new Error(err.message || "Failed to add transaction");
       }
-      // Refresh
-      const data = await (await fetch("/api/allowance/transactions")).json();
-      balance.value = data.balance ?? 0;
+      await loadData();
       description.value = "";
       amount.value = "";
     } catch (e: any) {
@@ -108,6 +112,35 @@ export default component$(() => {
           {loading.value ? "Adding..." : "Add"}
         </button>
       </form>
+
+      {/* Transaction Groups */}
+      {groups.value.length > 0 && (
+        <div class="mt-6 space-y-4">
+          {groups.value.map((group) => (
+            <div key={group.periodLabel}>
+              <div class="flex items-center gap-2 border-b border-gray-200 pb-1">
+                <span class="text-sm font-semibold text-gray-700">{group.periodLabel}</span>
+                <span class="ml-auto text-sm text-gray-500">
+                  {group.totalInGroup >= 0 ? "+" : ""}{group.totalInGroup}
+                </span>
+              </div>
+              <div class="divide-y divide-gray-100">
+                {group.transactions.map((tx: any) => (
+                  <div key={tx.id} class="flex items-center py-2 text-sm">
+                    <span class="flex-1 text-gray-800">{tx.description}</span>
+                    <span class={tx.type === "expense" ? "text-red-600" : "text-green-600"}>
+                      {tx.type === "expense" ? "-" : "+"}{tx.amount}
+                    </span>
+                    <span class="ml-4 text-gray-500">
+                      ({tx.balance_after >= 0 ? "+" : ""}{tx.balance_after})
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <a
         href="/money/allowance/admin"

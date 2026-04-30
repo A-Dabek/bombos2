@@ -1,14 +1,14 @@
 import { RequestHandler } from "@builder.io/qwik-city";
 import {
-  getAllowanceTransactions,
+  getTransactionsGroupedByPeriod,
   addAllowanceTransaction,
   getCurrentBalance,
 } from "~/db/allowance";
 
 export const onGet: RequestHandler = async ({ json }) => {
-  const transactions = getAllowanceTransactions();
+  const groups = getTransactionsGroupedByPeriod();
   const balance = getCurrentBalance();
-  json(200, { transactions, balance });
+  json(200, { groups, balance });
 };
 
 export const onPost: RequestHandler = async ({ parseBody, json, error }) => {
@@ -22,6 +22,6 @@ export const onPost: RequestHandler = async ({ parseBody, json, error }) => {
 
   const type = amount > 0 ? "income" as const : "expense" as const;
   const id = addAllowanceTransaction(type, description, Math.abs(amount));
-  const transaction = getAllowanceTransactions().find((t) => t.id === id);
-  json(201, transaction);
+  const balance = getCurrentBalance();
+  json(201, { id, type, description, amount: Math.abs(amount), balance });
 };

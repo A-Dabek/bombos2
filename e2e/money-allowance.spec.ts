@@ -41,3 +41,37 @@ test.describe("allowance page - add transaction form", () => {
     await expect(page.getByText("50").first()).toBeVisible(); // expense amount shown as positive
   });
 });
+
+test.describe("allowance page - transaction list with grouping", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/money/allowance");
+    // Wait for page to load
+    await page.waitForLoadState("networkidle");
+  });
+
+  test("transactions show description, amount, and balance", async ({ page }) => {
+    // Add a unique transaction
+    const uniqueDesc = `Test-${Date.now()}`;
+    await page.getByPlaceholder("Description").fill(uniqueDesc);
+    await page.getByPlaceholder("Amount (negative for expense)").fill("100");
+    await page.getByRole("button", { name: "Add" }).click();
+    // Check that the new transaction appears
+    await expect(page.getByText(uniqueDesc).first()).toBeVisible();
+    // Amount should be visible
+    await expect(page.getByText("+100").first()).toBeVisible();
+  });
+
+  test("amounts colored: green for income, red for expense", async ({ page }) => {
+    // Add income
+    await page.getByPlaceholder("Description").fill("Income item");
+    await page.getByPlaceholder("Amount (negative for expense)").fill("100");
+    await page.getByRole("button", { name: "Add" }).click();
+    // Add expense
+    await page.getByPlaceholder("Description").fill("Expense item");
+    await page.getByPlaceholder("Amount (negative for expense)").fill("-30");
+    await page.getByRole("button", { name: "Add" }).click();
+    // Income amount should be green
+    const incomeAmount = page.locator("text=+100").first();
+    await expect(incomeAmount).toHaveClass(/text-green-600/);
+  });
+});

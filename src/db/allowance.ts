@@ -51,7 +51,64 @@ export function getCurrentBalance(
   return rows[0][0] as number;
 }
 
-export interface AllowanceTransactionWithBalance extends AllowanceTransaction {}
+export interface TransactionGroup {
+  periodLabel: string;
+  transactions: AllowanceTransaction[];
+  totalInGroup: number;
+}
+
+export function getTransactionsGroupedByPeriod(
+  db?: Database.Database,
+): TransactionGroup[] {
+  const transactions = getAllowanceTransactions(db);
+  const groups: TransactionGroup[] = [];
+  let currentGroup: TransactionGroup | null = null;
+
+  for (const tx of transactions) {
+    if (tx.type === "allowance") {
+      // New period starts
+      const date = new Date(tx.created_at * 1000);
+      const monthName = date.toLocaleString("en-US", { month: "long" });
+      const day = date.getDate();
+      const ordinal = getOrdinal(day);
+      const periodLabel = `${monthName} ${day}${ordinal}`;
+
+      currentGroup = {
+        periodLabel,
+        transactions: [tx],
+        totalInGroup: tx.amount,
+      };
+      groups.push(currentGroup);
+    } else if (currentGroup) {
+      currentGroup.transactions.push(tx);
+      currentGroup.totalInGroup += tx.type === "expense" ? -tx.amount : tx.amount;
+    } else {
+      // No allowance period yet — use "Transactions" as label
+      if (!currentGroup) {
+        currentGroup = {
+          periodLabel: "Transactions",
+          transactions: [],
+          totalInGroup: 0,
+        };
+        groups.push(currentGroup);
+      }
+      currentGroup.transactions.push(tx);
+      currentGroup.totalInGroup += tx.type === "expense" ? -tx.amount : tx.amount;
+    }
+  }
+
+  return groups;
+}
+
+function getOrdinal(day: number): string {
+  if (day >= 11 && day <= 13) return "th";
+  switch (day % 10) {
+    case 1: return "st";
+    case 2: return "nd";
+    case 3: return "rd";
+    default: return "th";
+  }
+}
 
 export function getAllowanceTransactions(
   db?: Database.Database,
