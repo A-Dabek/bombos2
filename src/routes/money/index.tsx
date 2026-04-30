@@ -1,13 +1,16 @@
-import { component$ } from "@builder.io/qwik";
+import { component$, useNavigate } from "@builder.io/qwik";
+import { useLocation } from "@builder.io/qwik-city";
 import type { DocumentHead } from "@builder.io/qwik-city";
 
 export default component$(() => {
-  return (
-    <div class="p-4">
-      <h1 class="text-xl font-semibold">Money</h1>
-      <p class="mt-2 text-gray-600">Placeholder for money module.</p>
-    </div>
-  );
+  const nav = useNavigate();
+  const loc = useLocation();
+
+  if (loc.url.pathname === "/money" || loc.url.pathname === "/money/") {
+    nav("/money/allowance");
+  }
+
+  return null;
 });
 
 export const head: DocumentHead = {
