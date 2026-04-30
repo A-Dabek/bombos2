@@ -59,7 +59,21 @@ export interface TransactionGroup {
 export function getTransactionsGroupedByPeriod(
   db?: Database.Database,
 ): TransactionGroup[] {
-  const transactions = getAllowanceTransactions(db);
+  const dbConn = db ?? getDb();
+  // Get transactions in ASC order (oldest first) for proper grouping
+  const rows = dbConn.prepare(
+    "SELECT id, type, description, amount, balance_after, created_at FROM allowance_transactions ORDER BY id ASC",
+  ).raw(true).all() as unknown[][];
+
+  const transactions: AllowanceTransaction[] = rows.map((row) => ({
+    id: row[0] as number,
+    type: row[1] as "allowance" | "expense" | "income",
+    description: row[2] as string,
+    amount: row[3] as number,
+    balance_after: row[4] as number,
+    created_at: row[5] as number,
+  }));
+
   const groups: TransactionGroup[] = [];
   let currentGroup: TransactionGroup | null = null;
 
@@ -92,6 +106,13 @@ export function getTransactionsGroupedByPeriod(
       currentGroup.transactions.push(tx);
       currentGroup.totalInGroup += tx.type === "expense" ? -tx.amount : tx.amount;
     }
+  }
+
+  // Reverse groups so newest period appears first (for UI display)
+  groups.reverse();
+  // Also reverse transactions within each group so newest appears first
+  for (const group of groups) {
+    group.transactions.reverse();
   }
 
   return groups;
@@ -188,10 +209,14 @@ export function checkAndAddAllowance(
   }
 
   // Check if allowance already added for this month
-  const currentMonth = now.toISOString().slice(0, 7); // YYYY-MM
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const startOfMonth = Math.floor(new Date(year, month, 1).getTime() / 1000);
+  const startOfNextMonth = Math.floor(new Date(year, month + 1, 1).getTime() / 1000);
+
   const existing = dbConn.prepare(
     "SELECT id FROM allowance_transactions WHERE type = 'allowance' AND created_at >= ? AND created_at < ?",
-  ).raw(true).get() as unknown[][];
+  ).raw(true).get(startOfMonth, startOfNextMonth) as unknown[][];
 
   if (existing && existing.length > 0) {
     return { added: false, newBalance: getCurrentBalance(dbConn) };
