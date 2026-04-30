@@ -201,7 +201,7 @@ export default component$(() => {
                       isExpanded={isExpanded}
                       items={cachedData.items}
                       isLoading={isLoading}
-                      formMode={formMode.value}
+                      formMode={isExpanded ? formMode.value : "none"}
                       activeItemId={activeItemId.value}
                       itemConfirm={itemConfirm.value}
                       onItemClick$={handleItemClick}
@@ -213,7 +213,7 @@ export default component$(() => {
                       removeAllConfirm={removeAllConfirm.value}
                       onSave$={(name, desc, amt) => handleSave(list.id, name, desc, amt)}
                       onCancel$= {handleCancel}
-                      editingItem={editingItem.value}
+                      editingItem={isExpanded ? editingItem.value : null}
                     />
                   )}
                 </li>
