@@ -1,5 +1,6 @@
 import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
 import type { AllowanceConfig } from "~/db/allowance";
+import BackButton from "~/components/shared/BackButton";
 
 export default component$(() => {
   const config = useSignal<AllowanceConfig | null>(null);
@@ -55,6 +56,7 @@ export default component$(() => {
 
   return (
     <div class="p-4">
+      <BackButton href="/money/allowance" />
       <h1 class="text-xl font-semibold">Allowance Admin</h1>
 
       {error.value && (
