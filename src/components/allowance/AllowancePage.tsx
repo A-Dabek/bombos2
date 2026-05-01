@@ -144,7 +144,7 @@ export default component$(() => {
         <div class="mt-6 space-y-4">
           {groups.value.map((group) => (
             <div key={group.periodLabel}>
-              <div class="flex items-center gap-2 border-b border-gray-200 pb-1">
+              <div data-testid="period-header" class="flex items-center gap-2 border-b border-gray-200 pb-1">
                 <span class="text-sm font-semibold text-gray-700">{group.periodLabel}</span>
                 <span class="ml-auto text-sm text-gray-500">
                   {group.totalInGroup >= 0 ? "+" : ""}{group.totalInGroup}

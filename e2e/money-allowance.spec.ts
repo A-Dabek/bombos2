@@ -15,7 +15,7 @@ test.describe("allowance page - balance and config display", () => {
   });
 
   test("monthly income shows 600 with +600 exponent", async ({ page }) => {
-    await expect(page.getByText("+600")).toBeVisible();
+    await expect(page.locator(".self-start").getByText("+600")).toBeVisible();
   });
 
   test("admin button visible and links to admin page", async ({ page }) => {
@@ -147,5 +147,63 @@ test.describe("allowance page - transaction list with grouping", () => {
     // Wait for the second transaction to disappear
     await expect(page.getByText(secondDesc)).not.toBeVisible();
     await expect(page.getByText(firstDesc).first()).toBeVisible();
+  });
+});
+
+test.describe("allowance page - transaction grouping", () => {
+  test("transactions grouped by allowance periods", async ({ page }) => {
+    // Reset config to defaults
+    await page.request.post("/api/allowance/config", {
+      data: { day_of_month: 15, monthly_amount: 600 },
+    });
+
+    // Clear existing transactions by deleting them all
+    let cleared = false;
+    while (!cleared) {
+      const response = await page.request.get("/api/allowance/transactions");
+      const data = await response.json();
+      if (data.groups && data.groups.length > 0) {
+        for (const group of data.groups) {
+          for (const tx of group.transactions) {
+            await page.request.delete(`/api/allowance/transactions/${tx.id}`);
+          }
+        }
+      } else {
+        cleared = true;
+      }
+    }
+
+    // Add an allowance-type transaction via API (this starts a new period)
+    await page.request.post("/api/allowance/transactions", {
+      data: { description: "May allowance", amount: 600, type: "allowance" },
+    });
+
+    // Add an expense under this period
+    await page.request.post("/api/allowance/transactions", {
+      data: { description: "Lunch", amount: -20, type: "expense" },
+    });
+
+    // Add another allowance-type transaction (new period)
+    await page.request.post("/api/allowance/transactions", {
+      data: { description: "June allowance", amount: 600, type: "allowance" },
+    });
+
+    // Add an expense under the new period
+    await page.request.post("/api/allowance/transactions", {
+      data: { description: "Dinner", amount: -30, type: "expense" },
+    });
+
+    await page.goto("/money/allowance");
+    await page.waitForLoadState("networkidle");
+
+    // Should have at least 2 period groups (not just "Transactions")
+    const periodHeaders = page.getByTestId("period-header");
+    await expect(await periodHeaders.count()).toBeGreaterThanOrEqual(2);
+
+    // Verify period labels exist (format: "Month DayOrdinal")
+    const firstPeriod = await periodHeaders.first().textContent();
+    const secondPeriod = await periodHeaders.last().textContent();
+    expect(firstPeriod).toMatch(/[A-Z][a-z]+ \d+(st|nd|rd|th)/);
+    expect(secondPeriod).toMatch(/[A-Z][a-z]+ \d+(st|nd|rd|th)/);
   });
 });
