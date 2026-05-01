@@ -80,7 +80,8 @@ export function getTransactionsGroupedByPeriod(
   let currentGroup: TransactionGroup | null = null;
 
   for (const tx of transactions) {
-    if (tx.type === "allowance") {
+    // Each automatic allowance transaction starts a new group
+    if (tx.is_automatic && tx.type === "allowance") {
       const date = new Date(tx.created_at * 1000);
       const monthName = date.toLocaleString("en-US", { month: "long" });
       const day = date.getDate();
@@ -94,9 +95,11 @@ export function getTransactionsGroupedByPeriod(
       };
       groups.push(currentGroup);
     } else if (currentGroup) {
+      // Add to current group
       currentGroup.transactions.push(tx);
       currentGroup.totalInGroup += tx.type === "expense" ? -tx.amount : tx.amount;
     } else {
+      // No group yet, create a default one
       if (!currentGroup) {
         currentGroup = {
           periodLabel: "Transactions",
@@ -154,14 +157,17 @@ export function addAllowanceTransaction(
   amount: number,
   db?: Database.Database,
   is_automatic: boolean = false,
+  created_at?: number, // Unix timestamp in seconds
 ): number {
   const dbConn = db ?? getDb();
   const currentBalance = getCurrentBalance(dbConn);
   const newBalance = type === "expense" ? currentBalance - amount : currentBalance + amount;
 
+  const timestamp = created_at ?? Math.floor(Date.now() / 1000);
+
   const result = dbConn.prepare(
-    "INSERT INTO allowance_transactions (type, description, amount, balance_after, is_automatic) VALUES (?, ?, ?, ?, ?)",
-  ).run(type, description, amount, newBalance, is_automatic ? 1 : 0);
+    "INSERT INTO allowance_transactions (type, description, amount, balance_after, is_automatic, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+  ).run(type, description, amount, newBalance, is_automatic ? 1 : 0, timestamp);
 
   return Number(result.lastInsertRowid);
 }

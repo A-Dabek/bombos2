@@ -130,11 +130,11 @@ test("getTransactionsGroupedByPeriod groups by allowance", () => {
 test("getTransactionsGroupedByPeriod creates multiple groups", () => {
   resetDb();
   const db = openDb(":memory:");
-  // First allowance period
-  addAllowanceTransaction("allowance", "January allowance", 600, db);
+  // First allowance period - is_automatic=true starts new group
+  addAllowanceTransaction("allowance", "January allowance", 600, db, true);
   addAllowanceTransaction("expense", "Lunch", 20, db);
-  // Second allowance period
-  addAllowanceTransaction("allowance", "February allowance", 600, db);
+  // Second allowance period - is_automatic=true starts new group
+  addAllowanceTransaction("allowance", "February allowance", 600, db, true);
   addAllowanceTransaction("expense", "Groceries", 100, db);
 
   const groups = getTransactionsGroupedByPeriod(db);

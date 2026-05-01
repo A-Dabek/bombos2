@@ -55,11 +55,11 @@ export function setupAllowanceConfig(day_of_month: number, monthly_amount: numbe
   db.close();
 }
 
-export function addAllowanceTransactionSql(type: string, description: string, amount: number, is_automatic: boolean = false) {
+export function addAllowanceTransactionSql(type: string, description: string, amount: number, is_automatic: boolean = false, created_at?: number) {
   const db = new Database(DB_PATH);
   // Get current balance
   const lastTx = db.prepare("SELECT balance_after FROM allowance_transactions ORDER BY id DESC LIMIT 1").get() as { balance_after: number } | undefined;
-  const currentBalance = lastTx ? lastTx.balance_after : 0;
+  const currentBalance = lastTx ? lastTx.balance_after :0;
 
   let newBalance: number;
   if (type === "expense") {
@@ -68,9 +68,11 @@ export function addAllowanceTransactionSql(type: string, description: string, am
     newBalance = currentBalance + amount;
   }
 
+  const timestamp = created_at ?? Math.floor(Date.now() / 1000);
+
   db.prepare(
-    "INSERT INTO allowance_transactions (type, description, amount, balance_after, is_automatic) VALUES (?, ?, ?, ?, ?)"
-  ).run(type, description, amount, newBalance, is_automatic ? 1 : 0);
+    "INSERT INTO allowance_transactions (type, description, amount, balance_after, is_automatic, created_at) VALUES (?, ?, ?, ?, ?, ?)"
+  ).run(type, description, amount, newBalance, is_automatic ? 1 : 0, timestamp);
   db.close();
 }
 

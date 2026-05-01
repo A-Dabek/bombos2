@@ -153,25 +153,31 @@ test.describe("allowance page - transaction grouping", () => {
     clearAllowance();
     setupAllowanceConfig(15, 600);
 
-    // Add allowance-type transactions via SQL (bypasses API)
-    addAllowanceTransactionSql("allowance", "May allowance", 600, false);
-    addAllowanceTransactionSql("expense", "Lunch", 20, false);
+    // Create timestamps for different months
+    const mayDate = new Date(2025, 4, 15); // May 15, 2025
+    const juneDate = new Date(2025, 5, 15); // June 15, 2025
+    const mayTimestamp = Math.floor(mayDate.getTime() / 1000);
+    const juneTimestamp = Math.floor(juneDate.getTime() / 1000);
 
-    // Second allowance period
-    addAllowanceTransactionSql("allowance", "June allowance", 600, false);
-    addAllowanceTransactionSql("expense", "Dinner", 30, false);
+    // Add allowance-type transactions with is_automatic=true and specific dates
+    addAllowanceTransactionSql("allowance", "May allowance", 600, true, mayTimestamp);
+    addAllowanceTransactionSql("expense", "Lunch", 20, false, mayTimestamp + 1000);
+
+    // Second allowance period (different month)
+    addAllowanceTransactionSql("allowance", "June allowance", 600, true, juneTimestamp);
+    addAllowanceTransactionSql("expense", "Dinner", 30, false, juneTimestamp + 1000);
 
     await page.goto("/money/allowance");
     await page.waitForLoadState("networkidle");
 
-    // Should have at least 2 period groups (not just "Transactions")
+    // Should have 2 period groups
     const periodHeaders = page.getByTestId("period-header");
-    await expect(await periodHeaders.count()).toBeGreaterThanOrEqual(2);
+    await expect(await periodHeaders.count()).toBe(2);
 
-    // Verify period labels exist (format: "Month DayOrdinal")
+    // Verify period labels: "May 15th" and "June 15th"
     const firstPeriod = await periodHeaders.first().textContent();
     const secondPeriod = await periodHeaders.last().textContent();
-    expect(firstPeriod).toMatch(/[A-Z][a-z]+ \d+(st|nd|rd|th)/);
-    expect(secondPeriod).toMatch(/[A-Z][a-z]+ \d+(st|nd|rd|th)/);
+    expect(firstPeriod).toBe("June 15th"); // Newest first
+    expect(secondPeriod).toBe("May 15th");
   });
 });
