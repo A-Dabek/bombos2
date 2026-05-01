@@ -38,6 +38,13 @@ test.describe("allowance admin page - config update", () => {
     await expect(amountInput).toHaveValue("600");
   });
 
+  test("BackButton navigates to allowance page", async ({ page }) => {
+    const backButton = page.getByRole("link", { name: "Back" });
+    await expect(backButton).toBeVisible();
+    await backButton.click();
+    await expect(page).toHaveURL(/\/money\/allowance\/?$/);
+  });
+
   test("update day and amount, verify on allowance page", async ({ page }) => {
     const dayInput = page.locator("input[type='number']").first();
     const amountInput = page.locator("input[type='number']").nth(1);
