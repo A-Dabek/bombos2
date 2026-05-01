@@ -15,8 +15,8 @@ export default component$(() => {
       if (!res.ok) throw new Error("Failed to load config");
       const data: AllowanceConfig = await res.json();
       config.value = data;
-      dayOfMonth.value = String(data.day_of_month);
-      monthlyAmount.value = String(data.monthly_amount);
+      dayOfMonth.value = data.day_of_month.toString();
+      monthlyAmount.value = data.monthly_amount.toString();
     } catch (e: any) {
       error.value = e.message;
     }
@@ -75,10 +75,7 @@ export default component$(() => {
             min="1"
             max="28"
             class="mt-1 rounded border border-gray-300 px-2 py-1 text-sm w-24"
-            value={dayOfMonth.value}
-            onInput$={(e) => {
-              dayOfMonth.value = (e.target as HTMLInputElement).value;
-            }}
+            bind:value={dayOfMonth}
           />
         </div>
 
@@ -90,10 +87,7 @@ export default component$(() => {
             type="number"
             min="0"
             class="mt-1 rounded border border-gray-300 px-2 py-1 text-sm w-32"
-            value={monthlyAmount.value}
-            onInput$={(e) => {
-              monthlyAmount.value = (e.target as HTMLInputElement).value;
-            }}
+            bind:value={monthlyAmount}
           />
         </div>
 

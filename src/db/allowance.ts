@@ -5,7 +5,6 @@ export interface AllowanceConfig {
   id: number;
   day_of_month: number;
   monthly_amount: number;
-  updated_at: number;
 }
 
 export interface AllowanceTransaction {
@@ -22,33 +21,26 @@ export function getAllowanceConfig(
   db?: Database.Database,
 ): AllowanceConfig {
   const dbConn = db ?? getDb();
-  const rows = dbConn.prepare(
-    "SELECT id, day_of_month, monthly_amount, updated_at FROM allowance_config WHERE id = 1",
-  ).raw(true).all() as unknown[][];
-  if (rows.length === 0) {
+  const config = dbConn.prepare(
+    "SELECT id, day_of_month, monthly_amount FROM allowance_config WHERE id = 1",
+  ).get() as AllowanceConfig | undefined;
+  if (!config) {
     dbConn.prepare(
       "INSERT OR IGNORE INTO allowance_config (id, day_of_month, monthly_amount) VALUES (1, 15, 600)",
     ).run();
     return getAllowanceConfig(dbConn);
   }
-  const row = rows[0];
-  return {
-    id: row[0] as number,
-    day_of_month: row[1] as number,
-    monthly_amount: row[2] as number,
-    updated_at: row[3] as number,
-  };
+  return config;
 }
 
 export function getCurrentBalance(
   db?: Database.Database,
 ): number {
   const dbConn = db ?? getDb();
-  const rows = dbConn.prepare(
+  const row = dbConn.prepare(
     "SELECT balance_after FROM allowance_transactions ORDER BY id DESC LIMIT 1",
-  ).raw(true).all() as unknown[][];
-  if (rows.length === 0) return 0;
-  return rows[0][0] as number;
+  ).get() as { balance_after: number } | undefined;
+  return row?.balance_after ?? 0;
 }
 
 export interface TransactionGroup {
@@ -62,19 +54,9 @@ export function getTransactionsGroupedByPeriod(
 ): TransactionGroup[] {
   const dbConn = db ?? getDb();
   // Get transactions in ASC order (oldest first) for proper grouping
-  const rows = dbConn.prepare(
+  const transactions = dbConn.prepare(
     "SELECT id, type, description, amount, balance_after, created_at, is_automatic FROM allowance_transactions ORDER BY id ASC",
-  ).raw(true).all() as unknown[][];
-
-  const transactions: AllowanceTransaction[] = rows.map((row) => ({
-    id: row[0] as number,
-    type: row[1] as "allowance" | "expense" | "income",
-    description: row[2] as string,
-    amount: row[3] as number,
-    balance_after: row[4] as number,
-    created_at: row[5] as number,
-    is_automatic: Boolean(row[6]),
-  }));
+  ).all() as AllowanceTransaction[];
 
   const groups: TransactionGroup[] = [];
   let currentGroup: TransactionGroup | null = null;
@@ -133,22 +115,14 @@ function getOrdinal(day: number): string {
   }
 }
 
-export function getAllowanceTransactions(
+export function getLastTransactionId(
   db?: Database.Database,
-): AllowanceTransaction[] {
+): number | null {
   const dbConn = db ?? getDb();
-  const rows = dbConn.prepare(
-    "SELECT id, type, description, amount, balance_after, created_at, is_automatic FROM allowance_transactions ORDER BY id DESC",
-  ).raw(true).all() as unknown[][];
-  return rows.map((row) => ({
-    id: row[0] as number,
-    type: row[1] as "allowance" | "expense" | "income",
-    description: row[2] as string,
-    amount: row[3] as number,
-    balance_after: row[4] as number,
-    created_at: row[5] as number,
-    is_automatic: Boolean(row[6]),
-  }));
+  const row = dbConn.prepare(
+    "SELECT id FROM allowance_transactions ORDER BY id DESC LIMIT 1",
+  ).get() as { id: number } | undefined;
+  return row?.id ?? null;
 }
 
 export function addAllowanceTransaction(
@@ -179,30 +153,18 @@ export function deleteLastTransaction(
 
   const lastRow = dbConn.prepare(
     "SELECT id FROM allowance_transactions ORDER BY id DESC LIMIT 1",
-  ).raw(true).get() as unknown[][];
+  ).get() as { id: number } | undefined;
 
   if (!lastRow) return { success: false, newBalance: 0 };
 
-  const lastId = lastRow[0] as number;
+  dbConn.prepare("DELETE FROM allowance_transactions WHERE id = ?").run(lastRow.id);
 
-  dbConn.prepare("DELETE FROM allowance_transactions WHERE id = ?").run(lastId);
+  // Return balance from new last transaction (or 0 if empty)
+  const newLast = dbConn.prepare(
+    "SELECT balance_after FROM allowance_transactions ORDER BY id DESC LIMIT 1",
+  ).get() as { balance_after: number } | undefined;
 
-  // Recalculate all balances
-  const allTx = dbConn.prepare(
-    "SELECT id, type, amount FROM allowance_transactions ORDER BY id ASC",
-  ).raw(true).all() as unknown[][];
-
-  let runningBalance = 0;
-  for (const row of allTx) {
-    const type = row[1] as string;
-    const amount = row[2] as number;
-    runningBalance += type === "expense" ? -amount : amount;
-    dbConn.prepare(
-      "UPDATE allowance_transactions SET balance_after = ? WHERE id = ?",
-    ).run(runningBalance, row[0] as number);
-  }
-
-  return { success: true, newBalance: runningBalance };
+  return { success: true, newBalance: newLast?.balance_after ?? 0 };
 }
 
 export function checkAndAddAllowance(
@@ -226,9 +188,9 @@ export function checkAndAddAllowance(
 
   const existing = dbConn.prepare(
     "SELECT id FROM allowance_transactions WHERE type = 'allowance' AND created_at >= ? AND created_at < ?",
-  ).raw(true).get(startOfMonth, startOfNextMonth) as unknown[][];
+  ).get(startOfMonth, startOfNextMonth) as { id: number } | undefined;
 
-  if (existing && existing.length > 0) {
+  if (existing) {
     return { added: false, newBalance: getCurrentBalance(dbConn) };
   }
 
@@ -247,8 +209,8 @@ export function updateAllowanceConfig(
   const dbConn = db ?? getDb();
 
   dbConn.prepare(
-    "UPDATE allowance_config SET day_of_month = ?, monthly_amount = ?, updated_at = ? WHERE id = 1",
-  ).run(day_of_month, monthly_amount, Math.floor(Date.now() / 1000));
+    "UPDATE allowance_config SET day_of_month = ?, monthly_amount = ? WHERE id = 1",
+  ).run(day_of_month, monthly_amount);
 
   return getAllowanceConfig(dbConn);
 }

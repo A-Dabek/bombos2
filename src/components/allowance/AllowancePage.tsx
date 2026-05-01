@@ -1,5 +1,4 @@
 import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
-import { useNavigate } from "@builder.io/qwik-city";
 import type { AllowanceConfig } from "~/db/allowance";
 import AdminButton from "~/components/shared/AdminButton";
 
@@ -11,7 +10,7 @@ export default component$(() => {
   const amount = useSignal<string>("");
   const loading = useSignal(false);
   const groups = useSignal<any[]>([]);
-  const nav = useNavigate();
+  const lastTransactionId = useSignal<number | null>(null);
 
   const loadData = $(async () => {
     try {
@@ -28,6 +27,7 @@ export default component$(() => {
         const data = await res.json();
         balance.value = data.balance ?? 0;
         groups.value = data.groups ?? [];
+        lastTransactionId.value = data.lastTransactionId ?? null;
       }
     } catch {
       // Ignore
@@ -80,18 +80,6 @@ export default component$(() => {
       error.value = e.message;
     }
   });
-
-  // Get the last transaction id (highest id) for delete button visibility
-  const getLastTransactionId = (): number | null => {
-    for (const group of groups.value) {
-      if (group.transactions && group.transactions.length > 0) {
-        return group.transactions[0].id; // transactions are in DESC order
-      }
-    }
-    return null;
-  };
-
-  const lastTxId = getLastTransactionId();
 
   return (
     <div class="p-4">
@@ -158,7 +146,7 @@ export default component$(() => {
                       ({tx.balance_after >= 0 ? "+" : ""}{tx.balance_after})
                     </span>
                     {/* Delete button - only on last transaction */}
-                    {tx.id === lastTxId && (
+                    {tx.id === lastTransactionId.value && (
                       <button
                         data-testid="delete-last-tx"
                         onClick$={() => handleDelete(tx.id)}
