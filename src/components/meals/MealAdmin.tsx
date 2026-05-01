@@ -1,6 +1,7 @@
 import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
-import { Link, useLocation } from "@builder.io/qwik-city";
-import { HiArrowLeftSolid, HiPlusSolid, HiTrashSolid } from "@qwikest/icons/heroicons";
+import { useLocation } from "@builder.io/qwik-city";
+import { HiPlusSolid, HiTrashSolid } from "@qwikest/icons/heroicons";
+import BackButton from "~/components/shared/BackButton";
 import type { MealRow } from "~/db/meals";
 
 interface MealAdminProps {
@@ -55,15 +56,7 @@ export default component$<MealAdminProps>((props) => {
 
   return (
     <div class="min-h-screen p-4">
-      <div class="flex items-center mb-4">
-        <Link
-          href={`/meals/${props.category}`}
-          class="flex items-center text-gray-500 hover:text-gray-700"
-        >
-          <HiArrowLeftSolid class="w-5 h-5 mr-1" />
-          <span>Back</span>
-        </Link>
-      </div>
+       <BackButton href={`/meals/${props.category}`} />
 
       <div class="flex items-center mb-4 space-x-2">
         <input

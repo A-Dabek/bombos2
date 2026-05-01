@@ -52,7 +52,14 @@ test.describe("meals", () => {
     await expect(page.getByRole("link", { name: "Back" })).toBeVisible();
   });
 
-  test("admin CRUD: add and delete dish", async ({ page }) => {
+   test("back button returns to meals view from admin", async ({ page }) => {
+     await page.goto("/meals/dinner/admin");
+     await page.waitForLoadState("networkidle");
+     await page.getByRole("link", { name: "Back" }).click();
+     await expect(page).toHaveURL(/\/meals\/dinner\/?$/);
+   });
+
+   test("admin CRUD: add and delete dish", async ({ page }) => {
     await page.goto("/meals/dinner/admin");
     // Wait for meals to load
     await page.waitForSelector("li[role='listitem']", { state: "visible" }).catch(() => {});
