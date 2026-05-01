@@ -1,7 +1,11 @@
 import { test, expect } from "@playwright/test";
+import { clearAllowance, setupAllowanceConfig } from "./setup.ts";
 
 test.describe("money navigation and sub-nav", () => {
   test.beforeEach(async ({ page }) => {
+    // Clear allowance data and setup fresh config before each test
+    clearAllowance();
+    setupAllowanceConfig(15, 600);
     await page.goto("/money");
   });
 
@@ -21,8 +25,15 @@ test.describe("money navigation and sub-nav", () => {
     await expect(allowanceTab).toHaveAttribute("class", /text-blue-600/);
   });
 
-  test("Allowance page heading visible", async ({ page }) => {
-    await expect(page.getByRole("heading", { name: "Allowance" })).toBeVisible();
+  test("Allowance page elements visible", async ({ page }) => {
+    // Clear allowance data and setup fresh config
+    // (uses SQL helpers via setup)
+    await page.goto("/money/allowance");
+    // Check that allowance page is loaded (sub-nav active + balance display)
+    const allowanceTab = page.getByRole("link", { name: "Allowance" });
+    await expect(allowanceTab).toHaveAttribute("class", /border-blue-500/);
+    // Balance display should show 0 for fresh DB
+    await expect(page.getByText("0")).toBeVisible();
   });
 
   test("navigate to Balance tab", async ({ page }) => {
