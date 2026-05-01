@@ -41,11 +41,46 @@ export function clearMeals() {
   db.close();
 }
 
+export function clearAllowance() {
+  const db = new Database(DB_PATH);
+  db.prepare("DELETE FROM allowance_transactions").run();
+  db.prepare("DELETE FROM allowance_config").run();
+  db.close();
+}
+
+export function setupAllowanceConfig(day_of_month: number, monthly_amount: number) {
+  const db = new Database(DB_PATH);
+  db.prepare("DELETE FROM allowance_config").run();
+  db.prepare("INSERT INTO allowance_config (day_of_month, monthly_amount) VALUES (?, ?)").run(day_of_month, monthly_amount);
+  db.close();
+}
+
+export function addAllowanceTransactionSql(type: string, description: string, amount: number, is_automatic: boolean = false) {
+  const db = new Database(DB_PATH);
+  // Get current balance
+  const lastTx = db.prepare("SELECT balance_after FROM allowance_transactions ORDER BY id DESC LIMIT 1").get() as { balance_after: number } | undefined;
+  const currentBalance = lastTx ? lastTx.balance_after : 0;
+
+  let newBalance: number;
+  if (type === "expense") {
+    newBalance = currentBalance - amount;
+  } else {
+    newBalance = currentBalance + amount;
+  }
+
+  db.prepare(
+    "INSERT INTO allowance_transactions (type, description, amount, balance_after, is_automatic) VALUES (?, ?, ?, ?, ?)"
+  ).run(type, description, amount, newBalance, is_automatic ? 1 : 0);
+  db.close();
+}
+
 export function clearAll() {
   const db = new Database(DB_PATH);
   db.prepare("DELETE FROM parcels").run();
   db.prepare("DELETE FROM plan_items").run();
   db.prepare("DELETE FROM plan_lists").run();
   db.prepare("DELETE FROM meals").run();
+  db.prepare("DELETE FROM allowance_transactions").run();
+  db.prepare("DELETE FROM allowance_config").run();
   db.close();
 }

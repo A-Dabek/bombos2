@@ -1,13 +1,11 @@
 import { test, expect } from "@playwright/test";
+import { clearAllowance, setupAllowanceConfig, addAllowanceTransactionSql } from "./setup.ts";
 
 test.describe("allowance page - balance and config display", () => {
   test.beforeEach(async ({ page }) => {
+    // Use SQL to setup config instead of API
+    setupAllowanceConfig(15, 600);
     await page.goto("/money/allowance");
-    // Reset config to defaults before each test
-    await page.request.post("/api/allowance/config", {
-      data: { day_of_month: 15, monthly_amount: 600 },
-    });
-    await page.reload();
   });
 
   test("balance shows 0 by default", async ({ page }) => {
@@ -28,10 +26,7 @@ test.describe("allowance page - balance and config display", () => {
 
 test.describe("allowance admin page - config update", () => {
   test.beforeEach(async ({ page }) => {
-    // Reset config to defaults first
-    await page.request.post("/api/allowance/config", {
-      data: { day_of_month: 15, monthly_amount: 600 },
-    });
+    setupAllowanceConfig(15, 600);
     await page.goto("/money/allowance/admin");
     await page.waitForLoadState("networkidle");
   });
@@ -72,6 +67,7 @@ test.describe("allowance admin page - config update", () => {
 
 test.describe("allowance page - add transaction form", () => {
   test.beforeEach(async ({ page }) => {
+    setupAllowanceConfig(15, 600);
     await page.goto("/money/allowance");
   });
 
@@ -93,6 +89,7 @@ test.describe("allowance page - add transaction form", () => {
 
 test.describe("allowance page - transaction list with grouping", () => {
   test.beforeEach(async ({ page }) => {
+    setupAllowanceConfig(15, 600);
     await page.goto("/money/allowance");
     // Wait for page to load
     await page.waitForLoadState("networkidle");
@@ -152,46 +149,17 @@ test.describe("allowance page - transaction list with grouping", () => {
 
 test.describe("allowance page - transaction grouping", () => {
   test("transactions grouped by allowance periods", async ({ page }) => {
-    // Reset config to defaults
-    await page.request.post("/api/allowance/config", {
-      data: { day_of_month: 15, monthly_amount: 600 },
-    });
+    // Clear allowance data using SQL
+    clearAllowance();
+    setupAllowanceConfig(15, 600);
 
-    // Clear existing transactions by deleting them all
-    let cleared = false;
-    while (!cleared) {
-      const response = await page.request.get("/api/allowance/transactions");
-      const data = await response.json();
-      if (data.groups && data.groups.length > 0) {
-        for (const group of data.groups) {
-          for (const tx of group.transactions) {
-            await page.request.delete(`/api/allowance/transactions/${tx.id}`);
-          }
-        }
-      } else {
-        cleared = true;
-      }
-    }
+    // Add allowance-type transactions via SQL (bypasses API)
+    addAllowanceTransactionSql("allowance", "May allowance", 600, false);
+    addAllowanceTransactionSql("expense", "Lunch", 20, false);
 
-    // Add an allowance-type transaction via API (this starts a new period)
-    await page.request.post("/api/allowance/transactions", {
-      data: { description: "May allowance", amount: 600, type: "allowance" },
-    });
-
-    // Add an expense under this period
-    await page.request.post("/api/allowance/transactions", {
-      data: { description: "Lunch", amount: -20, type: "expense" },
-    });
-
-    // Add another allowance-type transaction (new period)
-    await page.request.post("/api/allowance/transactions", {
-      data: { description: "June allowance", amount: 600, type: "allowance" },
-    });
-
-    // Add an expense under the new period
-    await page.request.post("/api/allowance/transactions", {
-      data: { description: "Dinner", amount: -30, type: "expense" },
-    });
+    // Second allowance period
+    addAllowanceTransactionSql("allowance", "June allowance", 600, false);
+    addAllowanceTransactionSql("expense", "Dinner", 30, false);
 
     await page.goto("/money/allowance");
     await page.waitForLoadState("networkidle");
