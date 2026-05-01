@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { createParcel, getParcels, completeParcel, deleteCompletedParcels } from "./parcels.ts";
+import { createParcel, getParcels, completeParcel, deleteCompletedParcels, getIncompleteParcelsCount } from "./parcels.ts";
 import { openDb, resetDb } from "./connection.ts";
 
 test("getParcels returns empty array on fresh DB", () => {
@@ -109,6 +109,45 @@ test("deleteCompletedParcels removes only completed parcels", () => {
   const parcels = getParcels("incoming", db);
   expect(parcels.length).toBe(1);
   expect(parcels[0].completed_at).toBeNull();
+  db.close();
+  resetDb();
+});
+
+test("getIncompleteParcelsCount returns 0 on fresh DB", () => {
+  resetDb();
+  const db = openDb(":memory:");
+  const count = getIncompleteParcelsCount(db);
+  expect(count).toBe(0);
+  db.close();
+  resetDb();
+});
+
+test("getIncompleteParcelsCount returns correct count with mixed parcels", () => {
+  resetDb();
+  const db = openDb(":memory:");
+  const bytes = new Uint8Array([1, 2, 3]);
+  createParcel("incoming", bytes, "image/png", db);
+  createParcel("outgoing", bytes, "image/jpeg", db);
+  createParcel("incoming", bytes, "image/png", db);
+  completeParcel(1, db); // complete first one
+
+  const count = getIncompleteParcelsCount(db);
+  expect(count).toBe(2); // 2 incomplete
+  db.close();
+  resetDb();
+});
+
+test("getIncompleteParcelsCount returns 0 when all completed", () => {
+  resetDb();
+  const db = openDb(":memory:");
+  const bytes = new Uint8Array([1, 2, 3]);
+  const id1 = createParcel("incoming", bytes, "image/png", db);
+  const id2 = createParcel("outgoing", bytes, "image/jpeg", db);
+  completeParcel(id1, db);
+  completeParcel(id2, db);
+
+  const count = getIncompleteParcelsCount(db);
+  expect(count).toBe(0);
   db.close();
   resetDb();
 });

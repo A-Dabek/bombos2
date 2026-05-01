@@ -76,3 +76,13 @@ export function updateParcelNote(
   ).run(note, id);
   return result.changes > 0;
 }
+
+export function getIncompleteParcelsCount(
+  db?: Database.Database,
+): number {
+  const dbConn = db ?? getDb();
+  const result = dbConn.prepare(
+    "SELECT COUNT(*) as count FROM parcels WHERE completed_at IS NULL",
+  ).get() as { count: number };
+  return result.count;
+}
