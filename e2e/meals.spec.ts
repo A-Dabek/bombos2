@@ -26,12 +26,9 @@ test.describe("meals", () => {
 
   test("clicking sparkles button reveals a dinner meal", async ({ page }) => {
     await page.goto("/meals/dinner");
-    // Wait for page to load
-    await page.getByRole("button", { name: "Roll" }).waitFor();
-    await page.waitForLoadState("networkidle");
-    // Click the roll button (sparkles icon button)
-    const rollButton = page.locator("button").filter({ hasText: "Roll" });
-    await expect(rollButton).toBeVisible();
+    // Wait for roll button to appear (page loaded)
+    const rollButton = page.getByRole("button", { name: "Roll" });
+    await rollButton.waitFor({ state: "visible" });
     await rollButton.click();
     // Should show a meal name (one of the 33 dinner meals)
     const mealText = page.locator("p.text-2xl");
@@ -53,17 +50,16 @@ test.describe("meals", () => {
   });
 
    test("back button returns to meals view from admin", async ({ page }) => {
-     await page.goto("/meals/dinner/admin");
-     await page.waitForLoadState("networkidle");
-     await page.getByRole("link", { name: "Back" }).click();
-     await expect(page).toHaveURL(/\/meals\/dinner\/?$/);
-   });
+      await page.goto("/meals/dinner/admin");
+      await page.getByRole("link", { name: "Back" }).waitFor({ state: "visible" });
+      await page.getByRole("link", { name: "Back" }).click();
+      await page.waitForURL(/\/meals\/dinner\/?$/);
+    });
 
    test("admin CRUD: add and delete dish", async ({ page }) => {
     await page.goto("/meals/dinner/admin");
-    // Wait for meals to load
-    await page.waitForSelector("li[role='listitem']", { state: "visible" }).catch(() => {});
-    await page.waitForLoadState("networkidle");
+    // Wait for meals to load by waiting for the add button
+    await page.getByRole("button", { name: "Add" }).waitFor({ state: "visible" });
     // Add dish
     const testDishName = `__E2E_TEST_DISH__${Date.now()}`;
     await page.getByPlaceholder("Add new dish...").fill(testDishName);

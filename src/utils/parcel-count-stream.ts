@@ -15,8 +15,10 @@ export const streamParcelCount = server$(async function* () {
         this.signal.addEventListener('abort', () => clearTimeout(timeout));
       });
     }
-  } catch (error) {
-    console.error('Parcel count stream error:', error);
-    // Fail silently - stream ends
+  } catch (error: unknown) {
+    // AbortError is expected when client disconnects; only log unexpected errors
+    if (error instanceof Error && error.name !== 'AbortError') {
+      console.error('Parcel count stream error:', error);
+    }
   }
 });

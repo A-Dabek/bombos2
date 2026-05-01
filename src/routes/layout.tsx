@@ -24,7 +24,7 @@ export default component$(() => {
   useVisibleTask$(async ({ cleanup }) => {
     const stream = await streamParcelCount();
 
-    (async () => {
+    const iterate = async () => {
       try {
         for await (const count of stream) {
           parcelCount.value = count;
@@ -32,7 +32,8 @@ export default component$(() => {
       } catch (error) {
         console.error("Stream iteration error:", error);
       }
-    })();
+    };
+    iterate();
 
     cleanup(() => {
       // Stream cleanup happens automatically when component unmounts

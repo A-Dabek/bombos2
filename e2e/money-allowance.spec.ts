@@ -28,7 +28,7 @@ test.describe("allowance admin page - config update", () => {
   test.beforeEach(async ({ page }) => {
     setupAllowanceConfig(15, 600);
     await page.goto("/money/allowance/admin");
-    await page.waitForLoadState("networkidle");
+    await page.getByRole("button", { name: "Save" }).waitFor({ state: "visible" });
   });
 
   test("config form loads with current values", async ({ page }) => {
@@ -48,6 +48,10 @@ test.describe("allowance admin page - config update", () => {
   test("update day and amount, verify on allowance page", async ({ page }) => {
     const dayInput = page.locator("input[type='number']").first();
     const amountInput = page.locator("input[type='number']").nth(1);
+
+    await  page.waitForResponse(
+      (res) => res.url().includes("/api/allowance/config") && res.request().method() === "GET"
+    );
 
     // Update values
     await dayInput.fill("20");
@@ -98,8 +102,8 @@ test.describe("allowance page - transaction list with grouping", () => {
   test.beforeEach(async ({ page }) => {
     setupAllowanceConfig(15, 600);
     await page.goto("/money/allowance");
-    // Wait for page to load
-    await page.waitForLoadState("networkidle");
+    // Wait for page to load by checking for the description input
+    await page.getByPlaceholder("Description").waitFor({ state: "visible" });
   });
 
   test("transactions show description, amount, and balance", async ({ page }) => {
@@ -175,11 +179,11 @@ test.describe("allowance page - transaction grouping", () => {
     addAllowanceTransactionSql("expense", "Dinner", 30, false, juneTimestamp + 1000);
 
     await page.goto("/money/allowance");
-    await page.waitForLoadState("networkidle");
+    await page.getByPlaceholder("Description").waitFor({ state: "visible" });
 
     // Should have 2 period groups
     const periodHeaders = page.getByTestId("period-header");
-    await expect(await periodHeaders.count()).toBe(2);
+    await expect(periodHeaders).toHaveCount(2);
 
     // Verify period labels: "May 15th" and "June 15th"
     const firstPeriod = await periodHeaders.first().textContent();
