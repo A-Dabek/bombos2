@@ -19,7 +19,7 @@ test.describe("allowance page - balance and config display", () => {
   });
 
   test("admin button visible and links to admin page", async ({ page }) => {
-    const adminButton = page.getByRole("link", { name: "Admin" });
+    const adminButton = page.getByTestId("admin-button");
     await expect(adminButton).toBeVisible();
     await adminButton.click();
     await expect(page).toHaveURL(/\/money\/allowance\/admin\/?$/);

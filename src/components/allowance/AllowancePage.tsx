@@ -1,6 +1,7 @@
 import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
 import { useNavigate } from "@builder.io/qwik-city";
 import type { AllowanceConfig } from "~/db/allowance";
+import AdminButton from "~/components/shared/AdminButton";
 
 export default component$(() => {
   const config = useSignal<AllowanceConfig | null>(null);
@@ -141,6 +142,9 @@ export default component$(() => {
         </button>
       </form>
 
+      {/* Admin Button */}
+      <AdminButton href="/money/allowance/admin" />
+
       {/* Transaction Groups */}
       {groups.value.length > 0 && (
         <div class="mt-6 space-y-4">
@@ -180,13 +184,6 @@ export default component$(() => {
           ))}
         </div>
       )}
-
-      <a
-        href="/money/allowance/admin"
-        class="mt-4 inline-block rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-600"
-      >
-        Admin
-      </a>
     </div>
   );
 });
