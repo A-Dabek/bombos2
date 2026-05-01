@@ -15,6 +15,7 @@ export interface AllowanceTransaction {
   amount: number;
   balance_after: number;
   created_at: number;
+  is_automatic: boolean;
 }
 
 export function getAllowanceConfig(
@@ -62,7 +63,7 @@ export function getTransactionsGroupedByPeriod(
   const dbConn = db ?? getDb();
   // Get transactions in ASC order (oldest first) for proper grouping
   const rows = dbConn.prepare(
-    "SELECT id, type, description, amount, balance_after, created_at FROM allowance_transactions ORDER BY id ASC",
+    "SELECT id, type, description, amount, balance_after, created_at, is_automatic FROM allowance_transactions ORDER BY id ASC",
   ).raw(true).all() as unknown[][];
 
   const transactions: AllowanceTransaction[] = rows.map((row) => ({
@@ -72,6 +73,7 @@ export function getTransactionsGroupedByPeriod(
     amount: row[3] as number,
     balance_after: row[4] as number,
     created_at: row[5] as number,
+    is_automatic: Boolean(row[6]),
   }));
 
   const groups: TransactionGroup[] = [];
@@ -133,7 +135,7 @@ export function getAllowanceTransactions(
 ): AllowanceTransaction[] {
   const dbConn = db ?? getDb();
   const rows = dbConn.prepare(
-    "SELECT id, type, description, amount, balance_after, created_at FROM allowance_transactions ORDER BY id DESC",
+    "SELECT id, type, description, amount, balance_after, created_at, is_automatic FROM allowance_transactions ORDER BY id DESC",
   ).raw(true).all() as unknown[][];
   return rows.map((row) => ({
     id: row[0] as number,
@@ -142,6 +144,7 @@ export function getAllowanceTransactions(
     amount: row[3] as number,
     balance_after: row[4] as number,
     created_at: row[5] as number,
+    is_automatic: Boolean(row[6]),
   }));
 }
 
@@ -150,14 +153,15 @@ export function addAllowanceTransaction(
   description: string,
   amount: number,
   db?: Database.Database,
+  is_automatic: boolean = false,
 ): number {
   const dbConn = db ?? getDb();
   const currentBalance = getCurrentBalance(dbConn);
   const newBalance = type === "expense" ? currentBalance - amount : currentBalance + amount;
 
   const result = dbConn.prepare(
-    "INSERT INTO allowance_transactions (type, description, amount, balance_after) VALUES (?, ?, ?, ?)",
-  ).run(type, description, amount, newBalance);
+    "INSERT INTO allowance_transactions (type, description, amount, balance_after, is_automatic) VALUES (?, ?, ?, ?, ?)",
+  ).run(type, description, amount, newBalance, is_automatic ? 1 : 0);
 
   return Number(result.lastInsertRowid);
 }
@@ -222,9 +226,9 @@ export function checkAndAddAllowance(
     return { added: false, newBalance: getCurrentBalance(dbConn) };
   }
 
-  // Add allowance transaction
+  // Add allowance transaction (automatic)
   const description = `${now.toLocaleString("en-US", { month: "long" })} allowance`;
-  addAllowanceTransaction("allowance", description, config.monthly_amount, dbConn);
+  addAllowanceTransaction("allowance", description, config.monthly_amount, dbConn, true);
 
   return { added: true, newBalance: getCurrentBalance(dbConn) };
 }
