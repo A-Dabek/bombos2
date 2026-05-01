@@ -97,21 +97,17 @@ export default component$(() => {
     <div class="p-4">
       {error.value && <p class="mt-2 text-red-600">{error.value}</p>}
 
-      <div class="mt-4 space-y-2">
-        <div class="flex items-center gap-2">
-          <span class="text-gray-600">Current balance:</span>
-          <span class={balance.value >= 0 ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
-            {balance.value >= 0 ? "+" : "-"}{Math.abs(balance.value)}
-          </span>
-        </div>
+      <div class="mt-4 flex items-start gap-1">
+        {/* Balance - big */}
+        <span class={`text-4xl font-bold ${balance.value >= 0 ? "text-green-600" : "text-red-600"}`}>
+          {Math.abs(balance.value)}
+        </span>
 
+        {/* Monthly amount - small, top-right like exponent */}
         {config.value && (
-          <div class="flex items-center gap-2">
-            <span class="text-gray-600">Monthly income:</span>
-            <span class="text-green-600 font-semibold">
-              monthly: +{config.value.monthly_amount}
-            </span>
-          </div>
+          <span class="text-sm text-gray-800 self-start mt-1">
+            +{config.value.monthly_amount}
+          </span>
         )}
       </div>
 

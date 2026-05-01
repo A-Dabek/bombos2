@@ -14,8 +14,8 @@ test.describe("allowance page - balance and config display", () => {
     await expect(page.getByText("0")).toBeVisible();
   });
 
-  test("monthly income shows 600 with monthly: +600", async ({ page }) => {
-    await expect(page.getByText("monthly: +600")).toBeVisible();
+  test("monthly income shows 600 with +600 exponent", async ({ page }) => {
+    await expect(page.getByText("+600")).toBeVisible();
   });
 
   test("admin button visible and links to admin page", async ({ page }) => {
@@ -66,7 +66,7 @@ test.describe("allowance admin page - config update", () => {
     await page.goto("/money/allowance");
 
     // Verify monthly income shows updated values
-    await expect(page.getByText("monthly: +800")).toBeVisible();
+    await expect(page.getByText("+800")).toBeVisible();
   });
 });
 
