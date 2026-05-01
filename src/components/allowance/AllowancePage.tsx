@@ -95,8 +95,6 @@ export default component$(() => {
 
   return (
     <div class="p-4">
-      <h1 class="text-xl font-semibold">Allowance</h1>
-
       {error.value && <p class="mt-2 text-red-600">{error.value}</p>}
 
       <div class="mt-4 space-y-2">
