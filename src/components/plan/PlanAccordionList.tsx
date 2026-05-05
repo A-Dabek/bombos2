@@ -1,4 +1,5 @@
 import { component$, useSignal, $ } from "@builder.io/qwik";
+import Loader from "~/components/shared/Loader";
 import { HiPlusOutline, HiTrashOutline, HiCheckCircleSolid } from "@qwikest/icons/heroicons";
 import type { PlanItem } from "~/db/plan";
 import PlanItemRow from "./PlanItemRow";
@@ -62,8 +63,8 @@ export default component$(({
         >
           <div class="p-4">
             {isLoading ? (
-              <div class="flex justify-center py-4" data-testid="loader">
-                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+              <div class="flex justify-center py-4">
+                <Loader size="sm" color="border-blue-500" />
               </div>
             ) : (
               <>

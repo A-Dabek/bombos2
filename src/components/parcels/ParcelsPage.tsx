@@ -1,5 +1,5 @@
 import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
-import { HiArrowPathSolid } from "@qwikest/icons/heroicons";
+import Loader from "~/components/shared/Loader";
 import ParcelSubNav from "./ParcelSubNav";
 import ParcelList from "./ParcelList";
 import UploadButton from "./UploadButton";
@@ -83,8 +83,8 @@ export default component$<Props>(({ type, title }) => {
         onUpload$={fetchParcels}
       />
       {isLoading.value && parcels.value.length === 0 && (
-        <div class="flex items-center justify-center p-8" data-testid="loader">
-          <HiArrowPathSolid class="h-8 w-8 animate-spin text-blue-500" />
+        <div class="flex items-center justify-center p-8">
+          <Loader color="border-blue-500" />
         </div>
       )}
       {!isLoading.value && parcels.value.length === 0 && (

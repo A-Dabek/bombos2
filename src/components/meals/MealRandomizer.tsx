@@ -1,4 +1,5 @@
 import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
+import Loader from "~/components/shared/Loader";
 import { HiSparklesSolid } from "@qwikest/icons/heroicons";
 import type { MealRow } from "~/db/meals";
 
@@ -74,7 +75,7 @@ export default component$<MealRandomizerProps>((props) => {
   return (
     <div class="flex flex-col items-center justify-center p-8">
       {!isLoaded.value ? (
-        <div data-testid="loader" class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <Loader />
       ) : meals.value.length === 0 ? (
         <p class="text-lg text-gray-500">No meals yet</p>
       ) : (

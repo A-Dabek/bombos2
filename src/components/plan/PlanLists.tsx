@@ -1,4 +1,5 @@
 import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
+import Loader from "~/components/shared/Loader";
 import { HiChevronDownOutline } from "@qwikest/icons/heroicons";
 import type { PlanList, PlanItem } from "~/db/plan";
 import AdminButton from "~/components/shared/AdminButton";
@@ -173,7 +174,7 @@ export default component$(() => {
     <div class="min-h-screen" data-testid="plan-lists">
       {!isLoaded.value ? (
         <div class="flex justify-center p-8">
-          <div data-testid="loader" class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <Loader />
         </div>
       ) : lists.value.length === 0 ? (
         <p class="text-lg text-gray-500 px-4">No lists yet</p>

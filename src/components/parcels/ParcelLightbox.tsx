@@ -1,5 +1,5 @@
 import { component$, type PropFunction } from "@builder.io/qwik";
-import { HiArrowPathSolid } from "@qwikest/icons/heroicons";
+import Loader from "~/components/shared/Loader";
 import type { Parcel } from "./types";
 
 interface Props {
@@ -35,7 +35,7 @@ export default component$<Props>((props) => {
         >
           {props.isCompleting ? (
             <span class="flex items-center gap-2" data-testid="parcel-lightbox-saving">
-              <HiArrowPathSolid class="h-5 w-5 animate-spin" />
+              <Loader size="sm" color="border-white" />
               Saving...
             </span>
           ) : (

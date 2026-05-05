@@ -1,5 +1,5 @@
 import { component$, useSignal, type PropFunction } from "@builder.io/qwik";
-import { HiArrowPathSolid } from "@qwikest/icons/heroicons";
+import Loader from "~/components/shared/Loader";
 
 interface Props {
   apiPath: string;
@@ -50,7 +50,7 @@ export default component$<Props>((props) => {
       >
         {isUploading.value ? (
           <span class="flex items-center justify-center gap-2" data-testid="parcel-uploading">
-            <HiArrowPathSolid class="h-5 w-5 animate-spin" />
+            <Loader size="sm" color="border-white" />
             Uploading...
           </span>
         ) : (
