@@ -1,0 +1,76 @@
+import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
+import type { BillsTransaction } from "~/db/bills";
+import TransactionLine from "~/components/transactions/TransactionLine";
+import TransactionForm from "~/components/transactions/TransactionForm";
+
+export default component$(() => {
+  const transactions = useSignal<BillsTransaction[]>([]);
+  const loading = useSignal(false);
+  const error = useSignal<string | null>(null);
+  const description = useSignal("");
+  const amount = useSignal("");
+
+  const loadTransactions = $(async () => {
+    try {
+      const res = await fetch("/api/bills/transactions");
+      if (!res.ok) throw new Error("Failed to load transactions");
+      const data = await res.json();
+      transactions.value = data.transactions ?? [];
+    } catch (e: any) {
+      error.value = e.message;
+    }
+  });
+
+  useVisibleTask$(async () => {
+    await loadTransactions();
+  });
+
+  const handleAdd = $(async (desc: string, amt: number) => {
+    if (!desc || isNaN(amt) || amt === 0 || loading.value) return;
+    loading.value = true;
+    error.value = null;
+    try {
+      const res = await fetch("/api/bills/transactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description: desc, amount: amt }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to add transaction");
+      }
+      await loadTransactions();
+      description.value = "";
+      amount.value = "";
+    } catch (e: any) {
+      error.value = e.message;
+    } finally {
+      loading.value = false;
+    }
+  });
+
+  return (
+    <div class="p-4">
+      {error.value && <p class="mt-2 text-red-600">{error.value}</p>}
+
+      <TransactionForm
+        description={description.value}
+        amount={amount.value}
+        loading={loading.value}
+        onSubmit$={handleAdd}
+      />
+
+      {transactions.value.length > 0 && (
+        <div class="mt-6 divide-y divide-gray-100">
+          {transactions.value.map((tx) => (
+            <TransactionLine
+              key={tx.id}
+              description={tx.description}
+              amount={tx.amount}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});

@@ -1,6 +1,11 @@
 import Database from "better-sqlite3";
+import { openDb } from "../src/db/connection.ts";
 
 const DB_PATH = "./data/app.db";
+
+// Ensure migrations run before any DB operations
+const _db = openDb(DB_PATH);
+_db.close();
 
 export function clearParcels() {
   const db = new Database(DB_PATH);
@@ -45,6 +50,48 @@ export function clearAllowance() {
   const db = new Database(DB_PATH);
   db.prepare("DELETE FROM allowance_transactions").run();
   db.prepare("DELETE FROM allowance_config").run();
+  db.close();
+}
+
+export function clearBills() {
+  const db = new Database(DB_PATH);
+  db.prepare("DELETE FROM bills_transactions").run();
+  db.prepare("DELETE FROM bills_config").run();
+  db.close();
+}
+
+export function setupBillsConfig(day_of_month: number = 15) {
+  const db = new Database(DB_PATH);
+  db.prepare("DELETE FROM bills_config").run();
+  db.prepare("INSERT INTO bills_config (day_of_month) VALUES (?)").run(day_of_month);
+  db.close();
+}
+
+export function addBillTransactionSql(description: string, amount: number, created_at?: number) {
+  const db = new Database(DB_PATH);
+  const timestamp = created_at ?? Math.floor(Date.now() / 1000);
+  db.prepare("INSERT INTO bills_transactions (description, amount, created_at) VALUES (?, ?, ?)").run(description, amount, timestamp);
+  db.close();
+}
+
+export function clearBalance() {
+  const db = new Database(DB_PATH);
+  db.prepare("DELETE FROM balance_transactions").run();
+  db.prepare("DELETE FROM balance_config").run();
+  db.close();
+}
+
+export function setupBalanceConfig(day_of_month: number = 15) {
+  const db = new Database(DB_PATH);
+  db.prepare("DELETE FROM balance_config").run();
+  db.prepare("INSERT INTO balance_config (day_of_month) VALUES (?)").run(day_of_month);
+  db.close();
+}
+
+export function addBalanceTransactionSql(description: string, amount: number, created_at?: number) {
+  const db = new Database(DB_PATH);
+  const timestamp = created_at ?? Math.floor(Date.now() / 1000);
+  db.prepare("INSERT INTO balance_transactions (description, amount, created_at) VALUES (?, ?, ?)").run(description, amount, timestamp);
   db.close();
 }
 

@@ -1,13 +1,9 @@
 import { component$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
+import BalancePage from "~/components/balance/BalancePage";
 
 export default component$(() => {
-  return (
-    <div class="p-4">
-      <h1 class="text-xl font-semibold">Balance</h1>
-      <p class="mt-2 text-gray-600">Coming soon.</p>
-    </div>
-  );
+  return <BalancePage />;
 });
 
 export const head: DocumentHead = {

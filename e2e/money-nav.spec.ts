@@ -35,7 +35,8 @@ test.describe("money navigation and sub-nav", () => {
   test("navigate to Balance tab", async ({ page }) => {
     // Use page.goto to avoid SPA nav issues with streaming
     await page.goto("/money/balance");
-    await expect(page.getByRole("heading", { name: "Balance" })).toBeVisible();
+    // Per ADR-019: Balance page has no h1, uses form to verify page loaded
+    await expect(page.getByPlaceholder("Description")).toBeVisible();
     // Check sub-nav renders active state on full page load
     const balanceTab = page.getByRole("link", { name: "Balance" });
     await expect(balanceTab).toHaveClass(/border-blue-500/);
@@ -44,7 +45,8 @@ test.describe("money navigation and sub-nav", () => {
   test("navigate to Bills tab", async ({ page }) => {
     // Use page.goto to avoid SPA nav issues with streaming
     await page.goto("/money/bills");
-    await expect(page.getByRole("heading", { name: "Bills" })).toBeVisible();
+    // Per ADR-019: Bills page has no h1, uses form to verify page loaded
+    await expect(page.getByPlaceholder("Description")).toBeVisible();
     // Check sub-nav renders active state on full page load
     const billsTab = page.getByRole("link", { name: "Bills" });
     await expect(billsTab).toHaveClass(/border-blue-500/);
