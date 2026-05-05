@@ -1,17 +1,17 @@
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
+  reporter: [['list'], ['html', { outputFolder: 'html-results', open: 'never' }]],
   testDir: "./e2e",
-  fullyParallel: true,
+  fullyParallel: false,
   retries: 2,
-  reporter: "list",
   use: {
-    baseURL: "http://localhost:5173",
+    baseURL: "http://localhost:4173",
     trace: "on-first-retry",
   },
   webServer: {
-    command: "pnpm run dev",
-    url: "http://localhost:5173",
+    command: "pnpm build.preview && pnpm preview",
+    url: "http://localhost:4173",
     reuseExistingServer: true,
   },
   projects: [

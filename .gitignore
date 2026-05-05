@@ -51,6 +51,7 @@ lerna-debug.log*
 
 # Playwright
 test-results/
+html-results/
 
 # Database
 /data/
