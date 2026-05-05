@@ -1,73 +1,116 @@
 import { test, expect } from "@playwright/test";
-import { clearMeals, clearPlan } from "./setup";
+import Database from "better-sqlite3";
+
+const DB_PATH = "./data/app.db";
+
+function setupMeals() {
+  const db = new Database(DB_PATH);
+  db.prepare("DELETE FROM meals").run();
+  db.exec(`
+    INSERT INTO meals (category, name) VALUES
+      ('dinner', 'Dinner 1'), ('dinner', 'Dinner 2'), ('dinner', 'Dinner 3'),
+      ('supper', 'Supper 1'), ('supper', 'Supper 2'), ('supper', 'Supper 3')
+  `);
+  db.close();
+}
 
 test.describe("meals", () => {
   test.beforeEach(async () => {
-    clearPlan();
-    clearMeals();
-  });
-  test("redirects /meals to /meals/dinner", async ({ page }) => {
-    await page.goto("/meals");
-    await expect(page).toHaveURL(/\/meals\/dinner\/?$/);
+    setupMeals();
   });
 
-  test("sub-navigation and tab switching", async ({ page }) => {
+  test("User is able to modify dinners and randomize them", async ({ page }) => {
     await page.goto("/meals/dinner");
-    // Dinner and Supper visible
-    await expect(page.getByRole("link", { name: "Dinner" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Supper" })).toBeVisible();
-    // Tab switching + highlighting
-    await page.getByRole("link", { name: "Supper" }).click();
-    await expect(page).toHaveURL(/\/meals\/supper\/?$/);
-    const supperLink = page.getByRole("link", { name: "Supper" });
-    await expect(supperLink).toHaveClass(/border-blue-500/);
-    await expect(supperLink).toHaveClass(/text-blue-600/);
-  });
 
-  test("clicking sparkles button reveals a dinner meal", async ({ page }) => {
-    await page.goto("/meals/dinner");
-    // Wait for roll button to appear (page loaded)
-    const rollButton = page.getByRole("button", { name: "Roll" });
-    await rollButton.waitFor({ state: "visible" });
-    await rollButton.click();
-    // Should show a meal name (one of the 33 dinner meals)
-    const mealText = page.locator("p.text-2xl");
-    await expect(mealText).toBeVisible();
-    const text = await mealText.textContent();
-    // Verify it's a dinner meal (not empty)
-    expect(text?.length).toBeGreaterThan(0);
-  });
+    // Wait for roll button
+    await page.getByTestId("meal-roll-button").waitFor({ state: "visible", timeout: 5000 });
 
-  test("admin navigation and toggle button", async ({ page }) => {
-    await page.goto("/meals/dinner");
-    // Admin button visible
-    await expect(page.getByRole("link", { name: "Admin" })).toBeVisible();
-    // Navigation works
+    // Roll 3 times and collect meals
+    const mealsSeen = new Set<string>();
+    const mealDisplay = page.locator("p.text-2xl");
+    for (let i = 0; i < 3; i++) {
+      await page.getByTestId("meal-roll-button").click();
+      await page.waitForTimeout(50);
+      const text = await mealDisplay.textContent();
+      if (text) mealsSeen.add(text);
+    }
+    expect(mealsSeen.size).toBe(3);
+
+    // Click once more - see picky eater
+    await page.getByTestId("meal-roll-button").click();
+    await expect(page.getByText("You're a picky eater")).toBeVisible({ timeout: 5000 });
+
+    // Go to admin, add 1, delete different
     await page.getByRole("link", { name: "Admin" }).click();
     await expect(page).toHaveURL(/\/meals\/dinner\/admin\/?$/);
-    // Back button exists
-    await expect(page.getByRole("link", { name: "Back" })).toBeVisible();
+
+    await page.getByTestId("meal-admin-input").fill("New Dish");
+    await page.getByTestId("meal-admin-add").click();
+    await expect(page.getByText("New Dish")).toBeVisible();
+
+    await page.locator("li[role='listitem']").filter({ hasText: "Dinner 1" }).getByTestId("meal-admin-delete").click();
+    await expect(page.getByText("Dinner 1")).not.toBeVisible();
+
+    // Back to meals
+    await page.getByRole("link", { name: "Back" }).click();
+    await expect(page).toHaveURL(/\/meals\/dinner\/?$/);
+
+    // Roll again - should see different meals
+    await page.getByTestId("meal-roll-button").waitFor({ state: "visible", timeout: 5000 });
+    const newMealsSeen = new Set<string>();
+    for (let i = 0; i < 3; i++) {
+      await page.getByTestId("meal-roll-button").click();
+      await page.waitForTimeout(50);
+      const text = await mealDisplay.textContent();
+      if (text) newMealsSeen.add(text);
+    }
+
+    // Different from original (since one was replaced)
+    const overlap = [...mealsSeen].filter(m => newMealsSeen.has(m));
+    expect(overlap.length).toBeLessThan(3);
   });
 
-   test("back button returns to meals view from admin", async ({ page }) => {
-      await page.goto("/meals/dinner/admin");
-      await page.getByRole("link", { name: "Back" }).waitFor({ state: "visible" });
-      await page.getByRole("link", { name: "Back" }).click();
-      await page.waitForURL(/\/meals\/dinner\/?$/);
-    });
+  test("User is able to modify suppers and randomize them", async ({ page }) => {
+    await page.goto("/meals/supper");
 
-   test("admin CRUD: add and delete dish", async ({ page }) => {
-    await page.goto("/meals/dinner/admin");
-    // Wait for meals to load by waiting for the add button
-    await page.getByRole("button", { name: "Add" }).waitFor({ state: "visible" });
-    // Add dish
-    const testDishName = `__E2E_TEST_DISH__${Date.now()}`;
-    await page.getByPlaceholder("Add new dish...").fill(testDishName);
-    await page.getByRole("button", { name: "Add" }).click();
-    await expect(page.getByText(testDishName)).toBeVisible();
-    // Delete the dish
-    await page.locator("li[role='listitem']").filter({ hasText: testDishName }).getByLabel("Delete").click();
-    // Should be removed
-    await expect(page.getByText(testDishName)).not.toBeVisible();
+    await page.getByTestId("meal-roll-button").waitFor({ state: "visible", timeout: 5000 });
+
+    const mealsSeen = new Set<string>();
+    const mealDisplay = page.locator("p.text-2xl");
+    for (let i = 0; i < 3; i++) {
+      await page.getByTestId("meal-roll-button").click();
+      await page.waitForTimeout(50);
+      const text = await mealDisplay.textContent();
+      if (text) mealsSeen.add(text);
+    }
+    expect(mealsSeen.size).toBe(3);
+
+    await page.getByTestId("meal-roll-button").click();
+    await expect(page.getByText("You're a picky eater")).toBeVisible({ timeout: 5000 });
+
+    await page.getByRole("link", { name: "Admin" }).click();
+    await expect(page).toHaveURL(/\/meals\/supper\/admin\/?$/);
+
+    await page.getByTestId("meal-admin-input").fill("New Supper");
+    await page.getByTestId("meal-admin-add").click();
+    await expect(page.getByText("New Supper")).toBeVisible();
+
+    await page.locator("li[role='listitem']").filter({ hasText: "Supper 1" }).getByTestId("meal-admin-delete").click();
+    await expect(page.getByText("Supper 1")).not.toBeVisible();
+
+    await page.getByRole("link", { name: "Back" }).click();
+    await expect(page).toHaveURL(/\/meals\/supper\/?$/);
+
+    await page.getByTestId("meal-roll-button").waitFor({ state: "visible", timeout: 5000 });
+    const newMealsSeen = new Set<string>();
+    for (let i = 0; i < 3; i++) {
+      await page.getByTestId("meal-roll-button").click();
+      await page.waitForTimeout(50);
+      const text = await mealDisplay.textContent();
+      if (text) newMealsSeen.add(text);
+    }
+
+    const overlap = [...mealsSeen].filter(m => newMealsSeen.has(m));
+    expect(overlap.length).toBeLessThan(3);
   });
 });

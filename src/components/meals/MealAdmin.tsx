@@ -55,18 +55,20 @@ export default component$<MealAdminProps>((props) => {
   });
 
   return (
-    <div class="min-h-screen p-4">
+    <div class="min-h-screen p-4" data-testid="meal-admin">
        <BackButton href={`/meals/${props.category}`} />
 
       <div class="flex items-center mb-4 space-x-2">
         <input
           type="text"
+          data-testid="meal-admin-input"
           value={newMealName.value}
           onInput$={(e) => (newMealName.value = (e.target as HTMLInputElement).value)}
           placeholder="Add new dish..."
           class="flex-1 px-3 py-2 border rounded"
         />
         <button
+          data-testid="meal-admin-add"
           onClick$={handleAdd}
           class="flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
@@ -87,6 +89,7 @@ export default component$<MealAdminProps>((props) => {
             >
               <span class="text-gray-800">{meal.name}</span>
               <button
+                data-testid="meal-admin-delete"
                 onClick$={() => handleDelete(meal.id)}
                 class="p-2 text-red-500 hover:text-red-700"
                 aria-label="Delete"

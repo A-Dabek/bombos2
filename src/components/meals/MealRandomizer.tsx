@@ -28,19 +28,21 @@ export default component$<MealRandomizerProps>((props) => {
     // Bump key to trigger button animation
     clickKey.value++;
 
+    if (!isLoaded.value || meals.value.length === 0) {
+      return;
+    }
+
     // If exhausted, shuffle and restart
     if (isExhausted.value) {
       const shuffled = fisherYates([...meals.value]);
       shuffledMeals.value = shuffled;
-      currentIndex.value = 0;
-      isExhausted.value = false;
-      // Immediately advance to show first meal in new cycle
       currentIndex.value = 1;
+      isExhausted.value = false;
       return;
     }
 
     // If no meals loaded yet or shuffling fresh
-    if (shuffledMeals.value.length === 0 && meals.value.length > 0) {
+    if (shuffledMeals.value.length === 0) {
       const shuffled = fisherYates([...meals.value]);
       shuffledMeals.value = shuffled;
       // Immediately show first meal after shuffle
@@ -49,15 +51,13 @@ export default component$<MealRandomizerProps>((props) => {
     }
 
     // Advance pointer
-    if (currentIndex.value >= shuffledMeals.value.length) {
-      isExhausted.value = true;
+    if (currentIndex.value < shuffledMeals.value.length) {
+      currentIndex.value++;
       return;
     }
 
-    currentIndex.value++;
-    if (currentIndex.value >= shuffledMeals.value.length) {
-      isExhausted.value = true;
-    }
+    // If we were at the last meal, now we are exhausted
+    isExhausted.value = true;
   });
 
   // Get current meal to display
@@ -73,7 +73,9 @@ export default component$<MealRandomizerProps>((props) => {
 
   return (
     <div class="flex flex-col items-center justify-center p-8">
-      {isLoaded.value && meals.value.length === 0 ? (
+      {!isLoaded.value ? (
+        <div data-testid="loader" class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      ) : meals.value.length === 0 ? (
         <p class="text-lg text-gray-500">No meals yet</p>
       ) : (
         <>
