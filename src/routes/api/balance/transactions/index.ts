@@ -15,6 +15,6 @@ export const onPost: RequestHandler = async ({ parseBody, json, error }) => {
     throw error(400, "Valid description and non-zero amount required");
   }
 
-  const id = addBalanceTransaction(description, amount);
+  const id = addBalanceTransaction(description, amount, false);
   json(201, { id, description, amount });
 };

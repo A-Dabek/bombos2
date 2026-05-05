@@ -10,6 +10,7 @@ export interface BillsTransaction {
   id: number;
   description: string;
   amount: number;
+  is_automatic: boolean;
   created_at: number;
 }
 
@@ -43,20 +44,76 @@ export function updateBillsConfig(
 export function addBillTransaction(
   description: string,
   amount: number,
+  is_automatic = false,
   db?: Database.Database,
 ): number {
   const dbConn = db ?? getDb();
   const result = dbConn.prepare(
-    "INSERT INTO bills_transactions (description, amount) VALUES (?, ?)",
-  ).run(description, amount);
+    "INSERT INTO bills_transactions (description, amount, is_automatic) VALUES (?, ?, ?)",
+  ).run(description, amount, is_automatic ? 1 : 0);
   return Number(result.lastInsertRowid);
 }
 
 export function getBillTransactions(
   db?: Database.Database,
+  include_automatic = false,
 ): BillsTransaction[] {
   const dbConn = db ?? getDb();
+  if (include_automatic) {
+    return dbConn.prepare(
+      "SELECT id, description, amount, is_automatic, created_at FROM bills_transactions ORDER BY id DESC",
+    ).all() as BillsTransaction[];
+  }
   return dbConn.prepare(
-    "SELECT id, description, amount, created_at FROM bills_transactions ORDER BY id DESC",
+    "SELECT id, description, amount, is_automatic, created_at FROM bills_transactions WHERE is_automatic = 0 ORDER BY id DESC",
   ).all() as BillsTransaction[];
+}
+
+export function addPeriodStartTransaction(
+  db?: Database.Database,
+): number {
+  const dbConn = db ?? getDb();
+  const result = dbConn.prepare(
+    "INSERT INTO bills_transactions (description, amount, is_automatic) VALUES ('Period start', 0, 1)",
+  ).run();
+  return Number(result.lastInsertRowid);
+}
+
+export interface PeriodStartResult {
+  added: boolean;
+}
+
+export function checkAndAddBillsPeriodStart(
+  db?: Database.Database,
+): PeriodStartResult {
+  const dbConn = db ?? getDb();
+  const config = getBillsConfig(dbConn);
+  const today = new Date();
+  const day_of_month = config.day_of_month;
+
+  if (today.getDate() !== day_of_month) {
+    return { added: false };
+  }
+
+  // Calculate period boundaries
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const periodStartTs = Math.floor(
+    new Date(year, month, day_of_month).getTime() / 1000,
+  );
+  const nextPeriodStartTs = Math.floor(
+    new Date(year, month + 1, day_of_month).getTime() / 1000,
+  );
+
+  // Check if period-start marker already exists
+  const existing = dbConn.prepare(
+    "SELECT id FROM bills_transactions WHERE is_automatic = 1 AND created_at >= ? AND created_at < ?",
+  ).get(periodStartTs, nextPeriodStartTs);
+
+  if (existing) {
+    return { added: false };
+  }
+
+  addPeriodStartTransaction(dbConn);
+  return { added: true };
 }

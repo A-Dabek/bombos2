@@ -2,6 +2,7 @@ import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
 import type { BalanceTransaction } from "~/db/balance";
 import TransactionLine from "~/components/transactions/TransactionLine";
 import TransactionForm from "~/components/transactions/TransactionForm";
+import AdminButton from "~/components/shared/AdminButton";
 
 export default component$(() => {
   const transactions = useSignal<BalanceTransaction[]>([]);
@@ -51,6 +52,7 @@ export default component$(() => {
 
   return (
     <div class="p-4">
+      <AdminButton href="/money/balance/admin" />
       {error.value && <p class="mt-2 text-red-600">{error.value}</p>}
 
       <TransactionForm

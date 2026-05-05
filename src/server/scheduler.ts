@@ -1,6 +1,8 @@
 import cron from "node-cron";
 import { deleteCompletedParcels } from "../db/parcels.ts";
 import { checkAndAddAllowance } from "../db/allowance.ts";
+import { checkAndAddBillsPeriodStart } from "../db/bills.ts";
+import { checkAndAddBalancePeriodStart } from "../db/balance.ts";
 
 let started = false;
 
@@ -33,6 +35,28 @@ function runAllowanceCheck(): void {
   }
 }
 
+function runPeriodStartChecks(): void {
+  log("period-start", "Checking if period-start transactions should be added");
+
+  try {
+    const billsResult = checkAndAddBillsPeriodStart();
+    if (billsResult.added) {
+      log("period-start", `Added Bills period-start.`);
+    }
+  } catch (err) {
+    log("error", `Failed to check/add Bills period-start: ${err}`);
+  }
+
+  try {
+    const balanceResult = checkAndAddBalancePeriodStart();
+    if (balanceResult.added) {
+      log("period-start", `Added Balance period-start.`);
+    }
+  } catch (err) {
+    log("error", `Failed to check/add Balance period-start: ${err}`);
+  }
+}
+
 export function startScheduler(): void {
   if (started) {
     log("init", "Scheduler already started, skipping");
@@ -45,6 +69,7 @@ export function startScheduler(): void {
   cron.schedule("0 4 * * *", () => {
     runCleanup();
     runAllowanceCheck();
+    runPeriodStartChecks();
   });
 
   log("init", "Scheduled daily cleanup + allowance check at 04:00 UTC");

@@ -67,10 +67,10 @@ export function setupBillsConfig(day_of_month: number = 15) {
   db.close();
 }
 
-export function addBillTransactionSql(description: string, amount: number, created_at?: number) {
+export function addBillTransactionSql(description: string, amount: number, is_automatic: boolean = false, created_at?: number) {
   const db = new Database(DB_PATH);
   const timestamp = created_at ?? Math.floor(Date.now() / 1000);
-  db.prepare("INSERT INTO bills_transactions (description, amount, created_at) VALUES (?, ?, ?)").run(description, amount, timestamp);
+  db.prepare("INSERT INTO bills_transactions (description, amount, is_automatic, created_at) VALUES (?, ?, ?, ?)").run(description, amount, is_automatic ? 1 : 0, timestamp);
   db.close();
 }
 
@@ -88,10 +88,10 @@ export function setupBalanceConfig(day_of_month: number = 15) {
   db.close();
 }
 
-export function addBalanceTransactionSql(description: string, amount: number, created_at?: number) {
+export function addBalanceTransactionSql(description: string, amount: number, is_automatic: boolean = false, created_at?: number) {
   const db = new Database(DB_PATH);
   const timestamp = created_at ?? Math.floor(Date.now() / 1000);
-  db.prepare("INSERT INTO balance_transactions (description, amount, created_at) VALUES (?, ?, ?)").run(description, amount, timestamp);
+  db.prepare("INSERT INTO balance_transactions (description, amount, is_automatic, created_at) VALUES (?, ?, ?, ?)").run(description, amount, is_automatic ? 1 : 0, timestamp);
   db.close();
 }
 

@@ -60,8 +60,10 @@ test.describe("bills page - transaction form and list", () => {
     await expect(firstTransaction.getByText("Second")).toBeVisible();
   });
 
-  test("AdminButton NOT present (no admin page in iteration 1)", async ({ page }) => {
+  test("AdminButton visible and navigates to admin page", async ({ page }) => {
     const adminButton = page.getByTestId("admin-button");
-    await expect(adminButton).not.toBeVisible();
+    await expect(adminButton).toBeVisible();
+    await adminButton.click();
+    await expect(page).toHaveURL("/money/bills/admin");
   });
 });
