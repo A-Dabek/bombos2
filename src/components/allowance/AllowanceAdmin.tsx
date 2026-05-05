@@ -54,6 +54,14 @@ export default component$(() => {
     }
   });
 
+  if (!config.value) {
+    return (
+      <div data-testid="loader" class="flex justify-center p-8">
+        <div class="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+      </div>
+    );
+  }
+
   return (
     <div class="p-4">
       <BackButton href="/money/allowance" />
@@ -76,6 +84,7 @@ export default component$(() => {
             type="number"
             min="1"
             max="28"
+            data-testid="allowance-config-day"
             class="mt-1 rounded border border-gray-300 px-2 py-1 text-sm w-24"
             bind:value={dayOfMonth}
           />
@@ -88,6 +97,7 @@ export default component$(() => {
           <input
             type="number"
             min="0"
+            data-testid="allowance-config-amount"
             class="mt-1 rounded border border-gray-300 px-2 py-1 text-sm w-32"
             bind:value={monthlyAmount}
           />
@@ -96,6 +106,7 @@ export default component$(() => {
         <button
           onClick$={handleSave}
           disabled={loading.value}
+          data-testid="allowance-config-save"
           class="w-fit rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-600 disabled:opacity-50"
         >
           {loading.value ? "Saving..." : "Save"}

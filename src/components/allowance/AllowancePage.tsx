@@ -81,19 +81,30 @@ export default component$(() => {
     }
   });
 
+  if (!config.value) {
+    return (
+      <div data-testid="loader" class="flex justify-center p-8">
+        <div class="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+      </div>
+    );
+  }
+
   return (
     <div class="p-4">
       {error.value && <p class="mt-2 text-red-600">{error.value}</p>}
 
       <div class="mt-4 flex items-start gap-1">
         {/* Balance - big */}
-        <span class={`text-4xl font-bold ${balance.value >= 0 ? "text-green-600" : "text-red-600"}`}>
+        <span
+          data-testid="allowance-balance"
+          class={`text-4xl font-bold ${balance.value >= 0 ? "text-green-600" : "text-red-600"}`}
+        >
           {Math.abs(balance.value)}
         </span>
 
         {/* Monthly amount - small, top-right like exponent */}
         {config.value && (
-          <span class="text-sm text-gray-800 self-start mt-1">
+          <span data-testid="allowance-monthly-income" class="text-sm text-gray-800 self-start mt-1">
             +{config.value.monthly_amount}
           </span>
         )}
@@ -106,17 +117,20 @@ export default component$(() => {
         <input
           type="text"
           placeholder="Description"
+          data-testid="allowance-desc-input"
           class="rounded border border-gray-300 px-2 py-1 text-sm"
           bind:value={description}
         />
         <input
           type="number"
           placeholder="Amount (negative for expense)"
+          data-testid="allowance-amount-input"
           class="rounded border border-gray-300 px-2 py-1 text-sm"
           bind:value={amount}
         />
         <button
           type="submit"
+          data-testid="allowance-add-button"
           disabled={loading.value}
           class="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-600 disabled:opacity-50"
         >
