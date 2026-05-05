@@ -3,6 +3,7 @@ import type { BalanceTransaction } from "~/db/balance";
 import TransactionLine from "~/components/transactions/TransactionLine";
 import TransactionForm from "~/components/transactions/TransactionForm";
 import AdminButton from "~/components/shared/AdminButton";
+import Loader from "~/components/shared/Loader";
 
 export default component$(() => {
   const transactions = useSignal<BalanceTransaction[]>([]);
@@ -12,6 +13,7 @@ export default component$(() => {
   const amount = useSignal("");
 
   const loadTransactions = $(async () => {
+    loading.value = true;
     try {
       const res = await fetch("/api/balance/transactions");
       if (!res.ok) throw new Error("Failed to load transactions");
@@ -19,6 +21,8 @@ export default component$(() => {
       transactions.value = data.transactions ?? [];
     } catch (e: any) {
       error.value = e.message;
+    } finally {
+      loading.value = false;
     }
   });
 
@@ -54,6 +58,12 @@ export default component$(() => {
     <div class="p-4">
       <AdminButton href="/money/balance/admin" />
       {error.value && <p class="mt-2 text-red-600">{error.value}</p>}
+
+      {loading.value && (
+        <div class="flex justify-center py-4">
+          <Loader />
+        </div>
+      )}
 
       <TransactionForm
         description={description.value}

@@ -1,6 +1,7 @@
 import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
 import type { BalanceConfig } from "~/db/balance";
 import BackButton from "~/components/shared/BackButton";
+import Loader from "~/components/shared/Loader";
 
 export default component$(() => {
   const config = useSignal<BalanceConfig | null>(null);
@@ -10,6 +11,7 @@ export default component$(() => {
   const loading = useSignal(false);
 
   useVisibleTask$(async () => {
+    loading.value = true;
     try {
       const res = await fetch("/api/balance/config");
       if (!res.ok) throw new Error("Failed to load config");
@@ -18,6 +20,8 @@ export default component$(() => {
       dayOfMonth.value = data.day_of_month.toString();
     } catch (e: any) {
       error.value = e.message;
+    } finally {
+      loading.value = false;
     }
   });
 
@@ -56,6 +60,12 @@ export default component$(() => {
     <div class="p-4">
       <BackButton href="/money/balance" />
       <h1 class="text-xl font-semibold">Balance Admin</h1>
+
+      {loading.value && (
+        <div class="flex justify-center py-4">
+          <Loader />
+        </div>
+      )}
 
       {error.value && (
         <p class="mt-2 text-red-600">{error.value}</p>

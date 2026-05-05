@@ -19,7 +19,11 @@ export default component$<TransactionFormProps>(
     });
 
     return (
-      <form class="flex flex-col gap-2" onSubmit$={handleSubmit}>
+      <form
+        class="flex flex-col gap-2"
+        preventdefault:submit
+        onSubmit$={handleSubmit}
+      >
         <input
           type="text"
           placeholder="Description"
