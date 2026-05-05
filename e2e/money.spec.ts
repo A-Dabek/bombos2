@@ -9,8 +9,6 @@ import {
 } from "./setup.ts";
 
 test.describe("money module journeys", () => {
-  test.describe.configure({ mode: "serial" });
-
   test.beforeEach(async ({ page }) => {
     clearBalance();
     setupBalanceConfig(15);

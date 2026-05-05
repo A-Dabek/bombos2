@@ -2,10 +2,6 @@ import { test, expect } from "@playwright/test";
 import { clearParcels, addParcelSql } from "./setup";
 
 test.describe("parcels journeys", () => {
-  // We run parcels tests sequentially because they share the same database
-  // and the notification dot is a global state.
-  test.describe.configure({ mode: "serial" });
-
   test.beforeEach(() => {
     clearParcels();
   });

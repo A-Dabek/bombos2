@@ -12,8 +12,6 @@ function seedList(title: string) {
 }
 
 test.describe("plan", () => {
-  test.describe.configure({ mode: "serial" });
-
   test.beforeEach(async () => {
     clearPlan();
   });
