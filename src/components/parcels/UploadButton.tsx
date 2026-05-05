@@ -16,6 +16,7 @@ export default component$<Props>((props) => {
         ref={inputRef}
         type="file"
         accept="image/*"
+        data-testid="parcel-upload-input"
         class="hidden"
         disabled={isUploading.value}
         onChange$={async (event: Event) => {
@@ -43,11 +44,12 @@ export default component$<Props>((props) => {
       />
       <button
         class="w-full rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        data-testid="parcel-upload-button"
         disabled={isUploading.value}
         onClick$={() => inputRef.value?.click()}
       >
         {isUploading.value ? (
-          <span class="flex items-center justify-center gap-2">
+          <span class="flex items-center justify-center gap-2" data-testid="parcel-uploading">
             <HiArrowPathSolid class="h-5 w-5 animate-spin" />
             Uploading...
           </span>

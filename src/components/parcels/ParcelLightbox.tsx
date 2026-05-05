@@ -19,12 +19,14 @@ export default component$<Props>((props) => {
       <img
         src={`data:${props.parcel.contentType};base64,${props.parcel.imageBase64}`}
         alt="Full size parcel"
+        data-testid="parcel-lightbox-image"
         class="max-h-full max-w-full object-contain"
         onClick$={props.onClose$}
       />
       {props.onComplete$ && props.parcel.completedAt === null && (
         <button
           class="mt-4 rounded-lg bg-green-600 px-6 py-3 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          data-testid="parcel-lightbox-complete-button"
           disabled={props.isCompleting}
           onClick$={(e: Event) => {
             e.stopPropagation();
@@ -32,7 +34,7 @@ export default component$<Props>((props) => {
           }}
         >
           {props.isCompleting ? (
-            <span class="flex items-center gap-2">
+            <span class="flex items-center gap-2" data-testid="parcel-lightbox-saving">
               <HiArrowPathSolid class="h-5 w-5 animate-spin" />
               Saving...
             </span>

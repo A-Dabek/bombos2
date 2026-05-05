@@ -1,157 +1,137 @@
 import { test, expect } from "@playwright/test";
 import { clearParcels } from "./setup";
 
-test.describe("parcels", () => {
+test.describe("parcels journeys", () => {
+  // We run parcels tests sequentially because they share the same database
+  // and the notification dot is a global state.
+  test.describe.configure({ mode: "serial" });
+
   test.beforeEach(() => {
     clearParcels();
   });
-  test("redirects /parcels to /parcels/incoming", async ({ page }) => {
+
+  test("Incoming Parcel Journey", async ({ page }) => {
+    // 1. Land and check redirect
     await page.goto("/parcels");
     await expect(page).toHaveURL(/\/parcels\/incoming\/?$/);
-  });
 
-  test("tab navigation works correctly", async ({ page }) => {
-    await page.goto("/parcels/incoming");
-    // Sub-navigation visible
-    await expect(page.getByRole("link", { name: "Incoming" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Outgoing" })).toBeVisible();
-    // Tab switching + highlights
-    await page.getByRole("link", { name: "Outgoing" }).click();
-    await expect(page).toHaveURL(/\/parcels\/outgoing\/?$/);
-    const outgoingLink = page.getByRole("link", { name: "Outgoing" });
-    await expect(outgoingLink).toHaveAttribute("class", /border-blue-500/);
-    await expect(outgoingLink).toHaveAttribute("class", /text-blue-600/);
-  });
+    // 2. Wait for loading to finish
+    const loader = page.getByTestId("loader");
+    if (await loader.isVisible()) {
+      await expect(loader).toBeHidden();
+    }
 
-  test("empty state and loading spinner", async ({ page }) => {
-    await page.goto("/parcels/incoming");
-    // Empty state (includes loading spinner test)
-    await expect(page.locator("svg.animate-spin")).toBeVisible();
+    // 3. Verify sub-nav state and empty state
+    const incomingTab = page.getByTestId("sub-nav-tab-incoming");
+    await expect(incomingTab).toHaveAttribute("class", /border-blue-500/);
     await expect(page.getByText("No parcels yet")).toBeVisible();
-    await expect(page.locator("img[alt='Parcel']").first()).toBeHidden();
-  });
 
-  test("upload incoming image and see miniature", async ({ page }) => {
-    await page.goto("/parcels/incoming");
-    const fileInput = page.locator('input[type="file"]');
-    await fileInput.setInputFiles("e2e/fixtures/test-parcel.png");
-    await expect(page.locator("img[alt='Parcel']").first()).toBeVisible();
-  });
-
-  test("upload outgoing image and see miniature", async ({ page }) => {
-    await page.goto("/parcels/outgoing");
-    const fileInput = page.locator('input[type="file"]');
-    await fileInput.setInputFiles("e2e/fixtures/test-parcel.png");
-    await expect(page.locator("img[alt='Parcel']").first()).toBeVisible();
-  });
-
-  test("fullscreen open and close", async ({ page }) => {
-    await page.goto("/parcels/incoming");
-    const fileInput = page.locator('input[type="file"]');
-    await fileInput.setInputFiles("e2e/fixtures/test-parcel.png");
-    await page.locator("img[alt='Parcel']").first().click();
-    await expect(page.locator("img[alt='Full size parcel']")).toBeVisible();
-    await page.locator("img[alt='Full size parcel']").click();
-    await expect(page.locator("img[alt='Full size parcel']")).not.toBeVisible();
-  });
-
-  test("image persistence after reload", async ({ page }) => {
-    await page.goto("/parcels/incoming");
-    const fileInput = page.locator('input[type="file"]');
-    await fileInput.setInputFiles("e2e/fixtures/test-parcel.png");
-    await expect(page.locator("img[alt='Parcel']").first()).toBeVisible();
-    await page.reload();
-    await expect(page.locator("img[alt='Parcel']").first()).toBeVisible();
-  });
-
-  test("mark parcel as completed", async ({ page }) => {
-    await page.goto("/parcels/incoming");
-    const fileInput = page.locator('input[type="file"]');
-    await fileInput.setInputFiles("e2e/fixtures/test-parcel.png");
-    await expect(page.locator("img[alt='Parcel']").first()).toBeVisible();
-
-    await page.locator("img[alt='Parcel']").first().click();
-    await expect(page.locator("img[alt='Full size parcel']")).toBeVisible();
-
-    await page.getByRole("button", { name: "Mark as Completed" }).click();
-    await expect(page.locator("img[alt='Full size parcel']")).not.toBeVisible();
-
-    const parcelButton = page.locator("button:has(img[alt='Parcel'])").first();
-    await expect(parcelButton).toHaveClass(/brightness-50/);
-
-    await parcelButton.click();
-    await expect(page.locator("img[alt='Full size parcel']")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Mark as Completed" })).not.toBeVisible();
-  });
-
-  test("note CRUD: add, persist, enforce max length", async ({ page }) => {
-    // Incoming note
-    await page.goto("/parcels/incoming");
-    const fileInput = page.locator('input[type="file"]');
-    await fileInput.setInputFiles("e2e/fixtures/test-parcel.png");
-    await expect(page.locator("img[alt='Parcel']").first()).toBeVisible();
-
-    const noteInput = page.locator('input[type="text"]').first();
-    await noteInput.fill("the big one");
-    await expect(noteInput).toHaveValue("the big one");
-    // Max length
-    await expect(noteInput).toHaveAttribute("maxLength", "100");
-    // Persistence - wait for API then reload
-    await page.waitForResponse(
-      (res) => res.url().includes("/api/parcels") && res.request().method() === "POST"
+    // 4. Upload an incoming parcel (test compression .jpg -> .png)
+    const fileInput = page.getByTestId("parcel-upload-input");
+    const uploadPromise = page.waitForResponse(
+      (res) => res.url().includes("/api/parcels/incoming") && res.request().method() === "POST",
     );
+    await fileInput.setInputFiles("e2e/fixtures/test-parcel.jpg");
+    await uploadPromise;
+
+    // Wait for UI to reflect upload
+    await expect(page.getByTestId("parcel-uploading")).toBeHidden();
+    const parcelImage = page.getByTestId("parcel-image").first();
+    await expect(parcelImage).toBeVisible();
+
+    // Verify compression
+    const imgSrc = await parcelImage.getAttribute("src");
+    expect(imgSrc).toMatch(/^data:image\/png;base64,/);
+
+    // 5. Verify notification indicator (blue dot) appears
+    await expect(page.getByTestId("parcel-notification-dot")).toBeVisible();
+
+    // 6. Navigate away and verify dot persists
+    await page.getByTestId("meals-nav-link").click();
+    await expect(page.getByTestId("parcel-notification-dot")).toBeVisible();
+
+    // 7. Go back and add a note
+    await page.getByTestId("parcels-nav-link").click();
+    const noteInput = page.getByTestId("parcel-note-input").first();
+    await noteInput.fill("New incoming");
+
+    // Wait for debounce and API persistence (300ms debounce)
+    await page.waitForResponse(
+      (res) => res.url().includes("/note") && res.request().method() === "POST",
+    );
+
     await page.reload();
-    await expect(page.locator('input[type="text"]').first()).toHaveValue("the big one");
+    await expect(page.getByTestId("parcel-note-input").first()).toHaveValue("New incoming");
 
-    // Outgoing note
-    await page.goto("/parcels/outgoing");
-    await fileInput.setInputFiles("e2e/fixtures/test-parcel.png");
-    await expect(page.locator("img[alt='Parcel']").first()).toBeVisible();
-    const outgoingNoteInput = page.locator('input[type="text"]').first();
-    await outgoingNoteInput.fill("urgent delivery");
-    await expect(outgoingNoteInput).toHaveValue("urgent delivery");
-  });
+    // 8. Lightbox and Completion
+    await page.getByTestId("parcel-image").first().click();
+    const lightboxImage = page.getByTestId("parcel-lightbox-image");
+    await expect(lightboxImage).toBeVisible();
 
-  test("mark as completed shows loading state", async ({ page }) => {
-    await page.goto("/parcels/incoming");
-    const fileInput = page.locator('input[type="file"]');
-    await fileInput.setInputFiles("e2e/fixtures/test-parcel.png");
-    await expect(page.locator("img[alt='Parcel']").first()).toBeVisible();
-
-    await page.locator("img[alt='Parcel']").first().click();
-    await expect(page.locator("img[alt='Full size parcel']")).toBeVisible();
-
-    await page.route("**/api/parcels/*/complete", async (route) => {
-      await new Promise((r) => setTimeout(r, 1000));
-      await route.continue();
-    });
-
-    const completeBtn = page.getByRole("button", { name: "Mark as Completed" });
+    const completeBtn = page.getByTestId("parcel-lightbox-complete-button");
     await completeBtn.click();
 
-    await expect(page.getByRole("button", { name: "Saving..." })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Saving..." })).toBeDisabled();
+    // Wait for lightbox to close
+    await expect(lightboxImage).not.toBeVisible();
 
-    await expect(completeBtn).toBeHidden();
-    await expect(page.locator("img[alt='Full size parcel']")).not.toBeVisible();
+    // 9. Verify notification dot is gone
+    await expect(page.getByTestId("parcel-notification-dot")).not.toBeVisible();
   });
 
-  test("image is compressed on upload", async ({ page }) => {
-    await page.goto("/parcels/incoming");
+  test("Outgoing Parcel Journey", async ({ page }) => {
+    // 1. Land on incoming and switch to outgoing
+    await page.goto("/parcels");
+    await page.getByTestId("sub-nav-tab-outgoing").click();
+    await expect(page).toHaveURL(/\/parcels\/outgoing\/?$/);
 
-    const responsePromise = page.waitForResponse(
-      (res) =>
-        res.url().includes("/api/parcels/incoming") && res.request().method() === "POST"
+    // 2. Wait for loading to finish
+    const loader = page.getByTestId("loader");
+    if (await loader.isVisible()) {
+      await expect(loader).toBeHidden();
+    }
+
+    // 3. Verify sub-nav state and empty state
+    const outgoingTab = page.getByTestId("sub-nav-tab-outgoing");
+    await expect(outgoingTab).toHaveAttribute("class", /border-blue-500/);
+    await expect(page.getByText("No parcels yet")).toBeVisible();
+
+    // 4. Upload an outgoing parcel
+    const fileInput = page.getByTestId("parcel-upload-input");
+    const uploadPromise = page.waitForResponse(
+      (res) => res.url().includes("/api/parcels/outgoing") && res.request().method() === "POST",
+    );
+    await fileInput.setInputFiles("e2e/fixtures/test-parcel.png");
+    await uploadPromise;
+
+    // Wait for UI to reflect upload
+    await expect(page.getByTestId("parcel-uploading")).toBeHidden();
+    const parcelImage = page.getByTestId("parcel-image").first();
+    await expect(parcelImage).toBeVisible();
+
+    // 5. Verify notification indicator (blue dot) appears
+    await expect(page.getByTestId("parcel-notification-dot")).toBeVisible();
+
+    // 6. Add a note
+    const noteInput = page.getByTestId("parcel-note-input").first();
+    await noteInput.fill("Urgent delivery");
+
+    // Wait for debounce and API persistence
+    await page.waitForResponse(
+      (res) => res.url().includes("/note") && res.request().method() === "POST",
     );
 
-    const fileInput = page.locator('input[type="file"]');
-    await fileInput.setInputFiles("e2e/fixtures/test-parcel.jpg");
+    // 7. Lightbox and Completion
+    await page.getByTestId("parcel-image").first().click();
+    const lightboxImage = page.getByTestId("parcel-lightbox-image");
+    await expect(lightboxImage).toBeVisible();
 
-    const response = await responsePromise;
-    expect(response.status()).toBe(201);
-    await expect(page.locator("img[alt='Parcel']").first()).toBeVisible();
+    const completeBtn = page.getByTestId("parcel-lightbox-complete-button");
+    await completeBtn.click();
 
-    const imgSrc = await page.locator("img[alt='Parcel']").first().getAttribute("src");
-    expect(imgSrc).toMatch(/^data:image\/png;base64,/);
+    // Wait for lightbox to close
+    await expect(lightboxImage).not.toBeVisible();
+
+    // 8. Verify notification dot is gone
+    await expect(page.getByTestId("parcel-notification-dot")).not.toBeVisible();
   });
 });

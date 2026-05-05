@@ -64,6 +64,16 @@ The production build will generate client and server modules by running both cli
 pnpm build
 ```
 
+## Testing
+
+The project uses Playwright for End-to-End testing and Vitest for unit tests.
+
+- `pnpm e2e` — Run Playwright E2E tests
+- `pnpm test.db` — Run Vitest database tests
+
+### E2E Strategy
+We are currently transitioning from atomic E2E tests to **User Journey** tests. Guidelines for this transition and future E2E development can be found in [docs/e2e-journey-transition.md](./docs/e2e-journey-transition.md).
+
 ## Fastify Server
 
 This app has a minimal [Fastify server](https://fastify.dev/) implementation. After running a full build, you can preview the build using the command:

@@ -14,6 +14,7 @@ export default component$<Props>((props) => {
       {props.parcels.map((parcel) => (
         <div key={parcel.id} class="flex flex-col starting:opacity-0 opacity-100 transition-opacity duration-300">
           <button
+            data-testid="parcel-item"
             class={`aspect-square overflow-hidden rounded-lg border border-gray-200 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 relative ${parcel.completedAt !== null ? "brightness-50" : ""}`}
             onClick$={() => props.onSelect$(parcel)}
           >

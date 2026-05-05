@@ -15,6 +15,7 @@ function setupMeals() {
 }
 
 test.describe("meals", () => {
+  test.describe.configure({ mode: "serial" });
   test.beforeEach(async () => {
     setupMeals();
   });

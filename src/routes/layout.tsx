@@ -53,6 +53,7 @@ export default component$(() => {
             <a
               key={tab.path}
               href={tab.path}
+              data-testid={`${tab.label.toLowerCase()}-nav-link`}
               class={[
                 "relative flex flex-1 flex-col items-center py-2 text-center text-sm font-medium transition-colors",
                 isActive
@@ -62,7 +63,7 @@ export default component$(() => {
             >
               <Icon class="h-5 w-5" />
               {tab.label === "Parcels" && parcelCount.value > 0 && (
-                <span class="absolute -right-1 top-1 flex h-3 w-3">
+                <span class="absolute -right-1 top-1 flex h-3 w-3" data-testid="parcel-notification-dot">
                   <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                   <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
                 </span>
