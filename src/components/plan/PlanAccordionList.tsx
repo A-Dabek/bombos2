@@ -62,7 +62,7 @@ export default component$(({
         >
           <div class="p-4">
             {isLoading ? (
-              <div class="flex justify-center py-4">
+              <div class="flex justify-center py-4" data-testid="loader">
                 <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
               </div>
             ) : (

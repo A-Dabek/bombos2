@@ -123,7 +123,11 @@ export default component$(() => {
         </button>
       </div>
 
-      {isLoaded.value && lists.value.length === 0 ? (
+      {!isLoaded.value ? (
+        <div class="flex justify-center p-8">
+          <div data-testid="loader" class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      ) : lists.value.length === 0 ? (
         <p class="text-lg text-gray-500">No lists yet</p>
       ) : (
         <ul class="space-y-2">
