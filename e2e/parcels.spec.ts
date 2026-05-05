@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { clearParcels } from "./setup";
+import { clearParcels, addParcelSql } from "./setup";
 
 test.describe("parcels journeys", () => {
   // We run parcels tests sequentially because they share the same database
@@ -132,6 +132,31 @@ test.describe("parcels journeys", () => {
     await expect(lightboxImage).not.toBeVisible();
 
     // 8. Verify notification dot is gone
+    await expect(page.getByTestId("parcel-notification-dot")).not.toBeVisible();
+  });
+
+  test("Parcel Indicator Journey", async ({ page }) => {
+    // 1. Setup an uncompleted parcel in DB (simulating someone else added it)
+    addParcelSql("incoming");
+
+    // 2. Go to a different module (Meals)
+    await page.goto("/meals");
+
+    // 3. Verify notification dot is visible
+    await expect(page.getByTestId("parcel-notification-dot")).toBeVisible();
+
+    // 4. Go to Parcels and complete it
+    await page.getByTestId("parcels-nav-link").click();
+    await expect(page).toHaveURL(/\/parcels\/incoming\/?$/);
+
+    await page.getByTestId("parcel-image").first().click();
+    await page.getByTestId("parcel-lightbox-complete-button").click();
+
+    // Wait for lightbox to close
+    await expect(page.getByTestId("parcel-lightbox-image")).not.toBeVisible();
+
+    // 5. Verify dot is gone even in another module
+    await page.getByTestId("money-nav-link").click();
     await expect(page.getByTestId("parcel-notification-dot")).not.toBeVisible();
   });
 });

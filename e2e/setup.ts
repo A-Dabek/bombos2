@@ -13,6 +13,18 @@ export function clearParcels() {
   db.close();
 }
 
+export function addParcelSql(type: "incoming" | "outgoing", completed_at?: number) {
+  const db = new Database(DB_PATH);
+  const dummyImage = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+    "base64",
+  );
+  db.prepare(
+    "INSERT INTO parcels (type, image, content_type, created_at, completed_at) VALUES (?, ?, ?, ?, ?)",
+  ).run(type, dummyImage, "image/png", Date.now(), completed_at ?? null);
+  db.close();
+}
+
 export function clearPlan() {
   const db = new Database(DB_PATH);
   db.prepare("DELETE FROM plan_items").run();
