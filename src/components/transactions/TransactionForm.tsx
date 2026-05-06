@@ -1,4 +1,5 @@
 import { component$, useSignal, $ } from "@builder.io/qwik";
+import TextInput from "../shared/TextInput";
 
 interface TransactionFormProps {
   description: string;
@@ -26,20 +27,22 @@ export default component$<TransactionFormProps>(
         preventdefault:submit
         onSubmit$={handleSubmit}
       >
-        <input
+        <TextInput
           type="text"
           placeholder="Description"
           data-testid="transaction-desc-input"
-          class="rounded border border-gray-300 px-2 py-1 text-sm"
-          bind:value={description}
+          class="px-2 py-1 text-sm"
+          value={description.value}
+          onInput$={(e) => (description.value = (e.target as HTMLInputElement).value)}
         />
-        <input
+        <TextInput
           type="text"
           inputMode="decimal"
           placeholder="Amount (negative for expense)"
           data-testid="transaction-amount-input"
-          class="rounded border border-gray-300 px-2 py-1 text-sm"
-          bind:value={amount}
+          class="px-2 py-1 text-sm"
+          value={amount.value}
+          onInput$={(e) => (amount.value = (e.target as HTMLInputElement).value)}
         />
         <button
           type="submit"

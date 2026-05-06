@@ -1,6 +1,7 @@
 import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
 import type { BillsAutomaticPayment } from "~/db/bills";
 import Loader from "~/components/shared/Loader";
+import TextInput from "~/components/shared/TextInput";
 import AutomaticPaymentItem from "./AutomaticPaymentItem";
 
 export default component$(() => {
@@ -174,48 +175,39 @@ export default component$(() => {
 
       {/* Add Payment Form */}
       <div class="mt-4 flex flex-col gap-3">
-        <div>
-          <label class="block text-sm font-medium text-gray-700">
-            Name
-          </label>
-          <input
-            data-testid="payment-name-input"
-            type="text"
-            placeholder="e.g., Rent"
-            class="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm"
-            bind:value={newPaymentName}
-          />
-        </div>
+        <TextInput
+          label="Name"
+          data-testid="payment-name-input"
+          type="text"
+          placeholder="e.g., Rent"
+          class="mt-1 w-full px-2 py-1 text-sm"
+          value={newPaymentName.value}
+          onInput$={(e) => (newPaymentName.value = (e.target as HTMLInputElement).value)}
+        />
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700">
-            Slug
-          </label>
-          <input
-            data-testid="payment-slug-input"
-            type="text"
-            placeholder="e.g., rent"
-            class="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm"
-            bind:value={newPaymentSlug}
-          />
-          <p class="mt-1 text-xs text-gray-500">
-            Single word, letters/numbers/underscores only
-          </p>
-        </div>
+        <TextInput
+          label="Slug"
+          data-testid="payment-slug-input"
+          type="text"
+          placeholder="e.g., rent"
+          class="mt-1 w-full px-2 py-1 text-sm"
+          value={newPaymentSlug.value}
+          onInput$={(e) => (newPaymentSlug.value = (e.target as HTMLInputElement).value)}
+        />
+        <p class="mt-1 text-xs text-gray-500">
+          Single word, letters/numbers/underscores only
+        </p>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700">
-            Amount
-          </label>
-          <input
-            data-testid="payment-amount-input"
-            type="number"
-            min="1"
-            placeholder="e.g., 1200"
-            class="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm"
-            bind:value={newPaymentAmount}
-          />
-        </div>
+        <TextInput
+          label="Amount"
+          data-testid="payment-amount-input"
+          type="number"
+          min="1"
+          placeholder="e.g., 1200"
+          class="mt-1 w-full px-2 py-1 text-sm"
+          value={newPaymentAmount.value}
+          onInput$={(e) => (newPaymentAmount.value = (e.target as HTMLInputElement).value)}
+        />
 
         <button
           data-testid="payment-add-button"

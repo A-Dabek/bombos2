@@ -1,5 +1,6 @@
 import { component$, type PropFunction } from "@builder.io/qwik";
 import { HiCheckCircleSolid } from "@qwikest/icons/heroicons";
+import TextInput from "../shared/TextInput";
 import type { Parcel } from "./types";
 
 interface Props {
@@ -29,13 +30,13 @@ export const ParcelListItem = component$<Props>((props) => {
           </div>
         )}
       </button>
-      <input
+      <TextInput
         type="text"
         data-testid="parcel-note-input"
         value={parcel.note ?? ""}
         placeholder="Note..."
         maxLength={100}
-        class="mt-1 w-full rounded border border-gray-300 px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+        class="mt-1 w-full px-1 py-0.5 text-xs focus:ring-1 focus:ring-blue-500"
         onInput$={(e: InputEvent) => {
           const target = e.target as HTMLInputElement;
           props.onNoteChange$(parcel.id, target.value);

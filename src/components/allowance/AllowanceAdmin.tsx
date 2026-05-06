@@ -2,6 +2,7 @@ import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
 import type { AllowanceConfig } from "~/db/allowance";
 import BackButton from "~/components/shared/BackButton";
 import DayOfMonthInput from "~/components/shared/DayOfMonthInput";
+import TextInput from "~/components/shared/TextInput";
 
 export default component$(() => {
   const config = useSignal<AllowanceConfig | null>(null);
@@ -82,18 +83,15 @@ export default component$(() => {
           data-testid="allowance-config-day"
         />
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700">
-            Monthly Amount
-          </label>
-          <input
-            type="number"
-            min="0"
-            data-testid="allowance-config-amount"
-            class="mt-1 rounded border border-gray-300 px-2 py-1 text-sm w-32"
-            bind:value={monthlyAmount}
-          />
-        </div>
+        <TextInput
+          label="Monthly Amount"
+          type="number"
+          min="0"
+          data-testid="allowance-config-amount"
+          class="mt-1 px-2 py-1 text-sm w-32"
+          value={monthlyAmount.value}
+          onInput$={(e) => (monthlyAmount.value = (e.target as HTMLInputElement).value)}
+        />
 
         <button
           onClick$={handleSave}

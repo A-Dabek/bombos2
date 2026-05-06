@@ -2,6 +2,7 @@ import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
 import { useLocation } from "@builder.io/qwik-city";
 import { HiPlusSolid } from "@qwikest/icons/heroicons";
 import BackButton from "~/components/shared/BackButton";
+import TextInput from "~/components/shared/TextInput";
 import type { MealRow } from "~/db/meals";
 import MealAdminItem from "./MealAdminItem";
 
@@ -60,13 +61,14 @@ export default component$<MealAdminProps>((props) => {
        <BackButton href={`/meals/${props.category}`} />
 
       <div class="flex items-center mb-4 space-x-2">
-        <input
+        <TextInput
           type="text"
           data-testid="meal-admin-input"
           value={newMealName.value}
           onInput$={(e) => (newMealName.value = (e.target as HTMLInputElement).value)}
           placeholder="Add new dish..."
-          class="flex-1 px-3 py-2 border rounded"
+          class="flex-1"
+          containerClass="flex-1"
         />
         <button
           data-testid="meal-admin-add"

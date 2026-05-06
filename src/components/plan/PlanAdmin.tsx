@@ -1,6 +1,7 @@
 import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
 import Loader from "~/components/shared/Loader";
 import BackButton from "~/components/shared/BackButton";
+import TextInput from "~/components/shared/TextInput";
 import { HiPlusOutline, HiArrowUpOutline, HiArrowDownOutline, HiTrashOutline, HiCheckCircleSolid } from "@qwikest/icons/heroicons";
 import type { PlanList } from "~/db/plan";
 
@@ -108,12 +109,13 @@ export default component$(() => {
       <h1 class="text-xl font-bold text-gray-800 mb-4">Manage Lists</h1>
 
       <div class="flex items-center mb-4 space-x-2">
-        <input
+        <TextInput
           type="text"
           value={newListTitle.value}
           onInput$={(e) => (newListTitle.value = (e.target as HTMLInputElement).value)}
           placeholder="New list title..."
-          class="flex-1 px-3 py-2 border rounded"
+          class="flex-1"
+          containerClass="flex-1"
         />
         <button
           onClick$={handleAdd}
