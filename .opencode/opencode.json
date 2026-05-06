@@ -41,7 +41,7 @@
     "nextstep": {
       "agent": "caveman",
       "description": "Implement the next step",
-      "template": "Current uncomitted changes are implementation of a lowest number step from `tasks` directory. Commit it, read the next task and implement it. Run `pnpm tests.db` and `pnpm e2e` to verify correctness."
+      "template": "Current uncomitted changes are implementation of a lowest number step from `tasks` directory. Commit it and remove the task file. Read the next task and implement it. Run `pnpm tests.db` and `pnpm e2e` to verify correctness."
     },
     "atomic": {
       "agent": "planner",
