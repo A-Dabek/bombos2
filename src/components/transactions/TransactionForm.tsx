@@ -29,6 +29,7 @@ export default component$<TransactionFormProps>(
         <input
           type="text"
           placeholder="Description"
+          data-testid="transaction-desc-input"
           class="rounded border border-gray-300 px-2 py-1 text-sm"
           bind:value={description}
         />
@@ -36,11 +37,13 @@ export default component$<TransactionFormProps>(
           type="text"
           inputMode="decimal"
           placeholder="Amount (negative for expense)"
+          data-testid="transaction-amount-input"
           class="rounded border border-gray-300 px-2 py-1 text-sm"
           bind:value={amount}
         />
         <button
           type="submit"
+          data-testid="transaction-add-button"
           disabled={loading || !description.value || !amount.value}
           class="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-600 disabled:opacity-50"
         >

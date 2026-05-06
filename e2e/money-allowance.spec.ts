@@ -45,9 +45,9 @@ test.describe("Money Allowance Module Journeys", () => {
     await expect(page.getByTestId("allowance-monthly-income")).toHaveText("+800");
 
     // 4. Add transactions and verify balance and colors
-    await page.getByTestId("allowance-desc-input").fill("Freelance");
-    await page.getByTestId("allowance-amount-input").fill("100");
-    await page.getByTestId("allowance-add-button").click();
+    await page.getByTestId("transaction-desc-input").fill("Freelance");
+    await page.getByTestId("transaction-amount-input").fill("100");
+    await page.getByTestId("transaction-add-button").click();
 
     await expect(page.getByText("Freelance")).toBeVisible();
     await expect(page.getByTestId("allowance-balance")).toHaveText("100");
@@ -55,9 +55,9 @@ test.describe("Money Allowance Module Journeys", () => {
     const incomeAmount = page.locator("text=+100").first();
     await expect(incomeAmount).toHaveClass(/text-green-600/);
 
-    await page.getByTestId("allowance-desc-input").fill("Coffee");
-    await page.getByTestId("allowance-amount-input").fill("-10");
-    await page.getByTestId("allowance-add-button").click();
+    await page.getByTestId("transaction-desc-input").fill("Coffee");
+    await page.getByTestId("transaction-amount-input").fill("-10");
+    await page.getByTestId("transaction-add-button").click();
 
     await expect(page.getByText("Coffee")).toBeVisible();
     await expect(page.getByTestId("allowance-balance")).toHaveText("90");

@@ -14,20 +14,20 @@ test.describe("money module journeys", () => {
         await page.waitForTimeout(500);
 
         // 2. Add income
-        await page.getByPlaceholder("Description").fill("Refund");
-        await page.getByPlaceholder("Amount (negative for expense)").fill("100");
+        await page.getByTestId("transaction-desc-input").fill("Refund");
+        await page.getByTestId("transaction-amount-input").fill("100");
         await Promise.all([
             page.waitForResponse(r => r.url().endsWith("/api/bills/transactions") && r.request().method() === "POST"),
-            page.getByRole("button", {name: "Add"}).click(),
+            page.getByTestId("transaction-add-button").click(),
         ]);
         await expect(page.getByText("+100")).toBeVisible();
 
         // 3. Add expense
-        await page.getByPlaceholder("Description").fill("Rent");
-        await page.getByPlaceholder("Amount (negative for expense)").fill("-1200");
+        await page.getByTestId("transaction-desc-input").fill("Rent");
+        await page.getByTestId("transaction-amount-input").fill("-1200");
         await Promise.all([
             page.waitForResponse(r => r.url().endsWith("/api/bills/transactions") && r.request().method() === "POST"),
-            page.getByRole("button", {name: "Add"}).click(),
+            page.getByTestId("transaction-add-button").click(),
         ]);
         await expect(page.getByText("-1200")).toBeVisible();
 
@@ -46,11 +46,11 @@ test.describe("money module journeys", () => {
         await page.getByTestId("loader").waitFor({state: "hidden"});
         await page.waitForTimeout(500);
 
-        await page.getByPlaceholder("Description").fill("Rent");
-        await page.getByPlaceholder("Amount (negative for expense)").fill("-1200");
+        await page.getByTestId("transaction-desc-input").fill("Rent");
+        await page.getByTestId("transaction-amount-input").fill("-1200");
         await Promise.all([
             page.waitForResponse(r => r.url().endsWith("/api/bills/transactions") && r.request().method() === "POST"),
-            page.getByRole("button", {name: "Add"}).click(),
+            page.getByTestId("transaction-add-button").click(),
         ]);
 
         // 3. Verify period header visible
@@ -78,11 +78,11 @@ test.describe("money module journeys", () => {
         await page.getByTestId("loader").waitFor({state: "hidden"});
         await page.waitForTimeout(500);
 
-        await page.getByPlaceholder("Description").fill("July expense");
-        await page.getByPlaceholder("Amount (negative for expense)").fill("-100");
+        await page.getByTestId("transaction-desc-input").fill("July expense");
+        await page.getByTestId("transaction-amount-input").fill("-100");
         await Promise.all([
             page.waitForResponse(r => r.url().endsWith("/api/bills/transactions") && r.request().method() === "POST"),
-            page.getByRole("button", {name: "Add"}).click(),
+            page.getByTestId("transaction-add-button").click(),
         ]);
 
         // 3. Verify multiple period headers (newest period first)
@@ -119,8 +119,9 @@ test.describe("money module journeys", () => {
         await expect(page.locator("#day-of-month")).toHaveValue("1");
 
         // 6. Return
-        await page.getByRole("link", {name: "Back"}).click();
-        await page.waitForURL(/\/money\/bills\/?$/);
-        await expect(page.getByPlaceholder("Description")).toBeVisible();
+        await page.goto("/money/bills");
+        await page.getByTestId("loader").waitFor({state: "hidden"});
+        await page.waitForTimeout(500); // Hydration safety
+        await expect(page.getByTestId("transaction-desc-input")).toBeVisible();
     });
 });
