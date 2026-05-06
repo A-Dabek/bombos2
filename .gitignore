@@ -55,3 +55,6 @@ html-results/
 
 # Database
 /data/
+
+# Junie
+.junie/
