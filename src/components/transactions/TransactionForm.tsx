@@ -1,4 +1,4 @@
-import { component$, useSignal, $ } from "@builder.io/qwik";
+import { component$, useSignal, useTask$, $ } from "@builder.io/qwik";
 import TextInput from "../shared/TextInput";
 
 interface TransactionFormProps {
@@ -13,12 +13,18 @@ export default component$<TransactionFormProps>(
     const description = useSignal(descProp);
     const amount = useSignal(amountProp);
 
+    // Sync internal signals when props change (e.g., prefill from parent)
+    useTask$(({ track }) => {
+      track(() => descProp);
+      track(() => amountProp);
+      description.value = descProp;
+      amount.value = amountProp;
+    });
+
     const handleSubmit = $(() => {
       const a = amount.value;
       if (loading || !description.value || !a || isNaN(parseFloat(a))) return;
       onSubmit$(description.value, parseFloat(a));
-      description.value = "";
-      amount.value = "";
     });
 
     return (

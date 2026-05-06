@@ -195,5 +195,44 @@ test.describe("money module journeys", () => {
         // Wait for DELETE API call and list reload
         await page.waitForResponse(r => r.url().includes("/api/bills/predefined-payments") && r.request().method() === "DELETE");
         await expect(page.getByTestId("predefined-item").filter({ hasText: "Water" })).toHaveCount(0);
+
+        // 3. User: Go to bills page and add manual bill using predefined
+        await page.goto("/money/bills");
+        await page.getByTestId("loader").waitFor({state: "hidden"});
+        await page.waitForTimeout(500);
+        
+        // Wait for predefined dropdown to be populated
+        await page.getByTestId("bills-predefined-select").waitFor({state: "visible"});
+        
+        // Select predefined payment from dropdown
+        await page.getByTestId("bills-predefined-select").selectOption("electricity");
+        
+        // Description pre-filled with "Electricity"
+        await expect(page.getByTestId("transaction-desc-input")).toHaveValue("Electricity");
+        
+        // Edit description (user can still edit)
+        await page.getByTestId("transaction-desc-input").fill("Electricity - June");
+        await page.getByTestId("transaction-amount-input").fill("-150");
+        
+        await Promise.all([
+            page.waitForResponse(r => r.url().endsWith("/api/bills/transactions") && r.request().method() === "POST"),
+            page.getByTestId("transaction-add-button").click(),
+        ]);
+        
+        await expect(page.getByText("Electricity - June")).toBeVisible();
+        await expect(page.getByText("-150")).toBeVisible();
+        
+        // 4. User: Add manual bill with free text (no predefined)
+        await page.getByTestId("bills-predefined-select").selectOption("");
+        await page.getByTestId("transaction-desc-input").fill("Internet");
+        await page.getByTestId("transaction-amount-input").fill("-80");
+        
+        await Promise.all([
+            page.waitForResponse(r => r.url().endsWith("/api/bills/transactions") && r.request().method() === "POST"),
+            page.getByTestId("transaction-add-button").click(),
+        ]);
+        
+        await expect(page.getByText("Internet")).toBeVisible();
+        await expect(page.getByText("-80")).toBeVisible();
     });
 });

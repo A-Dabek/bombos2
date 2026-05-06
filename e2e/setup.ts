@@ -182,3 +182,9 @@ export function clearBillsPredefinedPayments() {
   db.prepare("DELETE FROM bills_predefined_payments").run();
   db.close();
 }
+
+export function addBillsPredefinedPaymentSql(name: string, slug: string) {
+  const db = new Database(DB_PATH);
+  db.prepare("INSERT INTO bills_predefined_payments (name, slug) VALUES (?, ?)").run(name, slug);
+  db.close();
+}

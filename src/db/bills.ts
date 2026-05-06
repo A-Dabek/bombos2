@@ -12,6 +12,7 @@ export interface BillsTransaction {
   description: string;
   amount: number;
   is_automatic: boolean;
+  predefined_slug?: string;
   created_at: number;
 }
 
@@ -52,13 +53,22 @@ export function addBillTransaction(
   description: string,
   amount: number,
   is_automatic = false,
+  predefined_slug?: string,
   db?: Database.Database,
 ): number {
   const dbConn = db ?? getDb();
-  const result = dbConn.prepare(
-    "INSERT INTO bills_transactions (description, amount, is_automatic) VALUES (?, ?, ?)",
-  ).run(description, amount, is_automatic ? 1 : 0);
-  return Number(result.lastInsertRowid);
+  
+  if (predefined_slug) {
+    const result = dbConn.prepare(
+      "INSERT INTO bills_transactions (description, amount, is_automatic, predefined_slug) VALUES (?, ?, ?, ?)"
+    ).run(description, amount, is_automatic ? 1 : 0, predefined_slug);
+    return Number(result.lastInsertRowid);
+  } else {
+    const result = dbConn.prepare(
+      "INSERT INTO bills_transactions (description, amount, is_automatic) VALUES (?, ?, ?)"
+    ).run(description, amount, is_automatic ? 1 : 0);
+    return Number(result.lastInsertRowid);
+  }
 }
 
 export function getBillTransactions(
@@ -68,11 +78,11 @@ export function getBillTransactions(
   const dbConn = db ?? getDb();
   if (include_automatic) {
     return dbConn.prepare(
-      "SELECT id, description, amount, is_automatic, created_at FROM bills_transactions ORDER BY id DESC",
+      "SELECT id, description, amount, is_automatic, predefined_slug, created_at FROM bills_transactions ORDER BY id DESC",
     ).all() as BillsTransaction[];
   }
   return dbConn.prepare(
-    "SELECT id, description, amount, is_automatic, created_at FROM bills_transactions WHERE is_automatic = 0 ORDER BY id DESC",
+    "SELECT id, description, amount, is_automatic, predefined_slug, created_at FROM bills_transactions WHERE is_automatic = 0 ORDER BY id DESC",
   ).all() as BillsTransaction[];
 }
 
@@ -132,7 +142,7 @@ export function getBillTransactionsGroupedByPeriod(
 
   // Get ALL transactions ASC (oldest first) for proper grouping
   const transactions = dbConn.prepare(
-    "SELECT id, description, amount, is_automatic, created_at FROM bills_transactions ORDER BY id ASC",
+    "SELECT id, description, amount, is_automatic, predefined_slug, created_at FROM bills_transactions ORDER BY id ASC",
   ).all() as BillsTransaction[];
 
   const groups: BillsTransactionGroup[] = [];
@@ -253,7 +263,7 @@ export function createAutomaticPaymentTransactions(
   
   // Get all active automatic payments ordered by amount DESC (highest to lowest)
   const payments = dbConn.prepare(
-    "SELECT name, amount FROM bills_automatic_payments ORDER BY amount DESC"
+    "SELECT name, slug, amount FROM bills_automatic_payments ORDER BY amount DESC"
   ).all() as BillsAutomaticPayment[];
   
   let createdCount = 0;
@@ -262,9 +272,10 @@ export function createAutomaticPaymentTransactions(
     // Create transaction with is_automatic=1
     // Description stores the "name" for UI display
     // Amount is NEGATED because automatic payments are expenses
+    // predefined_slug links back to the predefined payment
     dbConn.prepare(
-      "INSERT INTO bills_transactions (description, amount, is_automatic) VALUES (?, ?, 1)"
-    ).run(payment.name, -payment.amount);
+      "INSERT INTO bills_transactions (description, amount, is_automatic, predefined_slug) VALUES (?, ?, 1, ?)"
+    ).run(payment.name, -payment.amount, payment.slug);
     createdCount++;
   }
   

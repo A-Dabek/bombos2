@@ -1,6 +1,6 @@
 import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
 import type { BillsTransactionGroup } from "~/db/bills";
-import TransactionForm from "~/components/transactions/TransactionForm";
+import BillsTransactionForm from "~/components/bills/BillsTransactionForm";
 import TransactionGroup from "~/components/transactions/TransactionGroup";
 import AdminButton from "~/components/shared/AdminButton";
 import Loader from "~/components/shared/Loader";
@@ -9,8 +9,6 @@ export default component$(() => {
   const groups = useSignal<BillsTransactionGroup[]>([]);
   const loading = useSignal(false);
   const error = useSignal<string | null>(null);
-  const description = useSignal("");
-  const amount = useSignal("");
 
   const loadData = $(async () => {
     loading.value = true;
@@ -30,23 +28,24 @@ export default component$(() => {
     await loadData();
   });
 
-  const handleAdd = $(async (desc: string, amt: number) => {
+  const handleAdd = $(async (desc: string, amt: number, predefinedSlug?: string) => {
     if (!desc || isNaN(amt) || amt === 0 || loading.value) return;
     loading.value = true;
     error.value = null;
     try {
+      const body: any = { description: desc, amount: amt };
+      if (predefinedSlug) body.predefined_slug = predefinedSlug;
+      
       const res = await fetch("/api/bills/transactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description: desc, amount: amt }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.message || "Failed to add transaction");
       }
       await loadData();
-      description.value = "";
-      amount.value = "";
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -65,9 +64,7 @@ export default component$(() => {
         </div>
       )}
 
-      <TransactionForm
-        description={description.value}
-        amount={amount.value}
+      <BillsTransactionForm
         loading={loading.value}
         onSubmit$={handleAdd}
       />
