@@ -1,6 +1,7 @@
 import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
 import type { AllowanceConfig } from "~/db/allowance";
 import BackButton from "~/components/shared/BackButton";
+import DayOfMonthInput from "~/components/shared/DayOfMonthInput";
 
 export default component$(() => {
   const config = useSignal<AllowanceConfig | null>(null);
@@ -76,19 +77,10 @@ export default component$(() => {
       )}
 
       <div class="mt-4 flex flex-col gap-3">
-        <div>
-          <label class="block text-sm font-medium text-gray-700">
-            Day of Month (1-28)
-          </label>
-          <input
-            type="number"
-            min="1"
-            max="28"
-            data-testid="allowance-config-day"
-            class="mt-1 rounded border border-gray-300 px-2 py-1 text-sm w-24"
-            bind:value={dayOfMonth}
-          />
-        </div>
+        <DayOfMonthInput
+          dayOfMonth={dayOfMonth}
+          data-testid="allowance-config-day"
+        />
 
         <div>
           <label class="block text-sm font-medium text-gray-700">
