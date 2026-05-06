@@ -79,6 +79,13 @@ export function setupBillsConfig(day_of_month: number = 15) {
   db.close();
 }
 
+export function addBillsPeriodStartMarker(created_at?: number) {
+  const db = new Database(DB_PATH);
+  const timestamp = created_at ?? Math.floor(Date.now() / 1000);
+  db.prepare("INSERT INTO bills_transactions (description, amount, is_automatic, created_at) VALUES ('Period start', 0, 1, ?)").run(timestamp);
+  db.close();
+}
+
 export function addBillTransactionSql(description: string, amount: number, is_automatic: boolean = false, created_at?: number) {
   const db = new Database(DB_PATH);
   const timestamp = created_at ?? Math.floor(Date.now() / 1000);
@@ -97,6 +104,13 @@ export function setupBalanceConfig(day_of_month: number = 15) {
   const db = new Database(DB_PATH);
   db.prepare("DELETE FROM balance_config").run();
   db.prepare("INSERT INTO balance_config (day_of_month) VALUES (?)").run(day_of_month);
+  db.close();
+}
+
+export function addBalancePeriodStartMarker(created_at?: number) {
+  const db = new Database(DB_PATH);
+  const timestamp = created_at ?? Math.floor(Date.now() / 1000);
+  db.prepare("INSERT INTO balance_transactions (description, amount, is_automatic, created_at) VALUES ('Period start', 0, 1, ?)").run(timestamp);
   db.close();
 }
 

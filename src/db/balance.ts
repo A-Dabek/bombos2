@@ -1,5 +1,6 @@
 import Database from "better-sqlite3";
 import { getDb } from "./connection.ts";
+import { getOrdinal } from "~/utils/date";
 
 export interface BalanceConfig {
   id: number;
@@ -12,6 +13,12 @@ export interface BalanceTransaction {
   amount: number;
   is_automatic: boolean;
   created_at: number;
+}
+
+export interface BalanceTransactionGroup {
+  periodLabel: string;        // "May 15th – June 15th"
+  periodStartTs: number;       // for sorting
+  transactions: BalanceTransaction[];  // excludes is_automatic=1
 }
 
 export function getBalanceConfig(
@@ -116,4 +123,66 @@ export function checkAndAddBalancePeriodStart(
 
   addPeriodStartTransaction(dbConn);
   return { added: true };
+}
+
+export function getBalanceTransactionsGroupedByPeriod(
+  db?: Database.Database,
+): BalanceTransactionGroup[] {
+  const dbConn = db ?? getDb();
+
+  // Get ALL transactions ASC (oldest first) for proper grouping
+  const transactions = dbConn.prepare(
+    "SELECT id, description, amount, is_automatic, created_at FROM balance_transactions ORDER BY id ASC",
+  ).all() as BalanceTransaction[];
+
+  const groups: BalanceTransactionGroup[] = [];
+  let currentGroup: BalanceTransactionGroup | null = null;
+
+  for (const tx of transactions) {
+    // Period-start marker: new group begins
+    if (tx.is_automatic && tx.amount === 0) {
+      const startDate = new Date(tx.created_at * 1000);
+      const startDay = startDate.getDate();
+      const startOrdinal = getOrdinal(startDay);
+      const startMonth = startDate.toLocaleString("en-US", { month: "long" });
+
+      // End date = same day next month
+      const endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + 1);
+      const endDay = endDate.getDate();
+      const endOrdinal = getOrdinal(endDay);
+      const endMonth = endDate.toLocaleString("en-US", { month: "long" });
+
+      const periodLabel = `${startMonth} ${startDay}${startOrdinal} – ${endMonth} ${endDay}${endOrdinal}`;
+
+      currentGroup = {
+        periodLabel,
+        periodStartTs: tx.created_at,
+        transactions: [],  // period markers are NOT included in the list
+      };
+      groups.push(currentGroup);
+    } else if (currentGroup && !tx.is_automatic) {
+      // Add to current group (only non-automatic transactions)
+      currentGroup.transactions.push(tx);
+    } else if (!currentGroup && !tx.is_automatic) {
+      // No period marker yet: create a default group
+      currentGroup = {
+        periodLabel: "Transactions",
+        periodStartTs: 0,
+        transactions: [],
+      };
+      groups.push(currentGroup);
+      currentGroup.transactions.push(tx);
+    }
+    // If no group and tx is_automatic (but not amount=0), skip it
+  }
+
+  // Reverse groups so newest period appears first (for UI)
+  groups.reverse();
+  // Reverse transactions within each group so newest appears first
+  for (const group of groups) {
+    group.transactions.reverse();
+  }
+
+  return groups;
 }

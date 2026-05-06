@@ -1,24 +1,25 @@
 import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
-import type { BalanceTransaction } from "~/db/balance";
+import type { BalanceTransactionGroup } from "~/db/balance";
 import TransactionLine from "~/components/transactions/TransactionLine";
 import TransactionForm from "~/components/transactions/TransactionForm";
+import PeriodHeader from "~/components/transactions/PeriodHeader";
 import AdminButton from "~/components/shared/AdminButton";
 import Loader from "~/components/shared/Loader";
 
 export default component$(() => {
-  const transactions = useSignal<BalanceTransaction[]>([]);
+  const groups = useSignal<BalanceTransactionGroup[]>([]);
   const loading = useSignal(false);
   const error = useSignal<string | null>(null);
   const description = useSignal("");
   const amount = useSignal("");
 
-  const loadTransactions = $(async () => {
+  const loadData = $(async () => {
     loading.value = true;
     try {
       const res = await fetch("/api/balance/transactions");
       if (!res.ok) throw new Error("Failed to load transactions");
       const data = await res.json();
-      transactions.value = data.transactions ?? [];
+      groups.value = data.groups ?? [];
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -27,7 +28,7 @@ export default component$(() => {
   });
 
   useVisibleTask$(async () => {
-    await loadTransactions();
+    await loadData();
   });
 
   const handleAdd = $(async (desc: string, amt: number) => {
@@ -44,7 +45,7 @@ export default component$(() => {
         const err = await res.json();
         throw new Error(err.message || "Failed to add transaction");
       }
-      await loadTransactions();
+      await loadData();
       description.value = "";
       amount.value = "";
     } catch (e: any) {
@@ -72,14 +73,21 @@ export default component$(() => {
         onSubmit$={handleAdd}
       />
 
-      {transactions.value.length > 0 && (
-        <div class="mt-6 divide-y divide-gray-100">
-          {transactions.value.map((tx) => (
-            <TransactionLine
-              key={tx.id}
-              description={tx.description}
-              amount={tx.amount}
-            />
+      {groups.value.length > 0 && (
+        <div class="mt-6 space-y-4">
+          {groups.value.map((group) => (
+            <div key={group.periodLabel}>
+              <PeriodHeader periodLabel={group.periodLabel} />
+              <div class="divide-y divide-gray-100">
+                {group.transactions.map((tx) => (
+                  <TransactionLine
+                    key={tx.id}
+                    description={tx.description}
+                    amount={tx.amount}
+                  />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       )}

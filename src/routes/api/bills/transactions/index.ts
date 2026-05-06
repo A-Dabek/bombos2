@@ -1,9 +1,9 @@
 import { RequestHandler } from "@builder.io/qwik-city";
-import { addBillTransaction, getBillTransactions } from "~/db/bills";
+import { addBillTransaction, getBillTransactionsGroupedByPeriod } from "~/db/bills";
 
 export const onGet: RequestHandler = async ({ json }) => {
-  const transactions = getBillTransactions();
-  json(200, { transactions });
+  const groups = getBillTransactionsGroupedByPeriod();
+  json(200, { groups });
 };
 
 export const onPost: RequestHandler = async ({ parseBody, json, error }) => {
