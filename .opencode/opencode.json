@@ -1,23 +1,23 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["@tarquinen/opencode-dcp@3.1.9"],
+  "plugin": [/*"@tarquinen/opencode-dcp@3.1.9",*/ "context-mode"],
   "mcp": {
     "memelord": {
+      "enabled": true,
       "type": "local",
       "command": ["memelord", "serve"],
       "environment": {
         "MEMELORD_DIR": "C:\\Users\\asan_\\IdeaProjects\\bombos2\\.memelord"
-      },
-      "enabled": true
+      }
     },
-    "angular-cli": {
-      "type": "local",
+    "context-mode": {
       "enabled": true,
-      "command": ["npx", "-y", "@angular/cli", "mcp"]
+      "type": "local",
+      "command": ["context-mode"]
     },
     "serena": {
       "type": "local",
-      "enabled": true,
+      "enabled": false,
       "command": [
         "C:\\Users\\asan_\\IdeaProjects\\serena\\.venv\\Scripts\\serena.exe",
         "start-mcp-server",
@@ -33,15 +33,24 @@
       "description": "Implement the plan",
       "template": "Implement latest ADR from docs directory. Create a feature branch first. Write e2e tests afterwards to validate implementation."
     },
+    "nextstep": {
+      "agent": "caveman",
+      "description": "Implement the next step",
+      "template": "Find the MD file in `tasks` directory with lowest number and implement it. Run `pnpm tests.db` and `pnpm e2e` to verify correctness."
+    },
     "atomic": {
       "agent": "planner",
       "description": "Plan the next steps",
-      "template": "Based on the plan, create another document where you define this plan a series of atomic tasks/changes, so that each one can be done as a separate change. The slices should be vertical so each is a delivarable."
+      "template": "Divide the implementation plan into atomic steps where each is the next iteration. Each step should be an end-to-end improvement, do NOT slice it horizontally. Write them into dedicated MD files under `tasks` directory. Use format `task-<number>-<name>`"
     },
     "finish": {
       "agent": "caveman",
       "description": "Finish the plan",
       "template": "Commit unstaged changes, merge the feature branch to develop, and interact with memory if needed."
+    },
+    "memorize": {
+      "description": "Report to memory",
+      "template": "Report anything crucial to memory"
     }
   },
   "permission": {
@@ -55,7 +64,8 @@
       "mode": "primary",
       "tools": {
         "serena": true,
-        "memelord": true
+        "memelord": true,
+        "context-mode": true
       },
       "permission": {
         "skill": {
@@ -81,7 +91,8 @@
       },
       "tools": {
         "serena": true,
-        "memelord": true
+        "memelord": true,
+        "context-mode": true
       }
     }
   }
