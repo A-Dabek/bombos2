@@ -5,7 +5,7 @@ export default defineConfig({
     ["list"],
     ["html", { outputFolder: "html-results", open: "never" }],
   ],
-  timeout: 15 * 1000, // don't increase it, it will never take longer
+  timeout: 10 * 1000, // don't increase it, it will never take longer
   testDir: "./e2e",
   retries: 2,
   use: {
