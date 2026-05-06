@@ -270,3 +270,48 @@ export function createAutomaticPaymentTransactions(
   
   return createdCount;
 }
+
+// ADR-024: Predefined Payments CRUD
+
+export interface BillsPredefinedPayment {
+  id: number;
+  name: string;
+  slug: string;
+  created_at: number;
+}
+
+export function getBillsPredefinedPayments(
+  db?: Database.Database,
+): BillsPredefinedPayment[] {
+  const dbConn = db ?? getDb();
+  return dbConn.prepare(
+    "SELECT id, name, slug, created_at FROM bills_predefined_payments ORDER BY name ASC"
+  ).all() as BillsPredefinedPayment[];
+}
+
+export function addBillsPredefinedPayment(
+  input: { name: string; slug: string },
+  db?: Database.Database,
+): number {
+  const dbConn = db ?? getDb();
+  
+  if (!/^[a-zA-Z0-9_]+$/.test(input.slug)) {
+    throw new Error("Slug must be a single word (alphanumeric + underscores only)");
+  }
+  
+  const result = dbConn.prepare(
+    "INSERT INTO bills_predefined_payments (name, slug) VALUES (?, ?)"
+  ).run(input.name, input.slug);
+  
+  return Number(result.lastInsertRowid);
+}
+
+export function deleteBillsPredefinedPayment(
+  id: number,
+  db?: Database.Database,
+): void {
+  const dbConn = db ?? getDb();
+  dbConn.prepare(
+    "DELETE FROM bills_predefined_payments WHERE id = ?"
+  ).run(id);
+}

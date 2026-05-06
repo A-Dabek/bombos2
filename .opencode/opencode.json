@@ -33,10 +33,15 @@
       "description": "Implement the plan",
       "template": "Implement latest ADR from docs directory. Create a feature branch first. Write e2e tests afterwards to validate implementation."
     },
+    "startwork": {
+      "agent": "caveman",
+      "description": "Implement the first next step",
+      "template": "Find the MD file in `tasks` directory with lowest number and implement it. Create a feature branch. Run `pnpm tests.db` and `pnpm e2e` to verify correctness."
+    },
     "nextstep": {
       "agent": "caveman",
       "description": "Implement the next step",
-      "template": "Find the MD file in `tasks` directory with lowest number and implement it. Run `pnpm tests.db` and `pnpm e2e` to verify correctness."
+      "template": "Current uncomitted changes are implementation of a lowest number step from `tasks` directory. Commit it, read the next task and implement it. Run `pnpm tests.db` and `pnpm e2e` to verify correctness."
     },
     "atomic": {
       "agent": "planner",

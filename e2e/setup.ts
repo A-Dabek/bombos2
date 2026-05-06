@@ -174,3 +174,11 @@ export function addBillsAutomaticPaymentSql(name: string, slug: string, amount: 
   db.prepare("INSERT INTO bills_automatic_payments (name, slug, amount) VALUES (?, ?, ?)").run(name, slug, amount);
   db.close();
 }
+
+// ADR-024: Predefined Payments helpers
+
+export function clearBillsPredefinedPayments() {
+  const db = new Database(DB_PATH);
+  db.prepare("DELETE FROM bills_predefined_payments").run();
+  db.close();
+}

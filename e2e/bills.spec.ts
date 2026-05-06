@@ -1,10 +1,11 @@
 import {expect, test} from "@playwright/test";
-import {addBillsPeriodStartMarker, clearBills, setupBillsConfig, clearBillsAutomaticPayments, addBillsAutomaticPaymentSql,} from "./setup.ts";
+import {addBillsPeriodStartMarker, clearBills, setupBillsConfig, clearBillsAutomaticPayments, addBillsAutomaticPaymentSql, clearBillsPredefinedPayments,} from "./setup.ts";
 
 test.describe("money module journeys", () => {
     test.beforeEach(async ({page}) => {
         clearBills();
         clearBillsAutomaticPayments();
+        clearBillsPredefinedPayments();
         setupBillsConfig(15);
     });
 
@@ -161,5 +162,38 @@ test.describe("money module journeys", () => {
 
         // Give time for API call
         await page.waitForTimeout(2000);
+    });
+
+    test("Bills: Predefined payments journey", async ({page}) => {
+        // 1. Admin: Add predefined payments
+        await page.goto("/money/bills/admin");
+        await page.getByTestId("loader").waitFor({state: "hidden"});
+
+        // Add "Electricity"
+        await page.getByTestId("predefined-name-input").fill("Electricity");
+        await page.getByTestId("predefined-slug-input").fill("electricity");
+        await Promise.all([
+            page.waitForResponse(r => r.url().includes("/api/bills/predefined-payments") && r.request().method() === "POST"),
+            page.getByTestId("predefined-add-button").click(),
+        ]);
+        await expect(page.getByTestId("predefined-item")).toContainText("Electricity");
+
+        // Add "Water"
+        await page.getByTestId("predefined-name-input").fill("Water");
+        await page.getByTestId("predefined-slug-input").fill("water");
+        await Promise.all([
+            page.waitForResponse(r => r.url().includes("/api/bills/predefined-payments") && r.request().method() === "POST"),
+            page.getByTestId("predefined-add-button").click(),
+        ]);
+        await expect(page.getByTestId("predefined-item").last()).toContainText("Water");
+
+        // 2. Delete "Water" - two-click confirmation pattern
+        const deleteWaterBtn = page.getByTestId("predefined-delete-water");
+        await deleteWaterBtn.click(); // First click: shows "Confirm?"
+        await deleteWaterBtn.click(); // Second click: confirms deletion
+
+        // Wait for DELETE API call and list reload
+        await page.waitForResponse(r => r.url().includes("/api/bills/predefined-payments") && r.request().method() === "DELETE");
+        await expect(page.getByTestId("predefined-item").filter({ hasText: "Water" })).toHaveCount(0);
     });
 });
