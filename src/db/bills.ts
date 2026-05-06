@@ -186,3 +186,87 @@ export function getBillTransactionsGroupedByPeriod(
 
   return groups;
 }
+
+// ADR-023: Automatic Payments
+
+export interface BillsAutomaticPayment {
+  id: number;
+  name: string;
+  slug: string;
+  amount: number;  // Absolute value (positive), stored as defined by user
+  created_at: number;
+}
+
+export interface BillsAutomaticPaymentInput {
+  name: string;
+  slug: string;
+  amount: number;  // Absolute value (positive)
+}
+
+export function getBillsAutomaticPayments(
+  db?: Database.Database,
+): BillsAutomaticPayment[] {
+  const dbConn = db ?? getDb();
+  // Order by amount DESC (highest to lowest) for admin UI and scheduler
+  return dbConn.prepare(
+    "SELECT id, name, slug, amount, created_at FROM bills_automatic_payments ORDER BY amount DESC"
+  ).all() as BillsAutomaticPayment[];
+}
+
+export function addBillsAutomaticPayment(
+  input: BillsAutomaticPaymentInput,
+  db?: Database.Database,
+): number {
+  const dbConn = db ?? getDb();
+  
+  // Validate slug format (single word, alphanumeric + underscores)
+  if (!/^[a-zA-Z0-9_]+$/.test(input.slug)) {
+    throw new Error("Slug must be a single word (alphanumeric + underscores only)");
+  }
+  
+  // Validate amount is positive (absolute value)
+  if (input.amount <= 0) {
+    throw new Error("Amount must be a positive number");
+  }
+  
+  const result = dbConn.prepare(
+    "INSERT INTO bills_automatic_payments (name, slug, amount) VALUES (?, ?, ?)"
+  ).run(input.name, input.slug, input.amount);
+  
+  return Number(result.lastInsertRowid);
+}
+
+export function deleteBillsAutomaticPayment(
+  id: number,
+  db?: Database.Database,
+): void {
+  const dbConn = db ?? getDb();
+  dbConn.prepare(
+    "DELETE FROM bills_automatic_payments WHERE id = ?"
+  ).run(id);
+}
+
+export function createAutomaticPaymentTransactions(
+  db?: Database.Database,
+): number {
+  const dbConn = db ?? getDb();
+  
+  // Get all active automatic payments ordered by amount DESC (highest to lowest)
+  const payments = dbConn.prepare(
+    "SELECT name, amount FROM bills_automatic_payments ORDER BY amount DESC"
+  ).all() as BillsAutomaticPayment[];
+  
+  let createdCount = 0;
+  
+  for (const payment of payments) {
+    // Create transaction with is_automatic=1
+    // Description stores the "name" for UI display
+    // Amount is NEGATED because automatic payments are expenses
+    dbConn.prepare(
+      "INSERT INTO bills_transactions (description, amount, is_automatic) VALUES (?, ?, 1)"
+    ).run(payment.name, -payment.amount);
+    createdCount++;
+  }
+  
+  return createdCount;
+}

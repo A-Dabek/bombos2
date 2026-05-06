@@ -157,5 +157,20 @@ export function clearAll() {
   db.prepare("DELETE FROM meals").run();
   db.prepare("DELETE FROM allowance_transactions").run();
   db.prepare("DELETE FROM allowance_config").run();
+  db.prepare("DELETE FROM bills_automatic_payments").run();
+  db.close();
+}
+
+// ADR-023: Automatic Payments helpers
+
+export function clearBillsAutomaticPayments() {
+  const db = new Database(DB_PATH);
+  db.prepare("DELETE FROM bills_automatic_payments").run();
+  db.close();
+}
+
+export function addBillsAutomaticPaymentSql(name: string, slug: string, amount: number) {
+  const db = new Database(DB_PATH);
+  db.prepare("INSERT INTO bills_automatic_payments (name, slug, amount) VALUES (?, ?, ?)").run(name, slug, amount);
   db.close();
 }

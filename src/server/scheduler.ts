@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import { deleteCompletedParcels } from "../db/parcels.ts";
 import { checkAndAddAllowance } from "../db/allowance.ts";
-import { checkAndAddBillsPeriodStart } from "../db/bills.ts";
+import { checkAndAddBillsPeriodStart, createAutomaticPaymentTransactions } from "../db/bills.ts";
 import { checkAndAddBalancePeriodStart } from "../db/balance.ts";
 
 let started = false;
@@ -42,6 +42,14 @@ function runPeriodStartChecks(): void {
     const billsResult = checkAndAddBillsPeriodStart();
     if (billsResult.added) {
       log("period-start", `Added Bills period-start.`);
+      
+      // After adding period marker, create automatic payment transactions
+      try {
+        const createdCount = createAutomaticPaymentTransactions();
+        log("period-start", `Created ${createdCount} automatic payment transactions for Bills.`);
+      } catch (err) {
+        log("error", `Failed to create automatic payment transactions: ${err}`);
+      }
     }
   } catch (err) {
     log("error", `Failed to check/add Bills period-start: ${err}`);
