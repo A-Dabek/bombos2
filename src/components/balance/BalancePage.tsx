@@ -1,8 +1,7 @@
 import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
 import type { BalanceTransactionGroup } from "~/db/balance";
-import TransactionLine from "~/components/transactions/TransactionLine";
 import TransactionForm from "~/components/transactions/TransactionForm";
-import PeriodHeader from "~/components/transactions/PeriodHeader";
+import TransactionGroup from "~/components/transactions/TransactionGroup";
 import AdminButton from "~/components/shared/AdminButton";
 import Loader from "~/components/shared/Loader";
 
@@ -76,18 +75,11 @@ export default component$(() => {
       {groups.value.length > 0 && (
         <div class="mt-6 space-y-4">
           {groups.value.map((group) => (
-            <div key={group.periodLabel}>
-              <PeriodHeader periodLabel={group.periodLabel} />
-              <div class="divide-y divide-gray-100">
-                {group.transactions.map((tx) => (
-                  <TransactionLine
-                    key={tx.id}
-                    description={tx.description}
-                    amount={tx.amount}
-                  />
-                ))}
-              </div>
-            </div>
+            <TransactionGroup
+              key={group.periodLabel}
+              periodLabel={group.periodLabel}
+              transactions={group.transactions}
+            />
           ))}
         </div>
       )}

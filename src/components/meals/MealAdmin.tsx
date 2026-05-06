@@ -1,8 +1,9 @@
 import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
 import { useLocation } from "@builder.io/qwik-city";
-import { HiPlusSolid, HiTrashSolid } from "@qwikest/icons/heroicons";
+import { HiPlusSolid } from "@qwikest/icons/heroicons";
 import BackButton from "~/components/shared/BackButton";
 import type { MealRow } from "~/db/meals";
+import MealAdminItem from "./MealAdminItem";
 
 interface MealAdminProps {
   category: "dinner" | "supper";
@@ -82,21 +83,11 @@ export default component$<MealAdminProps>((props) => {
       ) : (
         <ul>
           {meals.value.map((meal) => (
-            <li
+            <MealAdminItem
               key={meal.id}
-              role="listitem"
-              class="flex items-center justify-between p-3 bg-white border rounded"
-            >
-              <span class="text-gray-800">{meal.name}</span>
-              <button
-                data-testid="meal-admin-delete"
-                onClick$={() => handleDelete(meal.id)}
-                class="p-2 text-red-500 hover:text-red-700"
-                aria-label="Delete"
-              >
-                <HiTrashSolid class="w-5 h-5" />
-              </button>
-            </li>
+              meal={meal}
+              onDelete$={handleDelete}
+            />
           ))}
         </ul>
       )}

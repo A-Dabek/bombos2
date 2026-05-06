@@ -2,6 +2,7 @@ import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
 import type { AllowanceConfig } from "~/db/allowance";
 import AdminButton from "~/components/shared/AdminButton";
 import TransactionForm from "../transactions/TransactionForm";
+import AllowanceTransactionGroup from "./AllowanceTransactionGroup";
 
 export default component$(() => {
   const config = useSignal<AllowanceConfig | null>(null);
@@ -125,48 +126,13 @@ export default component$(() => {
       {groups.value.length > 0 && (
         <div class="mt-6 space-y-4">
           {groups.value.map((group) => (
-            <div key={group.periodLabel}>
-              <div
-                data-testid="period-header"
-                class="flex items-center gap-2 border-b border-gray-200 pb-1"
-              >
-                <span class="text-sm font-semibold text-gray-700">
-                  {group.periodLabel}
-                </span>
-              </div>
-              <div class="divide-y divide-gray-100">
-                {group.transactions.map((tx: any) => (
-                  <div key={tx.id} class="flex items-center py-2 text-sm">
-                    <span class="flex-1 text-gray-800">{tx.description}</span>
-                    <span
-                      class={
-                        tx.type === "expense"
-                          ? "text-red-600"
-                          : "text-green-600"
-                      }
-                    >
-                      {tx.type === "expense" ? "-" : "+"}
-                      {tx.amount}
-                    </span>
-                    <span class="ml-4 text-gray-500">
-                      ({tx.balance_after >= 0 ? "+" : ""}
-                      {tx.balance_after})
-                    </span>
-                    {/* Delete button - only on last transaction */}
-                    {tx.id === lastTransactionId.value && (
-                      <button
-                        data-testid="delete-last-tx"
-                        onClick$={() => handleDelete(tx.id)}
-                        class="ml-2 text-red-500 hover:text-red-700 text-xs"
-                        title="Delete"
-                      >
-                        X
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+            <AllowanceTransactionGroup
+              key={group.periodLabel}
+              periodLabel={group.periodLabel}
+              transactions={group.transactions}
+              lastTransactionId={lastTransactionId.value}
+              onDelete$={handleDelete}
+            />
           ))}
         </div>
       )}

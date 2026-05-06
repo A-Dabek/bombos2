@@ -1,6 +1,7 @@
 import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
 import type { BillsAutomaticPayment } from "~/db/bills";
 import Loader from "~/components/shared/Loader";
+import AutomaticPaymentItem from "./AutomaticPaymentItem";
 
 export default component$(() => {
   // Automatic payments state
@@ -159,25 +160,13 @@ export default component$(() => {
         <div class="mt-4">
           <ul class="space-y-2">
             {payments.value.map((payment) => (
-              <li 
-                key={payment.id} 
-                data-testid="payment-item"
-                class="flex items-center justify-between rounded bg-gray-50 p-2"
-              >
-                <div>
-                  <span class="font-medium">{payment.name}</span>
-                  <span class="ml-2 text-sm text-gray-500">({payment.slug})</span>
-                  <span class="ml-2 text-sm font-semibold">${payment.amount}</span>
-                </div>
-                <button
-                  data-testid={`payment-delete-${payment.id}`}
-                  onClick$={() => handleDeleteClick(payment.id)}
-                  disabled={paymentsLoading.value}
-                  class="rounded px-2 py-1 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
-                >
-                  {deleteConfirmations.value.has(payment.id) ? "Confirm?" : "Delete"}
-                </button>
-              </li>
+              <AutomaticPaymentItem
+                key={payment.id}
+                payment={payment}
+                isConfirming={deleteConfirmations.value.has(payment.id)}
+                isLoading={paymentsLoading.value}
+                onDeleteClick$={handleDeleteClick}
+              />
             ))}
           </ul>
         </div>
