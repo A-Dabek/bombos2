@@ -16,6 +16,8 @@ export default component$<TransactionFormProps>(
       const a = amount.value;
       if (loading || !description.value || !a || isNaN(parseFloat(a))) return;
       onSubmit$(description.value, parseFloat(a));
+      description.value = "";
+      amount.value = "";
     });
 
     return (
