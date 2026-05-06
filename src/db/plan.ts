@@ -15,7 +15,7 @@ export interface PlanItem {
   list_id: number;
   name: string;
   description: string | null;
-  amount: number;
+  urgent: boolean;
   created_at: number;
 }
 
@@ -86,14 +86,14 @@ export function getPlanItems(
 ): PlanItem[] {
   const dbConn = db ?? getDb();
   const rows = dbConn.prepare(
-    "SELECT id, list_id, name, description, amount, created_at FROM plan_items WHERE list_id = ? ORDER BY id",
+    "SELECT id, list_id, name, description, urgent, created_at FROM plan_items WHERE list_id = ? ORDER BY id",
   ).raw(true).all(listId) as unknown[][];
   return rows.map((row) => ({
     id: row[0] as number,
     list_id: row[1] as number,
     name: row[2] as string,
     description: row[3] as string | null,
-    amount: row[4] as number,
+    urgent: (row[4] as number) === 1,
     created_at: row[5] as number,
   }));
 }
@@ -104,7 +104,7 @@ export function getPlanItemById(
 ): PlanItem | undefined {
   const dbConn = db ?? getDb();
   const rows = dbConn.prepare(
-    "SELECT id, list_id, name, description, amount, created_at FROM plan_items WHERE id = ?",
+    "SELECT id, list_id, name, description, urgent, created_at FROM plan_items WHERE id = ?",
   ).raw(true).all(id) as unknown[][];
   if (rows.length === 0) return undefined;
   const row = rows[0];
@@ -113,7 +113,7 @@ export function getPlanItemById(
     list_id: row[1] as number,
     name: row[2] as string,
     description: row[3] as string | null,
-    amount: row[4] as number,
+    urgent: (row[4] as number) === 1,
     created_at: row[5] as number,
   };
 }
@@ -122,13 +122,13 @@ export function createPlanItem(
   listId: number,
   name: string,
   description: string | null,
-  amount: number,
+  urgent: boolean,
   db?: Database.Database,
 ): number {
   const dbConn = db ?? getDb();
   const result = dbConn.prepare(
-    "INSERT INTO plan_items (list_id, name, description, amount) VALUES (?, ?, ?, ?)",
-  ).run(listId, name, description, amount);
+    "INSERT INTO plan_items (list_id, name, description, urgent) VALUES (?, ?, ?, ?)",
+  ).run(listId, name, description, urgent ? 1 : 0);
   return result.lastInsertRowid as number;
 }
 
@@ -136,13 +136,13 @@ export function updatePlanItem(
   id: number,
   name: string,
   description: string | null,
-  amount: number,
+  urgent: boolean,
   db?: Database.Database,
 ): boolean {
   const dbConn = db ?? getDb();
   const result = dbConn.prepare(
-    "UPDATE plan_items SET name = ?, description = ?, amount = ? WHERE id = ?",
-  ).run(name, description, amount, id);
+    "UPDATE plan_items SET name = ?, description = ?, urgent = ? WHERE id = ?",
+  ).run(name, description, urgent ? 1 : 0, id);
   return result.changes > 0;
 }
 

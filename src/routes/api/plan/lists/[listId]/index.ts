@@ -36,7 +36,7 @@ export const onPost: RequestHandler = async ({ params, json, parseBody }) => {
   const body = await parseBody();
   const name = (body as { name?: string })?.name;
   const description = (body as { description?: string })?.description ?? null;
-  const amount = (body as { amount?: number })?.amount ?? 1;
+  const urgent = (body as { urgent?: boolean })?.urgent ?? false;
 
   if (!name || typeof name !== "string" || name.trim().length === 0) {
     json(400, { error: "Name is required" });
@@ -53,11 +53,6 @@ export const onPost: RequestHandler = async ({ params, json, parseBody }) => {
     return;
   }
 
-  if (typeof amount !== "number" || amount < 1) {
-    json(400, { error: "Amount must be at least 1" });
-    return;
-  }
-
-  const id = createPlanItem(listId, name.trim(), description, amount);
+  const id = createPlanItem(listId, name.trim(), description, urgent);
   json(201, { id });
 };

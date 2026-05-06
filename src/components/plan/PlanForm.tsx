@@ -5,8 +5,9 @@ interface PlanFormProps {
   mode: "add" | "edit";
   initialName?: string;
   initialDescription?: string;
-  initialAmount?: number;
-  onSave$: (name: string, description: string, amount: number) => void;
+  initialUrgent?: boolean;
+  onSave$: (name: string, description: string, urgent: boolean) => void;
+  onNext$?: (name: string, description: string, urgent: boolean) => void;
   onCancel$: () => void;
 }
 
@@ -14,13 +15,14 @@ export default component$(({
   mode,
   initialName = "",
   initialDescription = "",
-  initialAmount = 1,
+  initialUrgent = false,
   onSave$,
+  onNext$,
   onCancel$,
 }: PlanFormProps) => {
   const formName = useSignal(initialName);
   const formDescription = useSignal(initialDescription);
-  const formAmount = useSignal(initialAmount);
+  const formUrgent = useSignal(initialUrgent);
 
   return (
     <div class="p-4 bg-white min-h-full" data-testid={mode === "add" ? "edit-form-add" : "edit-form-edit"}>
@@ -38,6 +40,7 @@ export default component$(({
             onInput$={(e) => (formName.value = (e.target as HTMLInputElement).value)}
             maxLength={100}
             class="w-full px-3 py-2 border rounded"
+            autofocus
           />
         </div>
         <div>
@@ -52,31 +55,38 @@ export default component$(({
             class="w-full px-3 py-2 border rounded"
           />
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">
-            Amount
+        <div class="flex justify-end">
+          <label class="flex items-center space-x-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={formUrgent.value}
+              onChange$={(e) => (formUrgent.value = (e.target as HTMLInputElement).checked)}
+              class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+            />
+            <span class="text-sm font-medium text-gray-700">Urgent</span>
           </label>
-          <input
-            type="number"
-            value={formAmount.value}
-            onInput$={(e) => (formAmount.value = parseInt((e.target as HTMLInputElement).value, 10) || 1)}
-            min={1}
-            class="w-full px-3 py-2 border rounded"
-          />
         </div>
         <div class="flex space-x-2">
-          <button
-            onClick$={() => onSave$(formName.value, formDescription.value, formAmount.value)}
-            class="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Save
-          </button>
           <button
             onClick$={onCancel$}
             class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
           >
             Cancel
           </button>
+          <button
+            onClick$={() => onSave$(formName.value, formDescription.value, formUrgent.value)}
+            class="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Save
+          </button>
+          {mode === "add" && onNext$ && (
+            <button
+              onClick$={() => onNext$(formName.value, formDescription.value, formUrgent.value)}
+              class="flex-1 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            >
+              Next
+            </button>
+          )}
         </div>
       </div>
     </div>

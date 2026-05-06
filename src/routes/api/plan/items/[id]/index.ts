@@ -17,11 +17,11 @@ export const onPatch: RequestHandler = async ({ params, json, parseBody }) => {
   const body = await parseBody();
   const name = (body as { name?: string })?.name;
   const description = (body as { description?: string })?.description;
-  const amount = (body as { amount?: number })?.amount;
+  const urgent = (body as { urgent?: boolean })?.urgent;
 
   const newName = name !== undefined ? name : item.name;
   const newDescription = description !== undefined ? description : item.description;
-  const newAmount = amount !== undefined ? amount : item.amount;
+  const newUrgent = urgent !== undefined ? urgent : item.urgent;
 
   if (typeof newName !== "string" || newName.trim().length === 0) {
     json(400, { error: "Name is required" });
@@ -38,12 +38,7 @@ export const onPatch: RequestHandler = async ({ params, json, parseBody }) => {
     return;
   }
 
-  if (typeof newAmount !== "number" || newAmount < 1) {
-    json(400, { error: "Amount must be at least 1" });
-    return;
-  }
-
-  updatePlanItem(id, newName.trim(), newDescription ?? null, newAmount);
+  updatePlanItem(id, newName.trim(), newDescription ?? null, newUrgent);
   json(200, { success: true });
 };
 

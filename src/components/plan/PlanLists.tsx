@@ -90,18 +90,7 @@ export default component$(() => {
   });
 
   const handleAmountChange = $(async (listId: number, itemId: number, delta: number) => {
-    const cached = listItemsCache.value.get(listId);
-    if (!cached) return;
-    const item = cached.items.find((i) => i.id === itemId);
-    if (!item) return;
-    const newAmount = item.amount + delta;
-    if (newAmount < 1) return;
-    await fetch(`/api/plan/items/${itemId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: newAmount }),
-    });
-    await refreshItems(listId);
+    // Removed - amount functionality no longer exists
   });
 
   const handleRemove = $(async (listId: number, itemId: number) => {
@@ -145,23 +134,32 @@ export default component$(() => {
     editingItem.value = item;
   });
 
-  const handleSave = $(async (listId: number, name: string, description: string, amount: number) => {
+  const handleSave = $(async (listId: number, name: string, description: string, urgent: boolean) => {
     if (formMode.value === "add") {
       await fetch(`/api/plan/lists/${listId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description: description || undefined, amount }),
+        body: JSON.stringify({ name, description: description || undefined, urgent }),
       });
     } else if (formMode.value === "edit" && editingItem.value) {
       await fetch(`/api/plan/items/${editingItem.value.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description: description || null, amount }),
+        body: JSON.stringify({ name, description: description || null, urgent }),
       });
     }
     formMode.value = "none";
     editingItem.value = null;
     activeItemId.value = null;
+    await refreshItems(listId);
+  });
+
+  const handleNext = $(async (listId: number, name: string, description: string, urgent: boolean) => {
+    await fetch(`/api/plan/lists/${listId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, description: description || undefined, urgent }),
+    });
     await refreshItems(listId);
   });
 
@@ -210,14 +208,14 @@ export default component$(() => {
                       activeItemId={activeItemId.value}
                       itemConfirm={itemConfirm.value}
                       onItemClick$={handleItemClick}
-                      onAmountChange$={(itemId, delta) => handleAmountChange(list.id, itemId, delta)}
                       onEditClick$={(item) => handleEditClick(list.id, item)}
                       onRemove$={(itemId) => handleRemove(list.id, itemId)}
                       onAddClick$={() => handleAddClick(list.id)}
                       onRemoveAll$={() => handleRemoveAll(list.id)}
                       removeAllConfirm={removeAllConfirm.value}
-                      onSave$={(name, desc, amt) => handleSave(list.id, name, desc, amt)}
-                      onCancel$= {handleCancel}
+                      onSave$={(name, desc, urgent) => handleSave(list.id, name, desc, urgent)}
+                      onNext$={(name, desc, urgent) => handleNext(list.id, name, desc, urgent)}
+                      onCancel$={handleCancel}
                       editingItem={isExpanded ? editingItem.value : null}
                     />
                   )}

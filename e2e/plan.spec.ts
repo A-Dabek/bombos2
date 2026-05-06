@@ -110,7 +110,6 @@ test.describe("plan", () => {
     await expect(page.getByTestId("edit-form-add")).toBeVisible();
     
     await page.locator('input[type="text"]').fill("Milk");
-    await page.locator('input[type="number"]').fill("2");
     await Promise.all([
       page.waitForResponse(r => r.url().match(/\/api\/plan\/lists\/\d+$/) && r.request().method() === "POST"),
       page.getByRole("button", { name: "Save" }).click({ force: true }),
@@ -119,7 +118,126 @@ test.describe("plan", () => {
     // 6. Verify item appears
     await expect(page.getByTestId("edit-form-add")).not.toBeVisible();
     await expect(page.getByText("Milk")).toBeVisible();
-    await expect(page.getByText("x2")).toBeVisible();
+  });
+
+  test("Name input has autofocus attribute when add form opens", async ({ page }) => {
+    seedList("Shopping");
+    await page.goto("/plan/lists");
+    await page.getByTestId("loader").waitFor({ state: "hidden" });
+    await page.waitForTimeout(500);
+    await page.getByRole("button", { name: "Shopping" }).click();
+    await page.getByRole("button", { name: "Add new" }).click({ force: true });
+    
+    // Verify autofocus attribute is present (Qwik handles focus via this attribute)
+    const nameInput = page.getByTestId("edit-form-add").locator('input[type="text"]');
+    await expect(nameInput).toHaveAttribute("autofocus", "");
+  });
+
+  test("Urgent checkbox creates urgent items", async ({ page }) => {
+    seedList("Shopping");
+    await page.goto("/plan/lists");
+    await page.getByTestId("loader").waitFor({ state: "hidden" });
+    await page.waitForTimeout(500);
+    await page.getByRole("button", { name: "Shopping" }).click();
+    await page.getByRole("button", { name: "Add new" }).click({ force: true });
+    
+    await page.getByTestId("edit-form-add").locator('input[type="text"]').fill("Urgent Item");
+    await page.getByTestId("edit-form-add").locator('input[type="checkbox"]').check();
+    await Promise.all([
+      page.waitForResponse(r => r.url().match(/\/api\/plan\/lists\/\d+$/) && r.request().method() === "POST"),
+      page.getByRole("button", { name: "Save" }).click({ force: true }),
+    ]);
+    
+    // Verify urgent item displays with red bold text - use more specific locator
+    await page.waitForTimeout(500);
+    const urgentItem = page.locator("ul > li").filter({ hasText: "Urgent Item" }).first();
+    await expect(urgentItem).toBeVisible();
+    await expect(urgentItem.locator(".text-red-600")).toBeVisible();
+  });
+
+  test("Next button saves item, clears form, and keeps form ready for next entry", async ({ page }) => {
+    seedList("Shopping");
+    await page.goto("/plan/lists");
+    await page.getByTestId("loader").waitFor({ state: "hidden" });
+    await page.waitForTimeout(500);
+    await page.getByRole("button", { name: "Shopping" }).click();
+    await page.getByRole("button", { name: "Add new" }).click({ force: true });
+    
+    // Fill first item and click Next
+    await page.getByTestId("edit-form-add").locator('input[type="text"]').fill("First Item");
+    await Promise.all([
+      page.waitForResponse(r => r.url().match(/\/api\/plan\/lists\/\d+$/) && r.request().method() === "POST"),
+      page.getByRole("button", { name: "Next" }).click({ force: true }),
+    ]);
+    
+    // Wait for animation and API response
+    await page.waitForTimeout(800);
+    
+    // Verify item appears in list - item list is hidden when form is open, so check via list text
+    const listSection = page.locator(".p-4").first();
+    await expect(listSection).toContainText("First Item");
+    
+    // Verify form is still open and cleared
+    await expect(page.getByTestId("edit-form-add")).toBeVisible();
+    const nameInput = page.getByTestId("edit-form-add").locator('input[type="text"]');
+    await expect(nameInput).toHaveValue("");
+    
+    // Verify form is usable (can type into it) - autofocus attribute present
+    await expect(nameInput).toHaveAttribute("autofocus", "");
+    
+    // Add second item
+    await nameInput.fill("Second Item");
+    await Promise.all([
+      page.waitForResponse(r => r.url().match(/\/api\/plan\/lists\/\d+$/) && r.request().method() === "POST"),
+      page.getByRole("button", { name: "Next" }).click({ force: true }),
+    ]);
+    
+    await page.waitForTimeout(800);
+    await expect(listSection).toContainText("Second Item");
+  });
+
+  test("Button order is Cancel, Save, Next", async ({ page }) => {
+    seedList("Shopping");
+    await page.goto("/plan/lists");
+    await page.getByTestId("loader").waitFor({ state: "hidden" });
+    await page.waitForTimeout(500);
+    await page.getByRole("button", { name: "Shopping" }).click();
+    await page.getByRole("button", { name: "Add new" }).click({ force: true });
+    
+    // Scope to form buttons only
+    const formButtons = page.getByTestId("edit-form-add").locator("button");
+    await expect(formButtons.nth(0)).toHaveText("Cancel");
+    await expect(formButtons.nth(1)).toHaveText("Save");
+    await expect(formButtons.nth(2)).toHaveText("Next");
+  });
+
+  test("Amount input and buttons are removed from UI", async ({ page }) => {
+    seedList("Shopping");
+    await page.goto("/plan/lists");
+    await page.getByTestId("loader").waitFor({ state: "hidden" });
+    await page.waitForTimeout(500);
+    await page.getByRole("button", { name: "Shopping" }).click();
+    await page.getByRole("button", { name: "Add new" }).click({ force: true });
+    
+    // No amount input in form
+    await expect(page.locator('input[type="number"]')).not.toBeVisible();
+    
+    // Add item
+    await page.locator('input[type="text"]').fill("Item");
+    await Promise.all([
+      page.waitForResponse(r => r.url().match(/\/api\/plan\/lists\/\d+$/) && r.request().method() === "POST"),
+      page.getByRole("button", { name: "Save" }).click({ force: true }),
+    ]);
+    
+    // Click item to show controls
+    await page.locator("li.cursor-pointer").filter({ hasText: "Item" }).click();
+    
+    // No +/- buttons
+    await expect(page.getByLabel("Decrease amount")).not.toBeVisible();
+    await expect(page.getByLabel("Increase amount")).not.toBeVisible();
+    
+    // No x{amount} badge
+    await expect(page.locator("text=/x\\d+/")).not.toBeVisible();
   });
 
   test("Modifying and deleting items under a list", async ({ page }) => {
@@ -132,7 +250,6 @@ test.describe("plan", () => {
     
     await page.getByRole("button", { name: "Add new" }).click({ force: true });
     await page.locator('input[type="text"]').fill("Milk");
-    await page.locator('input[type="number"]').fill("2");
     await Promise.all([
       page.waitForResponse(r => r.url().match(/\/api\/plan\/lists\/\d+$/) && r.request().method() === "POST"),
       page.getByRole("button", { name: "Save" }).click({ force: true }),
@@ -148,24 +265,12 @@ test.describe("plan", () => {
     await page.locator("li.cursor-pointer").filter({ hasText: "Milk" }).click();
     await expect(page.getByLabel("Edit")).toBeVisible();
 
-    // 3. Change amount via buttons
-    await Promise.all([
-      page.waitForResponse(r => r.url().includes("/api/plan/items/") && r.request().method() === "PATCH"),
-      page.getByLabel("Increase amount").click({ force: true }),
-    ]);
-    await expect(page.getByText("x3")).toBeVisible();
-    
-    await Promise.all([
-      page.waitForResponse(r => r.url().includes("/api/plan/items/") && r.request().method() === "PATCH"),
-      page.getByLabel("Decrease amount").click({ force: true }),
-    ]);
-    await expect(page.getByText("x2")).toBeVisible();
-
-    // 4. Edit item via form
+    // 3. Edit item via form - add urgent flag
     await page.getByLabel("Edit").click({ force: true });
     await expect(page.getByTestId("edit-form-edit")).toBeVisible();
     await page.locator('input[type="text"]').fill("Whole Milk");
     await page.locator('textarea').fill("From local farm");
+    await page.locator('input[type="checkbox"]').check();
     await Promise.all([
       page.waitForResponse(r => r.url().includes("/api/plan/items/") && r.request().method() === "PATCH"),
       page.getByRole("button", { name: "Save" }).click({ force: true }),
@@ -173,8 +278,10 @@ test.describe("plan", () => {
     
     await expect(page.getByText("Whole Milk")).toBeVisible();
     await expect(page.getByText("From local farm")).toBeVisible();
+    // Verify urgent styling
+    await expect(page.locator("li").filter({ hasText: "Whole Milk" }).locator("span.text-red-600")).toBeVisible();
 
-    // 5. Delete item
+    // 4. Delete item
     await page.locator("li.cursor-pointer").filter({ hasText: "Whole Milk" }).click({ force: true }); // Ensure active
     await page.getByTestId("item-remove-btn").click({ force: true });
     await expect(page.getByTestId("item-remove-btn")).toHaveClass(/animate-bounce/);
@@ -185,7 +292,7 @@ test.describe("plan", () => {
     ]);
     await expect(page.getByText("Whole Milk")).not.toBeVisible();
 
-    // 6. Remove all items
+    // 5. Remove all items
     await page.getByRole("button", { name: "Add new" }).click({ force: true });
     await page.locator('input[type="text"]').fill("Bread");
     await Promise.all([

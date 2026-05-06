@@ -8,7 +8,7 @@ test("runMigrations applies new migrations", () => {
   runMigrations(db);
 
   const rows = db.prepare("SELECT name FROM _migrations").raw(true).all() as string[][];
-  expect(rows.length).toBe(16);
+  expect(rows.length).toBe(17);
   expect(rows[0][0]).toBe("001_init.sql");
   expect(rows[1][0]).toBe("002_parcels.sql");
   expect(rows[2][0]).toBe("003_parcels_completed_at.sql");
@@ -25,6 +25,7 @@ test("runMigrations applies new migrations", () => {
   expect(rows[13][0]).toBe("014_balance.sql");
   expect(rows[14][0]).toBe("015_add_is_automatic_bills.sql");
   expect(rows[15][0]).toBe("016_add_is_automatic_balance.sql");
+  expect(rows[16][0]).toBe("017_add_urgent_remove_amount.sql");
 
   db.close();
 });
@@ -35,7 +36,7 @@ test("runMigrations skips already applied migrations", () => {
   runMigrations(db);
 
   const rows = db.prepare("SELECT name FROM _migrations").raw(true).all() as string[][];
-  expect(rows.length).toBe(16);
+  expect(rows.length).toBe(17);
 
   db.close();
 });
@@ -49,7 +50,7 @@ test("runMigrations applies custom migration files", async () => {
     runMigrations(db);
 
     const rows = db.prepare("SELECT name FROM _migrations ORDER BY name").raw(true).all() as string[][];
-    expect(rows.length).toBe(17);
+    expect(rows.length).toBe(18);
     expect(rows[0][0]).toBe("001_init.sql");
     expect(rows[1][0]).toBe("002_parcels.sql");
     expect(rows[2][0]).toBe("003_parcels_completed_at.sql");
@@ -67,6 +68,7 @@ test("runMigrations applies custom migration files", async () => {
     expect(rows[14][0]).toBe("014_balance.sql");
     expect(rows[15][0]).toBe("015_add_is_automatic_bills.sql");
     expect(rows[16][0]).toBe("016_add_is_automatic_balance.sql");
+    expect(rows[17][0]).toBe("017_add_urgent_remove_amount.sql");
 
     const tableCheck = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='test_table'").raw(true).all() as unknown[][];
     expect(tableCheck.length).toBe(1);
@@ -92,7 +94,7 @@ test("runMigrations does not record failed migrations", async () => {
     expect(errorCaught).toBe(true);
 
     const rows = db.prepare("SELECT name FROM _migrations").raw(true).all() as string[][];
-    expect(rows.length).toBe(16);
+    expect(rows.length).toBe(17);
     expect(rows[0][0]).toBe("001_init.sql");
     expect(rows[1][0]).toBe("002_parcels.sql");
     expect(rows[2][0]).toBe("003_parcels_completed_at.sql");
@@ -109,6 +111,7 @@ test("runMigrations does not record failed migrations", async () => {
     expect(rows[13][0]).toBe("014_balance.sql");
     expect(rows[14][0]).toBe("015_add_is_automatic_bills.sql");
     expect(rows[15][0]).toBe("016_add_is_automatic_balance.sql");
+    expect(rows[16][0]).toBe("017_add_urgent_remove_amount.sql");
   } finally {
     await rm(tempFile).catch(() => {});
     db.close();

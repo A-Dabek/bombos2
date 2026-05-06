@@ -72,8 +72,8 @@ test("deletePlanList removes list and cascades to items", () => {
   db.exec("DELETE FROM plan_lists");
 
   const listId = createPlanList("Test List", 0, db);
-  createPlanItem(listId, "Item 1", "Description 1", 1, db);
-  createPlanItem(listId, "Item 2", null, 2, db);
+  createPlanItem(listId, "Item 1", "Description 1", false, db);
+  createPlanItem(listId, "Item 2", null, false, db);
 
   const deleted = deletePlanList(listId, db);
   expect(deleted).toBe(true);
@@ -92,13 +92,15 @@ test("getPlanItems returns items for a list", () => {
   runMigrations(db);
 
   const listId = createPlanList("Test List", 0, db);
-  createPlanItem(listId, "Item 1", "Desc 1", 1, db);
-  createPlanItem(listId, "Item 2", "Desc 2", 2, db);
+  createPlanItem(listId, "Item 1", "Desc 1", false, db);
+  createPlanItem(listId, "Item 2", "Desc 2", true, db);
 
   const items = getPlanItems(listId, db);
   expect(items).toHaveLength(2);
   expect(items[0].name).toBe("Item 1");
   expect(items[1].name).toBe("Item 2");
+  expect(items[0].urgent).toBe(false);
+  expect(items[1].urgent).toBe(true);
 
   db.close();
 });
@@ -108,14 +110,28 @@ test("createPlanItem inserts a new item", () => {
   runMigrations(db);
 
   const listId = createPlanList("Test List", 0, db);
-  const id = createPlanItem(listId, "New Item", "Description", 3, db);
+  const id = createPlanItem(listId, "New Item", "Description", true, db);
   expect(id).toBeGreaterThan(0);
 
   const items = getPlanItems(listId, db);
   const found = items.find((i) => i.name === "New Item");
   expect(found).toBeDefined();
   expect(found?.description).toBe("Description");
-  expect(found?.amount).toBe(3);
+  expect(found?.urgent).toBe(true);
+
+  db.close();
+});
+
+test("createPlanItem with urgent=false defaults correctly", () => {
+  const db = new Database(":memory:");
+  runMigrations(db);
+
+  const listId = createPlanList("Test List", 0, db);
+  const id = createPlanItem(listId, "Regular Item", "Desc", false, db);
+  expect(id).toBeGreaterThan(0);
+
+  const item = getPlanItemById(id, db);
+  expect(item?.urgent).toBe(false);
 
   db.close();
 });
@@ -125,15 +141,33 @@ test("updatePlanItem updates item fields", () => {
   runMigrations(db);
 
   const listId = createPlanList("Test List", 0, db);
-  const itemId = createPlanItem(listId, "Original", "Original desc", 1, db);
+  const itemId = createPlanItem(listId, "Original", "Original desc", false, db);
 
-  const updated = updatePlanItem(itemId, "Updated", "Updated desc", 5, db);
+  const updated = updatePlanItem(itemId, "Updated", "Updated desc", true, db);
   expect(updated).toBe(true);
 
   const item = getPlanItemById(itemId, db);
   expect(item?.name).toBe("Updated");
   expect(item?.description).toBe("Updated desc");
-  expect(item?.amount).toBe(5);
+  expect(item?.urgent).toBe(true);
+
+  db.close();
+});
+
+test("updatePlanItem can toggle urgent status", () => {
+  const db = new Database(":memory:");
+  runMigrations(db);
+
+  const listId = createPlanList("Test List", 0, db);
+  const itemId = createPlanItem(listId, "Item", "Desc", false, db);
+
+  updatePlanItem(itemId, "Item", "Desc", true, db);
+  let item = getPlanItemById(itemId, db);
+  expect(item?.urgent).toBe(true);
+
+  updatePlanItem(itemId, "Item", "Desc", false, db);
+  item = getPlanItemById(itemId, db);
+  expect(item?.urgent).toBe(false);
 
   db.close();
 });
@@ -143,7 +177,7 @@ test("deletePlanItem removes an item", () => {
   runMigrations(db);
 
   const listId = createPlanList("Test List", 0, db);
-  const itemId = createPlanItem(listId, "To Delete", null, 1, db);
+  const itemId = createPlanItem(listId, "To Delete", null, false, db);
 
   const deleted = deletePlanItem(itemId, db);
   expect(deleted).toBe(true);
@@ -159,9 +193,9 @@ test("deleteAllPlanItems removes all items from a list", () => {
   runMigrations(db);
 
   const listId = createPlanList("Test List", 0, db);
-  createPlanItem(listId, "Item 1", null, 1, db);
-  createPlanItem(listId, "Item 2", null, 2, db);
-  createPlanItem(listId, "Item 3", null, 3, db);
+  createPlanItem(listId, "Item 1", null, false, db);
+  createPlanItem(listId, "Item 2", null, true, db);
+  createPlanItem(listId, "Item 3", null, false, db);
 
   const count = deleteAllPlanItems(listId, db);
   expect(count).toBe(3);
