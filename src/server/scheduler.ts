@@ -2,7 +2,7 @@ import cron from "node-cron";
 import { deleteCompletedParcels } from "../db/parcels.ts";
 import { shouldAddAllowance, runAllowance } from "../db/allowance.ts";
 import { shouldAddBillsPeriodStart, runBillsPeriodStart, createAutomaticPaymentTransactions } from "../db/bills.ts";
-import { checkAndAddBalancePeriodStart } from "../db/balance.ts";
+import { shouldAddBalancePeriodStart, runBalancePeriodStart } from "../db/balance.ts";
 
 let started = false;
 
@@ -63,13 +63,18 @@ function runPeriodStartChecks(): void {
     log("period-start", "Not the configured day for bills, skipping");
   }
 
-  try {
-    const balanceResult = checkAndAddBalancePeriodStart();
-    if (balanceResult.added) {
-      log("period-start", `Added Balance period-start.`);
+  if (shouldAddBalancePeriodStart()) {
+    log("period-start", "Scheduler triggered: adding balance period-start");
+    try {
+      const balanceResult = runBalancePeriodStart();
+      if (balanceResult.added) {
+        log("period-start", `Added Balance period-start.`);
+      }
+    } catch (err) {
+      log("error", `Failed to run balance period-start: ${err}`);
     }
-  } catch (err) {
-    log("error", `Failed to check/add Balance period-start: ${err}`);
+  } else {
+    log("period-start", "Not the configured day for balance, skipping");
   }
 }
 
