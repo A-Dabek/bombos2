@@ -1,5 +1,6 @@
 import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
 import Loader from "~/components/shared/Loader";
+import AdminButton from "~/components/shared/AdminButton";
 import ParcelSubNav from "./ParcelSubNav";
 import ParcelList from "./ParcelList";
 import UploadButton from "./UploadButton";
@@ -108,6 +109,7 @@ export default component$<Props>(({ type, title }) => {
           onComplete$={completeParcel}
         />
       )}
+      <AdminButton href="/parcels/admin" />
     </div>
   );
 });

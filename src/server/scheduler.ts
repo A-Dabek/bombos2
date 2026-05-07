@@ -11,7 +11,7 @@ function log(label: string, message: string): void {
   console.log(`[scheduler] [${timestamp}] [${label}] ${message}`);
 }
 
-function runCleanup(): void {
+export function runCleanup(): void {
   log("cleanup", "Starting cleanup of completed parcels");
   try {
     const deleted = deleteCompletedParcels();

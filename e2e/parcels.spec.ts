@@ -155,4 +155,28 @@ test.describe("parcels journeys", () => {
     await page.getByTestId("money-nav-link").click();
     await expect(page.getByTestId("parcel-notification-dot")).not.toBeVisible();
   });
+
+  test("Admin cleanup deletes completed parcels", async ({ page }) => {
+    // 1. Add completed parcels directly via DB
+    const now = Date.now();
+    addParcelSql("incoming", now); // completed
+    addParcelSql("outgoing", now); // completed
+
+    // 2. Navigate to parcels admin via button
+    await page.goto("/parcels/incoming");
+    await page.getByTestId("admin-button").click();
+    await expect(page).toHaveURL(/\/parcels\/admin\/?$/);
+
+    // 3. Click "Run Cleanup" - first click enters confirming state, second triggers action
+    const cleanupBtn = page.getByTestId("delete-btn");
+    await expect(cleanupBtn).toBeVisible();
+    await cleanupBtn.click(); // enter confirming state
+    await cleanupBtn.click(); // trigger delete
+
+    // Wait for API call to complete
+    await page.waitForResponse((res) => res.url().includes("/api/parcels/admin/run-cleanup"));
+
+    // 4. Verify success message appears
+    await expect(page.getByText(/Deleted 2 parcels/)).toBeVisible();
+  });
 });
