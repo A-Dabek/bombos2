@@ -59,7 +59,7 @@ test.describe("money module journeys", () => {
         await expect(page.getByTestId("period-header")).toBeVisible();
 
         // 4. Verify period label format
-        await expect(page.getByTestId("period-header")).toContainText("May 15th – June 15th");
+        await expect(page.getByTestId("period-header")).toContainText("May 15th, 2026 – June 15th, 2026");
 
         // 5. Verify period marker NOT visible (only user transactions show)
         await expect(page.getByText("Period start")).not.toBeVisible();

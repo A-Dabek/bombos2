@@ -102,16 +102,16 @@ test.describe("Money Allowance Module Journeys", () => {
     await expect(periodHeaders).toHaveCount(2);
 
     // Newest first
-    await expect(periodHeaders.first()).toHaveText("June 15th");
-    await expect(periodHeaders.last()).toHaveText("May 15th");
+    await expect(periodHeaders.first()).toHaveText("June 15th, 2025");
+    await expect(periodHeaders.last()).toHaveText("May 15th, 2025");
 
     // Verify transactions are under correct headers
     // June 15th section should have Dinner
-    const juneSection = page.locator("div").filter({ has: page.getByText("June 15th") });
+    const juneSection = page.locator("div").filter({ has: page.getByText("June 15th, 2025") });
     await expect(juneSection.getByText("Dinner")).toBeVisible();
 
     // May 15th section should have Lunch
-    const maySection = page.locator("div").filter({ has: page.getByText("May 15th") });
+    const maySection = page.locator("div").filter({ has: page.getByText("May 15th, 2025") });
     await expect(maySection.getByText("Lunch")).toBeVisible();
   });
 

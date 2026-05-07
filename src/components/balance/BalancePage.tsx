@@ -76,8 +76,9 @@ export default component$(() => {
         <div class="mt-6 space-y-4">
           {groups.value.map((group) => (
             <TransactionGroup
-              key={group.periodLabel}
-              periodLabel={group.periodLabel}
+              key={group.periodStartTs}
+              periodStartTs={group.periodStartTs}
+              periodEndTs={group.periodEndTs}
               transactions={group.transactions}
             />
           ))}

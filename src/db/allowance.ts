@@ -1,6 +1,5 @@
 import Database from "better-sqlite3";
 import { getDb } from "./connection.ts";
-import { getOrdinal } from "~/utils/date";
 
 export interface AllowanceConfig {
   id: number;
@@ -45,7 +44,7 @@ export function getCurrentBalance(
 }
 
 export interface TransactionGroup {
-  periodLabel: string;
+  periodStartTs: number;       // allowance marker unix ts, 0 for default
   transactions: AllowanceTransaction[];
   totalInGroup: number;
 }
@@ -65,14 +64,8 @@ export function getTransactionsGroupedByPeriod(
   for (const tx of transactions) {
     // Each automatic allowance transaction starts a new group
     if (tx.is_automatic && tx.type === "allowance") {
-      const date = new Date(tx.created_at * 1000);
-      const monthName = date.toLocaleString("en-US", { month: "long" });
-      const day = date.getDate();
-      const ordinal = getOrdinal(day);
-      const periodLabel = `${monthName} ${day}${ordinal}`;
-
       currentGroup = {
-        periodLabel,
+        periodStartTs: tx.created_at,
         transactions: [tx],
         totalInGroup: tx.amount,
       };
@@ -85,7 +78,7 @@ export function getTransactionsGroupedByPeriod(
       // No group yet, create a default one
       if (!currentGroup) {
         currentGroup = {
-          periodLabel: "Transactions",
+          periodStartTs: 0,
           transactions: [],
           totalInGroup: 0,
         };

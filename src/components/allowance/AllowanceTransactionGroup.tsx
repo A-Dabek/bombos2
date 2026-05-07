@@ -1,8 +1,9 @@
 import AllowanceTransactionLine from "./AllowanceTransactionLine";
 import { type PropFunction } from "@builder.io/qwik";
+import PeriodHeader from "../transactions/PeriodHeader";
 
 interface AllowanceTransactionGroupProps {
-  periodLabel: string;
+  periodStartTs: number;
   transactions: any[];
   lastTransactionId: number | null;
   onDelete$: PropFunction<(id: number) => void>;
@@ -11,14 +12,7 @@ interface AllowanceTransactionGroupProps {
 export default (props: AllowanceTransactionGroupProps) => {
   return (
     <div>
-      <div
-        data-testid="period-header"
-        class="flex items-center gap-2 border-b border-gray-200 pb-1"
-      >
-        <span class="text-sm font-semibold text-gray-700">
-          {props.periodLabel}
-        </span>
-      </div>
+      <PeriodHeader startTs={props.periodStartTs} />
       <div class="divide-y divide-gray-100">
         {props.transactions.map((tx: any) => (
           <AllowanceTransactionLine

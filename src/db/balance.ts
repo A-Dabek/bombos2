@@ -1,6 +1,5 @@
 import Database from "better-sqlite3";
 import { getDb } from "./connection.ts";
-import { getOrdinal } from "~/utils/date";
 
 export interface BalanceConfig {
   id: number;
@@ -16,8 +15,8 @@ export interface BalanceTransaction {
 }
 
 export interface BalanceTransactionGroup {
-  periodLabel: string;        // "May 15th – June 15th"
-  periodStartTs: number;       // for sorting
+  periodStartTs: number;       // start marker unix ts
+  periodEndTs: number;         // end marker unix ts (same day next month)
   transactions: BalanceTransaction[];  // excludes is_automatic=1
 }
 
@@ -153,22 +152,14 @@ export function getBalanceTransactionsGroupedByPeriod(
     // Period-start marker: new group begins
     if (tx.is_automatic && tx.amount === 0) {
       const startDate = new Date(tx.created_at * 1000);
-      const startDay = startDate.getDate();
-      const startOrdinal = getOrdinal(startDay);
-      const startMonth = startDate.toLocaleString("en-US", { month: "long" });
-
       // End date = same day next month
       const endDate = new Date(startDate);
       endDate.setMonth(endDate.getMonth() + 1);
-      const endDay = endDate.getDate();
-      const endOrdinal = getOrdinal(endDay);
-      const endMonth = endDate.toLocaleString("en-US", { month: "long" });
-
-      const periodLabel = `${startMonth} ${startDay}${startOrdinal} – ${endMonth} ${endDay}${endOrdinal}`;
+      const periodEndTs = Math.floor(endDate.getTime() / 1000);
 
       currentGroup = {
-        periodLabel,
         periodStartTs: tx.created_at,
+        periodEndTs,
         transactions: [],  // period markers are NOT included in the list
       };
       groups.push(currentGroup);
@@ -178,8 +169,8 @@ export function getBalanceTransactionsGroupedByPeriod(
     } else if (!currentGroup && !tx.is_automatic) {
       // No period marker yet: create a default group
       currentGroup = {
-        periodLabel: "Transactions",
         periodStartTs: 0,
+        periodEndTs: 0,
         transactions: [],
       };
       groups.push(currentGroup);

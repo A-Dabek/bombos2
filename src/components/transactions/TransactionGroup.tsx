@@ -8,14 +8,15 @@ interface Transaction {
 }
 
 interface TransactionGroupProps {
-  periodLabel: string;
+  periodStartTs: number;
+  periodEndTs?: number;
   transactions: Transaction[];
 }
 
 export default (props: TransactionGroupProps) => {
   return (
     <div>
-      <PeriodHeader periodLabel={props.periodLabel} />
+      <PeriodHeader startTs={props.periodStartTs} endTs={props.periodEndTs} />
       <div class="divide-y divide-gray-100">
         {props.transactions.map((tx) => (
           <TransactionLine
