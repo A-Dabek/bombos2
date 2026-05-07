@@ -237,4 +237,21 @@ test.describe("money module journeys", () => {
         await expect(page.getByText("Internet")).toBeVisible();
         await expect(page.getByText("-80")).toBeVisible();
     });
+
+  test("Run Period Start Check button adds period-start and payments", async ({ page }) => {
+    // 1. Navigate to bills admin
+    await page.goto("/money/bills/admin");
+    await page.getByTestId("loader").waitFor({ state: "hidden" });
+
+    // 2. Click "Run Period Start Check" twice
+    const periodBtn = page.getByTestId("period-start-btn");
+    await periodBtn.click();
+    await periodBtn.click();
+
+    // 3. Wait for API call
+    await page.waitForResponse((res) => res.url().includes("/api/bills/admin/run-period-start"));
+
+    // 4. Verify success message
+    await expect(page.getByTestId("period-success")).toBeVisible();
+  });
 });

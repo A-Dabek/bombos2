@@ -100,38 +100,49 @@ export interface PeriodStartResult {
   added: boolean;
 }
 
-export function checkAndAddBillsPeriodStart(
-  db?: Database.Database,
-): PeriodStartResult {
+function getBillsTargetDate(dayOfMonth: number): Date {
+  const today = new Date();
+  if (today.getDate() >= dayOfMonth) {
+    return new Date(today.getFullYear(), today.getMonth(), dayOfMonth);
+  } else {
+    return new Date(today.getFullYear(), today.getMonth() - 1, dayOfMonth);
+  }
+}
+
+export function shouldAddBillsPeriodStart(db?: Database.Database): boolean {
   const dbConn = db ?? getDb();
   const config = getBillsConfig(dbConn);
-  const today = new Date();
-  const day_of_month = config.day_of_month;
+  const today = new Date().getDate();
+  return today === config.day_of_month;
+}
 
-  if (today.getDate() !== day_of_month) {
-    return { added: false };
-  }
-
-  // Calculate period boundaries
-  const year = today.getFullYear();
-  const month = today.getMonth();
-  const periodStartTs = Math.floor(
-    new Date(year, month, day_of_month).getTime() / 1000,
-  );
-  const nextPeriodStartTs = Math.floor(
-    new Date(year, month + 1, day_of_month).getTime() / 1000,
-  );
-
-  // Check if period-start marker already exists
+export function runBillsPeriodStart(db?: Database.Database): PeriodStartResult {
+  const dbConn = db ?? getDb();
+  const config = getBillsConfig(dbConn);
+  
+  // Calculate target date
+  const target = getBillsTargetDate(config.day_of_month);
+  const targetTs = Math.floor(target.getTime() / 1000);
+  
+  // Check if period-start already exists for target's period
+  const year = target.getFullYear();
+  const month = target.getMonth();
+  const periodStartTs = Math.floor(new Date(year, month, config.day_of_month).getTime() / 1000);
+  const nextPeriodStartTs = Math.floor(new Date(year, month + 1, config.day_of_month).getTime() / 1000);
+  
   const existing = dbConn.prepare(
-    "SELECT id FROM bills_transactions WHERE is_automatic = 1 AND created_at >= ? AND created_at < ?",
+    "SELECT id FROM bills_transactions WHERE is_automatic = 1 AND created_at >= ? AND created_at < ?"
   ).get(periodStartTs, nextPeriodStartTs);
-
+  
   if (existing) {
     return { added: false };
   }
-
-  addPeriodStartTransaction(dbConn);
+  
+  // Add period-start marker with target date
+  dbConn.prepare(
+    "INSERT INTO bills_transactions (description, amount, is_automatic, created_at) VALUES ('Period start', 0, 1, ?)"
+  ).run(targetTs);
+  
   return { added: true };
 }
 

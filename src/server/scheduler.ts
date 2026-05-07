@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import { deleteCompletedParcels } from "../db/parcels.ts";
 import { shouldAddAllowance, runAllowance } from "../db/allowance.ts";
-import { checkAndAddBillsPeriodStart, createAutomaticPaymentTransactions } from "../db/bills.ts";
+import { shouldAddBillsPeriodStart, runBillsPeriodStart, createAutomaticPaymentTransactions } from "../db/bills.ts";
 import { checkAndAddBalancePeriodStart } from "../db/balance.ts";
 
 let started = false;
@@ -41,21 +41,26 @@ export function runAllowanceCheck(): void {
 function runPeriodStartChecks(): void {
   log("period-start", "Checking if period-start transactions should be added");
 
-  try {
-    const billsResult = checkAndAddBillsPeriodStart();
-    if (billsResult.added) {
-      log("period-start", `Added Bills period-start.`);
-      
-      // After adding period marker, create automatic payment transactions
-      try {
-        const createdCount = createAutomaticPaymentTransactions();
-        log("period-start", `Created ${createdCount} automatic payment transactions for Bills.`);
-      } catch (err) {
-        log("error", `Failed to create automatic payment transactions: ${err}`);
+  if (shouldAddBillsPeriodStart()) {
+    log("period-start", "Scheduler triggered: adding bills period-start");
+    try {
+      const billsResult = runBillsPeriodStart();
+      if (billsResult.added) {
+        log("period-start", `Added Bills period-start.`);
+        
+        // After adding period marker, create automatic payment transactions
+        try {
+          const createdCount = createAutomaticPaymentTransactions();
+          log("period-start", `Created ${createdCount} automatic payment transactions for Bills.`);
+        } catch (err) {
+          log("error", `Failed to create automatic payment transactions: ${err}`);
+        }
       }
+    } catch (err) {
+      log("error", `Failed to run bills period-start: ${err}`);
     }
-  } catch (err) {
-    log("error", `Failed to check/add Bills period-start: ${err}`);
+  } else {
+    log("period-start", "Not the configured day for bills, skipping");
   }
 
   try {
