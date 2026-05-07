@@ -1,11 +1,12 @@
-import { component$, useVisibleTask$, useSignal, $, type Signal } from "@builder.io/qwik";
-import DoubleConfirmButton from "~/components/shared/DoubleConfirmButton";
+import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
 import type { BillsConfig } from "~/db/bills";
 import type { BillsPredefinedPayment } from "~/db/bills";
 import BackButton from "~/components/shared/BackButton";
 import Loader from "~/components/shared/Loader";
 import TextInput from "~/components/shared/TextInput";
 import DayOfMonthInput from "~/components/shared/DayOfMonthInput";
+import DoubleConfirmButton from "~/components/shared/DoubleConfirmButton";
+import PeriodStartButton from "~/components/shared/PeriodStartButton";
 import AutomaticPaymentsAdmin from "./AutomaticPaymentsAdmin";
 
 export default component$(() => {
@@ -21,12 +22,6 @@ export default component$(() => {
   const newPredefinedSlug = useSignal("");
   const predefinedLoading = useSignal(false);
   const predefinedError = useSignal<string | null>(null);
-  
-  // Period start check state
-  const periodLoading = useSignal(false);
-  const periodError = useSignal<string | null>(null);
-  const periodSuccess = useSignal(false);
-  const periodResult = useSignal<string | null>(null);
 
   // --- Functions ---
   const handleSave = $(async () => {
@@ -127,31 +122,6 @@ export default component$(() => {
     }
   });
 
-  const handleRunPeriodStart = $(async () => {
-    periodLoading.value = true;
-    periodError.value = null;
-    periodSuccess.value = false;
-    periodResult.value = null;
-
-    try {
-      const res = await fetch("/api/bills/admin/run-period-start", {
-        method: "POST",
-      });
-      const data = await res.json();
-      
-      if (!res.ok) throw new Error(data.message || "Failed to run period start");
-      
-      periodResult.value = data.periodAdded 
-        ? `Added period-start. Created ${data.paymentsCreated} automatic payments.` 
-        : "No period-start needed";
-      periodSuccess.value = true;
-    } catch (e: any) {
-      periodError.value = e.message;
-    } finally {
-      periodLoading.value = false;
-    }
-  });
-
   // --- Tasks ---
   useVisibleTask$(async () => {
     loading.value = true;
@@ -210,21 +180,10 @@ export default component$(() => {
 
       <div class="mt-8 border-t pt-6">
         <h2 class="mb-4 text-lg font-semibold">Period Start</h2>
-        
-        {periodError.value && (
-          <p class="mb-2 text-red-600">{periodError.value}</p>
-        )}
-        
-        {periodSuccess.value && periodResult.value && (
-          <p data-testid="period-success" class="mb-2 text-green-600">{periodResult.value}</p>
-        )}
-        
-        <DoubleConfirmButton
-          onConfirm$={handleRunPeriodStart}
-          text="Run Period Start Check"
-          data-testid="period-start-btn"
-          class="px-3 py-1.5 text-sm rounded bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
-          disabled={periodLoading.value}
+        <PeriodStartButton
+          apiEndpoint="/api/bills/admin/run-period-start"
+          buttonText="Run Period Start Check"
+          successPrefix="Created"
         />
       </div>
 

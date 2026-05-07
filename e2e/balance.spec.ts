@@ -137,7 +137,7 @@ test.describe("money module journeys", () => {
     await page.getByTestId("loader").waitFor({ state: "hidden" });
 
     // 3. Click "Run Period Start Check" twice
-    const periodBtn = page.getByTestId("period-start-btn");
+    const periodBtn = page.getByTestId("run-period-start-check-btn");
     await periodBtn.click();
     await periodBtn.click();
 
@@ -145,12 +145,12 @@ test.describe("money module journeys", () => {
     await page.waitForResponse((res) => res.url().includes("/api/balance/admin/run-period-start"));
 
     // 5. Verify success message
-    await expect(page.getByTestId("period-success")).toBeVisible();
+    await expect(page.getByTestId("run-period-start-check-success")).toBeVisible();
 
     // 6. Navigate to balance page and verify transactions exist
     await page.goto("/money/balance");
     await page.getByTestId("loader").waitFor({ state: "hidden" });
-    await page.waitForTimeout(1000); // Allow transaction data to load
+    await page.waitForTimeout(1000);
     
     // Should see some transactions
     await expect(page.getByTestId("transaction-desc-input")).toBeVisible();

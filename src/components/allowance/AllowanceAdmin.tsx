@@ -3,7 +3,7 @@ import type { AllowanceConfig } from "~/db/allowance";
 import BackButton from "~/components/shared/BackButton";
 import DayOfMonthInput from "~/components/shared/DayOfMonthInput";
 import TextInput from "~/components/shared/TextInput";
-import DoubleConfirmButton from "~/components/shared/DoubleConfirmButton";
+import PeriodStartButton from "~/components/shared/PeriodStartButton";
 
 export default component$(() => {
   const config = useSignal<AllowanceConfig | null>(null);
@@ -12,12 +12,6 @@ export default component$(() => {
   const error = useSignal<string | null>(null);
   const success = useSignal(false);
   const loading = useSignal(false);
-  
-  // Run check state
-  const runLoading = useSignal(false);
-  const runError = useSignal<string | null>(null);
-  const runSuccess = useSignal(false);
-  const runResult = useSignal<string | null>(null);
 
   useVisibleTask$(async () => {
     try {
@@ -60,31 +54,6 @@ export default component$(() => {
       error.value = e.message;
     } finally {
       loading.value = false;
-    }
-  });
-
-  const handleRunCheck = $(async () => {
-    runLoading.value = true;
-    runError.value = null;
-    runSuccess.value = false;
-    runResult.value = null;
-
-    try {
-      const res = await fetch("/api/allowance/admin/run-check", {
-        method: "POST",
-      });
-      const data = await res.json();
-      
-      if (!res.ok) throw new Error(data.message || "Failed to run check");
-      
-      runResult.value = data.added 
-        ? `Added $${data.newBalance} allowance` 
-        : "No allowance needed";
-      runSuccess.value = true;
-    } catch (e: any) {
-      runError.value = e.message;
-    } finally {
-      runLoading.value = false;
     }
   });
 
@@ -139,21 +108,10 @@ export default component$(() => {
 
       <h2 class="text-lg font-semibold">Manual Check</h2>
       
-      {runError.value && (
-        <p class="mt-2 text-red-600">{runError.value}</p>
-      )}
-      
-      {runSuccess.value && runResult.value && (
-        <p data-testid="run-success" class="mt-2 text-green-600">{runResult.value}</p>
-      )}
-      
       <div class="mt-4">
-        <DoubleConfirmButton
-          onConfirm$={handleRunCheck}
-          text="Run Allowance Check"
-          data-testid="run-check-btn"
-          class="px-3 py-1.5 text-sm rounded bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
-          disabled={runLoading.value}
+        <PeriodStartButton
+          apiEndpoint="/api/allowance/admin/run-check"
+          buttonText="Run Allowance Check"
         />
       </div>
     </div>

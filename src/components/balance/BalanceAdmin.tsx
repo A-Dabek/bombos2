@@ -3,7 +3,7 @@ import type { BalanceConfig } from "~/db/balance";
 import BackButton from "~/components/shared/BackButton";
 import Loader from "~/components/shared/Loader";
 import DayOfMonthInput from "~/components/shared/DayOfMonthInput";
-import DoubleConfirmButton from "~/components/shared/DoubleConfirmButton";
+import PeriodStartButton from "~/components/shared/PeriodStartButton";
 
 export default component$(() => {
   const config = useSignal<BalanceConfig | null>(null);
@@ -11,12 +11,6 @@ export default component$(() => {
   const error = useSignal<string | null>(null);
   const success = useSignal(false);
   const loading = useSignal(false);
-  
-  // Period start check state
-  const periodLoading = useSignal(false);
-  const periodError = useSignal<string | null>(null);
-  const periodSuccess = useSignal(false);
-  const periodResult = useSignal<string | null>(null);
 
   useVisibleTask$(async () => {
     loading.value = true;
@@ -64,29 +58,6 @@ export default component$(() => {
     }
   });
 
-  const handleRunPeriodStart = $(async () => {
-    periodLoading.value = true;
-    periodError.value = null;
-    periodSuccess.value = false;
-    periodResult.value = null;
-
-    try {
-      const res = await fetch("/api/balance/admin/run-period-start", {
-        method: "POST",
-      });
-      const data = await res.json();
-      
-      if (!res.ok) throw new Error(data.message || "Failed to run period start");
-      
-      periodResult.value = data.added ? "Added period-start." : "No period-start needed";
-      periodSuccess.value = true;
-    } catch (e: any) {
-      periodError.value = e.message;
-    } finally {
-      periodLoading.value = false;
-    }
-  });
-
   return (
     <div class="p-4">
       <BackButton href="/money/balance" />
@@ -123,21 +94,9 @@ export default component$(() => {
 
       <div class="mt-8 border-t pt-6">
         <h2 class="mb-4 text-lg font-semibold">Period Start</h2>
-        
-        {periodError.value && (
-          <p class="mb-2 text-red-600">{periodError.value}</p>
-        )}
-        
-        {periodSuccess.value && periodResult.value && (
-          <p data-testid="period-success" class="mb-2 text-green-600">{periodResult.value}</p>
-        )}
-        
-        <DoubleConfirmButton
-          onConfirm$={handleRunPeriodStart}
-          text="Run Period Start Check"
-          data-testid="period-start-btn"
-          class="px-3 py-1.5 text-sm rounded bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
-          disabled={periodLoading.value}
+        <PeriodStartButton
+          apiEndpoint="/api/balance/admin/run-period-start"
+          buttonText="Run Period Start Check"
         />
       </div>
     </div>
