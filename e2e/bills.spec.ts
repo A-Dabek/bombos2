@@ -1,6 +1,19 @@
 import {expect, test} from "@playwright/test";
 import {addBillsPeriodStartMarker, clearBills, setupBillsConfig, clearBillsAutomaticPayments, addBillsAutomaticPaymentSql, clearBillsPredefinedPayments,} from "./setup.ts";
 
+function formatPeriodLabel(ts: number): string {
+  const start = new Date(ts * 1000);
+  const end = new Date(start);
+  end.setMonth(end.getMonth() + 1);
+  const f = (d: Date) => {
+    const month = d.toLocaleString("en-US", { month: "long" });
+    const day = d.getDate();
+    const suffix = day >= 11 && day <= 13 ? "th" : ["st", "nd", "rd"][(day % 10) - 1] || "th";
+    return `${month} ${day}${suffix}, ${d.getFullYear()}`;
+  };
+  return `${f(start)} – ${f(end)}`;
+}
+
 test.describe("money module journeys", () => {
     test.beforeEach(async ({page}) => {
         clearBills();
@@ -40,8 +53,9 @@ test.describe("money module journeys", () => {
     });
 
     test("Bills: Period grouping with period markers", async ({page}) => {
-        // 1. Add period start marker (May 15, 2026)
-        addBillsPeriodStartMarker(Math.floor(new Date("2026-05-15").getTime() / 1000));
+        // 1. Add period start marker for today
+        const periodTs = Math.floor(Date.now() / 1000);
+        addBillsPeriodStartMarker(periodTs);
 
         // 2. Add user transaction
         await page.goto("/money/bills");
@@ -59,7 +73,7 @@ test.describe("money module journeys", () => {
         await expect(page.getByTestId("period-header")).toBeVisible();
 
         // 4. Verify period label format
-        await expect(page.getByTestId("period-header")).toContainText("May 15th, 2026 – June 15th, 2026");
+        await expect(page.getByTestId("period-header")).toContainText(formatPeriodLabel(periodTs));
 
         // 5. Verify period marker NOT visible (only user transactions show)
         await expect(page.getByText("Period start")).not.toBeVisible();
@@ -70,10 +84,10 @@ test.describe("money module journeys", () => {
     });
 
     test("Bills: Multiple periods create multiple groups", async ({page}) => {
-        // 1. Add multiple period start markers
-        addBillsPeriodStartMarker(Math.floor(new Date("2026-05-15").getTime() / 1000));
-        addBillsPeriodStartMarker(Math.floor(new Date("2026-06-15").getTime() / 1000));
-        addBillsPeriodStartMarker(Math.floor(new Date("2026-07-15").getTime() / 1000));
+        // 1. Add multiple period start markers (current timestamp — created_at matches real time)
+        addBillsPeriodStartMarker();
+        addBillsPeriodStartMarker();
+        addBillsPeriodStartMarker();
 
         // 2. Add transactions in different periods
         await page.goto("/money/bills");
