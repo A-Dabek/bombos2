@@ -158,38 +158,49 @@ export function deleteLastTransaction(
   return { success: true, newBalance: newLast?.balance_after ?? 0 };
 }
 
-export function checkAndAddAllowance(
-  db?: Database.Database,
-): { added: boolean; newBalance: number } {
+export function shouldAddAllowance(db?: Database.Database): boolean {
   const dbConn = db ?? getDb();
   const config = getAllowanceConfig(dbConn);
-  const now = new Date();
-  const today = now.getDate();
+  const today = new Date().getDate();
+  return today === config.day_of_month;
+}
 
-  // Check if today is the allowance day
-  if (today !== config.day_of_month) {
-    return { added: false, newBalance: getCurrentBalance(dbConn) };
+function getTargetDate(dayOfMonth: number): Date {
+  const today = new Date();
+  if (today.getDate() >= dayOfMonth) {
+    return new Date(today.getFullYear(), today.getMonth(), dayOfMonth);
+  } else {
+    return new Date(today.getFullYear(), today.getMonth() - 1, dayOfMonth);
   }
+}
 
-  // Check if allowance already added for this month
-  const year = now.getFullYear();
-  const month = now.getMonth();
+export function runAllowance(db?: Database.Database): { added: boolean; newBalance: number } {
+  const dbConn = db ?? getDb();
+  const config = getAllowanceConfig(dbConn);
+  
+  // Calculate target date (most recent day_of_month that passed)
+  const target = getTargetDate(config.day_of_month);
+  const targetTs = Math.floor(target.getTime() / 1000);
+  
+  // Check if already processed for target's period
+  const year = target.getFullYear();
+  const month = target.getMonth();
   const startOfMonth = Math.floor(new Date(year, month, 1).getTime() / 1000);
   const startOfNextMonth = Math.floor(new Date(year, month + 1, 1).getTime() / 1000);
-
+  
   const existing = dbConn.prepare(
-    "SELECT id FROM allowance_transactions WHERE type = 'allowance' AND created_at >= ? AND created_at < ?",
+    "SELECT id FROM allowance_transactions WHERE type = 'allowance' AND created_at >= ? AND created_at < ?"
   ).get(startOfMonth, startOfNextMonth) as { id: number } | undefined;
-
+  
   if (existing) {
     return { added: false, newBalance: getCurrentBalance(dbConn) };
   }
-
-  // Add allowance transaction (automatic)
-  const description = `${now.toLocaleString("en-US", { month: "long" })} allowance`;
-  addAllowanceTransaction("allowance", description, config.monthly_amount, dbConn, true);
-
-  return { added: true, newBalance: getCurrentBalance(dbConn) };
+  
+  // Add allowance transaction with target date
+  const description = `${target.toLocaleString("en-US", { month: "long" })} allowance`;
+  addAllowanceTransaction("allowance", description, config.monthly_amount, dbConn, true, targetTs);
+  
+return { added: true, newBalance: getCurrentBalance(dbConn) };
 }
 
 export function updateAllowanceConfig(

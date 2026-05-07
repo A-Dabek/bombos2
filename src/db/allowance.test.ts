@@ -6,7 +6,8 @@ import {
   getTransactionsGroupedByPeriod,
   deleteLastTransaction,
   updateAllowanceConfig,
-  checkAndAddAllowance,
+  shouldAddAllowance,
+  runAllowance,
   getLastTransactionId,
 } from "./allowance.ts";
 import { openDb, resetDb } from "./connection.ts";
@@ -183,8 +184,8 @@ test("updateAllowanceConfig updates values", () => {
 test("checkAndAddAllowance does not add if not allowance day", () => {
   resetDb();
   const db = openDb(":memory:");
-  const result = checkAndAddAllowance(db);
-  expect(result.added).toBe(false);
+  const result = shouldAddAllowance(db);
+  expect(result).toBe(false);
   db.close();
   resetDb();
 });
@@ -195,7 +196,10 @@ test("checkAndAddAllowance adds allowance on correct day", () => {
   const today = new Date().getDate();
   updateAllowanceConfig(today, 500, db);
 
-  const result = checkAndAddAllowance(db);
+  const should = shouldAddAllowance(db);
+  expect(should).toBe(true);
+  
+  const result = runAllowance(db);
   expect(result.added).toBe(true);
   expect(result.newBalance).toBe(500);
 
@@ -213,10 +217,10 @@ test("checkAndAddAllowance does not duplicate in same month", () => {
   const today = new Date().getDate();
   updateAllowanceConfig(today, 500, db);
 
-  const result1 = checkAndAddAllowance(db);
+  const result1 = runAllowance(db);
   expect(result1.added).toBe(true);
 
-  const result2 = checkAndAddAllowance(db);
+  const result2 = runAllowance(db);
   expect(result2.added).toBe(false);
 
   const groups = getTransactionsGroupedByPeriod(db);

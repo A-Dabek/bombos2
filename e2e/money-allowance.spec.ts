@@ -114,4 +114,21 @@ test.describe("Money Allowance Module Journeys", () => {
     const maySection = page.locator("div").filter({ has: page.getByText("May 15th") });
     await expect(maySection.getByText("Lunch")).toBeVisible();
   });
+
+  test("Run Allowance Check button adds allowance", async ({ page }) => {
+    // 1. Navigate to allowance admin
+    await page.goto("/money/allowance/admin");
+    await page.getByTestId("loader").waitFor({ state: "hidden" });
+
+    // 2. Click "Run Allowance Check" twice - first enters confirming state, second triggers
+    const runBtn = page.getByTestId("run-check-btn");
+    await runBtn.click();
+    await runBtn.click();
+
+    // 3. Wait for API call
+    await page.waitForResponse((res) => res.url().includes("/api/allowance/admin/run-check"));
+
+    // 4. Verify success message
+    await expect(page.getByTestId("run-success")).toBeVisible();
+  });
 });

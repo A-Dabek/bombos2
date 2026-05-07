@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import { deleteCompletedParcels } from "../db/parcels.ts";
-import { checkAndAddAllowance } from "../db/allowance.ts";
+import { shouldAddAllowance, runAllowance } from "../db/allowance.ts";
 import { checkAndAddBillsPeriodStart, createAutomaticPaymentTransactions } from "../db/bills.ts";
 import { checkAndAddBalancePeriodStart } from "../db/balance.ts";
 
@@ -21,17 +21,20 @@ export function runCleanup(): void {
   }
 }
 
-function runAllowanceCheck(): void {
+export function runAllowanceCheck(): void {
   log("allowance", "Checking if allowance should be added");
-  try {
-    const result = checkAndAddAllowance();
-    if (result.added) {
-      log("allowance", `Added allowance. New balance: ${result.newBalance}`);
-    } else {
-      log("allowance", "No allowance to add today");
+  if (shouldAddAllowance()) {
+    log("allowance", "Scheduler triggered: adding allowance");
+    try {
+      const result = runAllowance();
+      if (result.added) {
+        log("allowance", `Added allowance. New balance: ${result.newBalance}`);
+      }
+    } catch (err) {
+      log("error", `Failed to run allowance: ${err}`);
     }
-  } catch (err) {
-    log("error", `Failed to check/add allowance: ${err}`);
+  } else {
+    log("allowance", "Not the configured day, skipping");
   }
 }
 
