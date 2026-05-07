@@ -77,11 +77,11 @@ export function getBillTransactions(
   const dbConn = db ?? getDb();
   if (include_automatic) {
     return dbConn.prepare(
-      "SELECT id, description, amount, is_automatic, predefined_slug, created_at FROM bills_transactions ORDER BY id DESC",
+      "SELECT id, description, amount, is_automatic, predefined_slug, created_at FROM bills_transactions ORDER BY created_at DESC, id DESC",
     ).all() as BillsTransaction[];
   }
   return dbConn.prepare(
-    "SELECT id, description, amount, is_automatic, predefined_slug, created_at FROM bills_transactions WHERE is_automatic = 0 ORDER BY id DESC",
+    "SELECT id, description, amount, is_automatic, predefined_slug, created_at FROM bills_transactions WHERE is_automatic = 0 ORDER BY created_at DESC, id DESC",
   ).all() as BillsTransaction[];
 }
 
@@ -152,7 +152,7 @@ export function getBillTransactionsGroupedByPeriod(
 
   // Get ALL transactions ASC (oldest first) for proper grouping
   const transactions = dbConn.prepare(
-    "SELECT id, description, amount, is_automatic, predefined_slug, created_at FROM bills_transactions ORDER BY id ASC",
+    "SELECT id, description, amount, is_automatic, predefined_slug, created_at FROM bills_transactions ORDER BY created_at ASC, id ASC",
   ).all() as BillsTransaction[];
 
   const groups: BillsTransactionGroup[] = [];

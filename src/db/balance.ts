@@ -67,11 +67,11 @@ export function getBalanceTransactions(
   const dbConn = db ?? getDb();
   if (include_automatic) {
     return dbConn.prepare(
-      "SELECT id, description, amount, is_automatic, created_at FROM balance_transactions ORDER BY id DESC",
+      "SELECT id, description, amount, is_automatic, created_at FROM balance_transactions ORDER BY created_at DESC, id DESC",
     ).all() as BalanceTransaction[];
   }
   return dbConn.prepare(
-    "SELECT id, description, amount, is_automatic, created_at FROM balance_transactions WHERE is_automatic = 0 ORDER BY id DESC",
+    "SELECT id, description, amount, is_automatic, created_at FROM balance_transactions WHERE is_automatic = 0 ORDER BY created_at DESC, id DESC",
   ).all() as BalanceTransaction[];
 }
 
@@ -142,7 +142,7 @@ export function getBalanceTransactionsGroupedByPeriod(
 
   // Get ALL transactions ASC (oldest first) for proper grouping
   const transactions = dbConn.prepare(
-    "SELECT id, description, amount, is_automatic, created_at FROM balance_transactions ORDER BY id ASC",
+    "SELECT id, description, amount, is_automatic, created_at FROM balance_transactions ORDER BY created_at ASC, id ASC",
   ).all() as BalanceTransaction[];
 
   const groups: BalanceTransactionGroup[] = [];

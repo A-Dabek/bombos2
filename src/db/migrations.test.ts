@@ -8,7 +8,7 @@ test("runMigrations applies new migrations", () => {
   runMigrations(db);
 
   const rows = db.prepare("SELECT name FROM _migrations").raw(true).all() as string[][];
-  expect(rows.length).toBe(20);
+  expect(rows.length).toBe(22);
   expect(rows[0][0]).toBe("001_init.sql");
   expect(rows[1][0]).toBe("002_parcels.sql");
   expect(rows[2][0]).toBe("003_parcels_completed_at.sql");
@@ -29,6 +29,8 @@ test("runMigrations applies new migrations", () => {
   expect(rows[17][0]).toBe("018_add_bills_automatic_payments.sql");
   expect(rows[18][0]).toBe("019_add_predefined_payments.sql");
   expect(rows[19][0]).toBe("020_add_predefined_slug_to_transactions.sql");
+  expect(rows[20][0]).toBe("021_import_historical_balance_transactions.sql");
+  expect(rows[21][0]).toBe("022_import_historical_bills_transactions.sql");
 
   db.close();
 });
@@ -39,7 +41,7 @@ test("runMigrations skips already applied migrations", () => {
   runMigrations(db);
 
   const rows = db.prepare("SELECT name FROM _migrations").raw(true).all() as string[][];
-  expect(rows.length).toBe(20);
+  expect(rows.length).toBe(22);
 
   db.close();
 });
@@ -53,7 +55,7 @@ test("runMigrations applies custom migration files", async () => {
     runMigrations(db);
 
     const rows = db.prepare("SELECT name FROM _migrations ORDER BY name").raw(true).all() as string[][];
-    expect(rows.length).toBe(21);
+    expect(rows.length).toBe(23);
     expect(rows[0][0]).toBe("001_init.sql");
     expect(rows[1][0]).toBe("002_parcels.sql");
     expect(rows[2][0]).toBe("003_parcels_completed_at.sql");
@@ -75,6 +77,8 @@ test("runMigrations applies custom migration files", async () => {
     expect(rows[18][0]).toBe("018_add_bills_automatic_payments.sql");
     expect(rows[19][0]).toBe("019_add_predefined_payments.sql");
     expect(rows[20][0]).toBe("020_add_predefined_slug_to_transactions.sql");
+    expect(rows[21][0]).toBe("021_import_historical_balance_transactions.sql");
+    expect(rows[22][0]).toBe("022_import_historical_bills_transactions.sql");
 
     const tableCheck = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='test_table'").raw(true).all() as unknown[][];
     expect(tableCheck.length).toBe(1);
@@ -100,7 +104,7 @@ test("runMigrations does not record failed migrations", async () => {
     expect(errorCaught).toBe(true);
 
     const rows = db.prepare("SELECT name FROM _migrations").raw(true).all() as string[][];
-    expect(rows.length).toBe(20);
+    expect(rows.length).toBe(22);
     expect(rows[0][0]).toBe("001_init.sql");
     expect(rows[1][0]).toBe("002_parcels.sql");
     expect(rows[2][0]).toBe("003_parcels_completed_at.sql");
@@ -121,6 +125,8 @@ test("runMigrations does not record failed migrations", async () => {
     expect(rows[17][0]).toBe("018_add_bills_automatic_payments.sql");
     expect(rows[18][0]).toBe("019_add_predefined_payments.sql");
     expect(rows[19][0]).toBe("020_add_predefined_slug_to_transactions.sql");
+    expect(rows[20][0]).toBe("021_import_historical_balance_transactions.sql");
+    expect(rows[21][0]).toBe("022_import_historical_bills_transactions.sql");
   } finally {
     await rm(tempFile).catch(() => {});
     db.close();
