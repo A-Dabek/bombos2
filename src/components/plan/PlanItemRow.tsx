@@ -1,11 +1,11 @@
-import { component$, useSignal, $ } from "@builder.io/qwik";
-import { HiPencilOutline, HiTrashOutline, HiCheckCircleSolid } from "@qwikest/icons/heroicons";
+import { component$ } from "@builder.io/qwik";
+import { HiPencilOutline } from "@qwikest/icons/heroicons";
 import type { PlanItem } from "~/db/plan";
+import DoubleConfirmButton from "../shared/DoubleConfirmButton";
 
 interface PlanItemRowProps {
   item: PlanItem;
   isActive: boolean;
-  itemConfirm: number | null;
   onItemClick$: (itemId: number) => void;
   onEditClick$: (item: PlanItem) => void;
   onRemove$: (itemId: number) => void;
@@ -14,7 +14,6 @@ interface PlanItemRowProps {
 export default component$(({
   item,
   isActive,
-  itemConfirm,
   onItemClick$,
   onEditClick$,
   onRemove$,
@@ -47,20 +46,10 @@ export default component$(({
             >
               <HiPencilOutline class="w-5 h-5" />
             </button>
-            <button
-              onClick$={() => onRemove$(item.id)}
-              class={`p-1 ${
-                itemConfirm === item.id ? "text-green-500 animate-bounce" : "text-red-500 hover:text-red-700"
-              }`}
-              aria-label="Remove"
-              data-testid="item-remove-btn"
-            >
-              {itemConfirm === item.id ? (
-                <HiCheckCircleSolid class="w-5 h-5" />
-              ) : (
-                <HiTrashOutline class="w-5 h-5" />
-              )}
-            </button>
+            <DoubleConfirmButton
+              onConfirm$={() => onRemove$(item.id)}
+              class="p-1"
+            />
           </div>
         )}
       </div>

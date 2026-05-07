@@ -48,7 +48,9 @@ test.describe("meals", () => {
     await page.getByTestId("meal-admin-add").click();
     await expect(page.getByText("New Dish")).toBeVisible();
 
-    await page.locator("li[role='listitem']").filter({ hasText: "Dinner 1" }).getByTestId("meal-admin-delete").click();
+    const deleteBtn = page.locator("li[role='listitem']").filter({ hasText: "Dinner 1" }).getByTestId("delete-btn");
+    await deleteBtn.click();
+    await deleteBtn.click();
     await expect(page.getByText("Dinner 1")).not.toBeVisible();
 
     // Back to meals
@@ -95,7 +97,9 @@ test.describe("meals", () => {
     await page.getByTestId("meal-admin-add").click();
     await expect(page.getByText("New Supper")).toBeVisible();
 
-    await page.locator("li[role='listitem']").filter({ hasText: "Supper 1" }).getByTestId("meal-admin-delete").click();
+    const deleteBtn = page.locator("li[role='listitem']").filter({ hasText: "Supper 1" }).getByTestId("delete-btn");
+    await deleteBtn.click();
+    await deleteBtn.click();
     await expect(page.getByText("Supper 1")).not.toBeVisible();
 
     await page.getByRole("link", { name: "Back" }).click();

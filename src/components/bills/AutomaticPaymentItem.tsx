@@ -1,14 +1,14 @@
 import { component$, type PropFunction } from "@builder.io/qwik";
 import type { BillsAutomaticPayment } from "~/db/bills";
+import DoubleConfirmButton from "../shared/DoubleConfirmButton";
 
 interface AutomaticPaymentItemProps {
   payment: BillsAutomaticPayment;
-  isConfirming: boolean;
   isLoading: boolean;
-  onDeleteClick$: PropFunction<(id: number) => void>;
+  onDelete$: PropFunction<(id: number) => void>;
 }
 
-export default component$<AutomaticPaymentItemProps>(({ payment, isConfirming, isLoading, onDeleteClick$ }) => {
+export default component$<AutomaticPaymentItemProps>(({ payment, isLoading, onDelete$ }) => {
   return (
     <li 
       data-testid="payment-item"
@@ -17,16 +17,14 @@ export default component$<AutomaticPaymentItemProps>(({ payment, isConfirming, i
       <div>
         <span class="font-medium">{payment.name}</span>
         <span class="ml-2 text-sm text-gray-500">({payment.slug})</span>
-        <span class="ml-2 text-sm font-semibold">${payment.amount}</span>
+        <span class="ml-2 text-sm font-semibold">{payment.amount} PLN</span>
       </div>
-      <button
-        data-testid={`payment-delete-${payment.id}`}
-        onClick$={() => onDeleteClick$(payment.id)}
+      <DoubleConfirmButton
+        onConfirm$={() => onDelete$(payment.id)}
         disabled={isLoading}
-        class="rounded px-2 py-1 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
-      >
-        {isConfirming ? "Confirm?" : "Delete"}
-      </button>
+        text="Delete"
+        class="rounded px-2 py-1 text-sm"
+      />
     </li>
   );
 });

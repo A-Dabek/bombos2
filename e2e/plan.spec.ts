@@ -69,12 +69,11 @@ test.describe("plan", () => {
     await page.getByTestId("loader").waitFor({ state: "hidden" });
     
     const groceriesItemAdmin = page.locator("li").filter({ hasText: list1 }).first();
-    await groceriesItemAdmin.getByTestId("admin-delete-btn").click({ force: true });
-    await expect(groceriesItemAdmin.getByTestId("admin-delete-btn")).toHaveClass(/animate-bounce/);
-    
+    await groceriesItemAdmin.getByTestId("delete-btn").click({ force: true });
+
     await Promise.all([
       page.waitForResponse(r => r.url().includes("/api/plan/lists/") && r.request().method() === "DELETE"),
-      groceriesItemAdmin.getByTestId("admin-delete-btn").click({ force: true }),
+      groceriesItemAdmin.getByTestId("delete-btn").click({ force: true }),
     ]);
     await page.waitForTimeout(500);
     await expect(page.getByText(list1)).not.toBeVisible();
@@ -282,13 +281,13 @@ test.describe("plan", () => {
     await expect(page.locator("li").filter({ hasText: "Whole Milk" }).locator("span.text-red-600")).toBeVisible();
 
     // 4. Delete item
-    await page.locator("li.cursor-pointer").filter({ hasText: "Whole Milk" }).click({ force: true }); // Ensure active
-    await page.getByTestId("item-remove-btn").click({ force: true });
-    await expect(page.getByTestId("item-remove-btn")).toHaveClass(/animate-bounce/);
-    
+    const milkItem = page.locator("li.cursor-pointer").filter({ hasText: "Whole Milk" });
+    await milkItem.click({ force: true }); // Ensure active
+    await milkItem.getByTestId("delete-btn").click({ force: true });
+
     await Promise.all([
       page.waitForResponse(r => r.url().includes("/api/plan/items/") && r.request().method() === "DELETE"),
-      page.getByTestId("item-remove-btn").click({ force: true }),
+      milkItem.getByTestId("delete-btn").click({ force: true }),
     ]);
     await expect(page.getByText("Whole Milk")).not.toBeVisible();
 
@@ -300,12 +299,11 @@ test.describe("plan", () => {
       page.getByRole("button", { name: "Save" }).click({ force: true }),
     ]);
 
-    await page.getByTestId("remove-all-btn").click({ force: true });
-    await expect(page.getByTestId("remove-all-btn")).toHaveClass(/animate-bounce/);
-    
+    await page.getByTestId("delete-btn").filter({ hasText: "Remove all" }).click({ force: true });
+
     await Promise.all([
       page.waitForResponse(r => r.url().match(/\/api\/plan\/lists\/\d+\/items$/) && r.request().method() === "DELETE"),
-      page.getByTestId("remove-all-btn").click({ force: true }),
+      page.getByTestId("delete-btn").filter({ hasText: "Remove all" }).click({ force: true }),
     ]);
     await expect(page.getByText("No items yet")).toBeVisible();
   });

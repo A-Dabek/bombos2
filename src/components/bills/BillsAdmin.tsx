@@ -1,4 +1,5 @@
 import { component$, useVisibleTask$, useSignal, $, type Signal } from "@builder.io/qwik";
+import DoubleConfirmButton from "~/components/shared/DoubleConfirmButton";
 import type { BillsConfig } from "~/db/bills";
 import type { BillsPredefinedPayment } from "~/db/bills";
 import BackButton from "~/components/shared/BackButton";
@@ -20,7 +21,6 @@ export default component$(() => {
   const newPredefinedSlug = useSignal("");
   const predefinedLoading = useSignal(false);
   const predefinedError = useSignal<string | null>(null);
-  const predefinedDeleteConfirmations = useSignal<Set<number>>(new Set());
 
   // --- Functions ---
   const handleSave = $(async () => {
@@ -105,13 +105,6 @@ export default component$(() => {
   });
 
   const handleDeletePredefined = $(async (paymentId: number) => {
-    const confirmations = new Set(predefinedDeleteConfirmations.value);
-    if (!confirmations.has(paymentId)) {
-      confirmations.add(paymentId);
-      predefinedDeleteConfirmations.value = confirmations;
-      return;
-    }
-
     try {
       const res = await fetch(`/api/bills/predefined-payments/${paymentId}`, {
         method: "DELETE",
@@ -123,9 +116,6 @@ export default component$(() => {
       }
 
       await loadPredefinedPayments();
-      const updated = new Set(predefinedDeleteConfirmations.value);
-      updated.delete(paymentId);
-      predefinedDeleteConfirmations.value = updated;
     } catch (e: any) {
       predefinedError.value = e.message;
     }
@@ -188,7 +178,7 @@ export default component$(() => {
       <AutomaticPaymentsAdmin />
 
       <div class="mt-8 border-t pt-6">
-        <h2 class="mb-4 text-lg font-semibold">Predefined Payment Names</h2>
+        <h2 class="mb-4 text-lg font-semibold">Predefined Payments</h2>
 
         {predefinedError.value && (
           <p class="mb-2 text-red-600">{predefinedError.value}</p>
@@ -209,15 +199,11 @@ export default component$(() => {
                 <span>
                   {payment.name} <span class="text-sm text-gray-500">({payment.slug})</span>
                 </span>
-                <button
-                  onClick$={() => handleDeletePredefined(payment.id)}
-                  data-testid={`predefined-delete-${payment.slug}`}
-                  class="rounded bg-red-500 px-2 py-1 text-sm text-white hover:bg-red-600"
-                >
-                  {predefinedDeleteConfirmations.value.has(payment.id)
-                    ? "Confirm?"
-                    : "Delete"}
-                </button>
+                <DoubleConfirmButton
+                  onConfirm$={() => handleDeletePredefined(payment.id)}
+                  text="Delete"
+                  class="px-2 py-1 text-sm rounded"
+                />
               </div>
             ))}
             {predefinedPayments.value.length === 0 && (

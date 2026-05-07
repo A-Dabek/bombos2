@@ -19,12 +19,6 @@ export default component$(() => {
   // Item interaction state
   const activeItemId = useSignal<number | null>(null);
 
-  // Double-click confirmation signals
-  const removeAllConfirm = useSignal(false);
-  const removeAllTimer = useSignal<number | null>(null);
-  const itemConfirm = useSignal<number | null>(null);
-  const itemTimers = useSignal<Map<number, number>>(new Map());
-
   // Load lists on mount
   useVisibleTask$(async () => {
     try {
@@ -41,8 +35,6 @@ export default component$(() => {
   // Cleanup timers on unmount
   useVisibleTask$(() => {
     return () => {
-      if (removeAllTimer.value) window.clearTimeout(removeAllTimer.value);
-      itemTimers.value.forEach((timer) => window.clearTimeout(timer));
       listItemsCache.value = new Map();
     };
   });
@@ -94,33 +86,12 @@ export default component$(() => {
   });
 
   const handleRemove = $(async (listId: number, itemId: number) => {
-    if (itemConfirm.value !== itemId) {
-      itemConfirm.value = itemId;
-      const timer = window.setTimeout(() => { itemConfirm.value = null; }, 2000);
-      const timers = new Map(itemTimers.value);
-      timers.set(itemId, timer);
-      itemTimers.value = timers;
-      return;
-    }
-    const timers = new Map(itemTimers.value);
-    const timer = timers.get(itemId);
-    if (timer) { window.clearTimeout(timer); timers.delete(itemId); }
-    itemTimers.value = timers;
-    itemConfirm.value = null;
     await fetch(`/api/plan/items/${itemId}`, { method: "DELETE" });
     activeItemId.value = null;
     await refreshItems(listId);
   });
 
   const handleRemoveAll = $(async (listId: number) => {
-    if (!removeAllConfirm.value) {
-      removeAllConfirm.value = true;
-      const timer = window.setTimeout(() => { removeAllConfirm.value = false; }, 2000);
-      removeAllTimer.value = timer;
-      return;
-    }
-    if (removeAllTimer.value) { window.clearTimeout(removeAllTimer.value); removeAllTimer.value = null; }
-    removeAllConfirm.value = false;
     await fetch(`/api/plan/lists/${listId}/items`, { method: "DELETE" });
     await refreshItems(listId);
   });
@@ -206,13 +177,11 @@ export default component$(() => {
                       isLoading={isLoading}
                       formMode={isExpanded ? formMode.value : "none"}
                       activeItemId={activeItemId.value}
-                      itemConfirm={itemConfirm.value}
                       onItemClick$={handleItemClick}
                       onEditClick$={(item) => handleEditClick(list.id, item)}
                       onRemove$={(itemId) => handleRemove(list.id, itemId)}
                       onAddClick$={() => handleAddClick(list.id)}
                       onRemoveAll$={() => handleRemoveAll(list.id)}
-                      removeAllConfirm={removeAllConfirm.value}
                       onSave$={(name, desc, urgent) => handleSave(list.id, name, desc, urgent)}
                       onNext$={(name, desc, urgent) => handleNext(list.id, name, desc, urgent)}
                       onCancel$={handleCancel}

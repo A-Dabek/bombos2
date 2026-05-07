@@ -1,13 +1,10 @@
-import { component$, useSignal, $ } from "@builder.io/qwik";
+import { component$ } from "@builder.io/qwik";
 import Loader from "~/components/shared/Loader";
-import {
-  HiPlusOutline,
-  HiTrashOutline,
-  HiCheckCircleSolid,
-} from "@qwikest/icons/heroicons";
+import { HiPlusOutline } from "@qwikest/icons/heroicons";
 import type { PlanItem } from "~/db/plan";
 import PlanItemRow from "./PlanItemRow";
 import PlanForm from "./PlanForm";
+import DoubleConfirmButton from "../shared/DoubleConfirmButton";
 
 interface PlanAccordionListProps {
   listId: number;
@@ -16,13 +13,11 @@ interface PlanAccordionListProps {
   isLoading: boolean;
   formMode: "none" | "add" | "edit";
   activeItemId: number | null;
-  itemConfirm: number | null;
   onItemClick$: (itemId: number) => void;
   onEditClick$: (item: PlanItem) => void;
   onRemove$: (itemId: number) => void;
   onAddClick$: () => void;
   onRemoveAll$: () => void;
-  removeAllConfirm: boolean;
   onSave$: (name: string, description: string, urgent: boolean) => void;
   onNext$?: (name: string, description: string, urgent: boolean) => void;
   onCancel$: () => void;
@@ -31,19 +26,16 @@ interface PlanAccordionListProps {
 
 export default component$(
   ({
-    listId,
     isExpanded,
     items,
     isLoading,
     formMode,
     activeItemId,
-    itemConfirm,
     onItemClick$,
     onEditClick$,
     onRemove$,
     onAddClick$,
     onRemoveAll$,
-    removeAllConfirm,
     onSave$,
     onNext$,
     onCancel$,
@@ -83,7 +75,6 @@ export default component$(
                             key={item.id}
                             item={item}
                             isActive={activeItemId === item.id}
-                            itemConfirm={itemConfirm}
                             onItemClick$={onItemClick$}
                             onEditClick$={onEditClick$}
                             onRemove$={onRemove$}
@@ -101,26 +92,12 @@ export default component$(
                       <HiPlusOutline class="w-5 h-5 mr-1" />
                       <span>Add new</span>
                     </button>
-                    <button
-                      onClick$={onRemoveAll$}
-                      disabled={items.length === 0 && !removeAllConfirm}
-                      class={`flex items-center px-3 py-2 rounded ${
-                        removeAllConfirm
-                          ? "bg-green-500 text-white animate-bounce"
-                          : items.length === 0
-                            ? "bg-gray-200 text-gray-400"
-                            : "bg-red-500 text-white hover:bg-red-600"
-                      }`}
-                      aria-label="Remove all"
-                      data-testid="remove-all-btn"
-                    >
-                      {removeAllConfirm ? (
-                        <HiCheckCircleSolid class="w-5 h-5 mr-1" />
-                      ) : (
-                        <HiTrashOutline class="w-5 h-5 mr-1" />
-                      )}
-                      <span>Remove all</span>
-                    </button>
+                    <DoubleConfirmButton
+                      onConfirm$={onRemoveAll$}
+                      disabled={items.length === 0}
+                      text="Remove all"
+                      class={`px-3 py-2 rounded ${items.length === 0 ? "bg-gray-200 text-gray-400" : ""}`}
+                    />
                   </div>
                 </>
               )}

@@ -13,7 +13,6 @@ export default component$(() => {
   const paymentsLoading = useSignal(false);
   const paymentsError = useSignal<string | null>(null);
   const paymentsSuccess = useSignal(false);
-  const deleteConfirmations = useSignal<Set<number>>(new Set());
 
   const loadPayments = $(async () => {
     paymentsLoading.value = true;
@@ -111,28 +110,6 @@ export default component$(() => {
     }
   });
 
-  const handleDeleteClick = $((paymentId: number) => {
-    if (deleteConfirmations.value.has(paymentId)) {
-      // Second click - actually delete
-      handleDeletePayment(paymentId);
-      const newSet = new Set(deleteConfirmations.value);
-      newSet.delete(paymentId);
-      deleteConfirmations.value = newSet;
-    } else {
-      // First click - show confirmation
-      const newSet = new Set(deleteConfirmations.value);
-      newSet.add(paymentId);
-      deleteConfirmations.value = newSet;
-      
-      // Revert after 2 seconds
-      setTimeout(() => {
-        const revertSet = new Set(deleteConfirmations.value);
-        revertSet.delete(paymentId);
-        deleteConfirmations.value = revertSet;
-      }, 2000);
-    }
-  });
-
   return (
     <>
       <hr class="my-6" />
@@ -164,9 +141,8 @@ export default component$(() => {
               <AutomaticPaymentItem
                 key={payment.id}
                 payment={payment}
-                isConfirming={deleteConfirmations.value.has(payment.id)}
                 isLoading={paymentsLoading.value}
-                onDeleteClick$={handleDeleteClick}
+                onDelete$={handleDeletePayment}
               />
             ))}
           </ul>

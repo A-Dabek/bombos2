@@ -148,17 +148,17 @@ test.describe("money module journeys", () => {
         // 4. Verify payment appears in list
         await expect(page.getByTestId("payment-item")).toBeVisible();
         await expect(page.getByText("Rent", { exact: true })).toBeVisible();
-        await expect(page.getByText("$1200")).toBeVisible();
+        await expect(page.getByText("1200 PLN")).toBeVisible();
 
         // 4. Verify payment appears in list
         await expect(page.getByTestId("payment-item")).toBeVisible();
         await expect(page.getByText("Rent", { exact: true })).toBeVisible();
-        await expect(page.getByText("$1200")).toBeVisible();
+        await expect(page.getByText("1200 PLN")).toBeVisible();
 
         // 5. Delete payment - click twice on Delete button
-        const deleteBtn = page.locator("button").filter({ hasText: "Delete" }).first();
-        await deleteBtn.click();
-        await deleteBtn.click();
+        const deleteBtn = page.getByTestId("delete-btn").first();
+        await deleteBtn.click({ force: true });
+        await deleteBtn.click({ force: true });
 
         // Give time for API call
         await page.waitForTimeout(2000);
@@ -188,12 +188,14 @@ test.describe("money module journeys", () => {
         await expect(page.getByTestId("predefined-item").last()).toContainText("Water");
 
         // 2. Delete "Water" - two-click confirmation pattern
-        const deleteWaterBtn = page.getByTestId("predefined-delete-water");
-        await deleteWaterBtn.click(); // First click: shows "Confirm?"
-        await deleteWaterBtn.click(); // Second click: confirms deletion
+        const deleteWaterBtn = page.getByTestId("predefined-item").filter({ hasText: "Water" }).getByTestId("delete-btn");
+        await deleteWaterBtn.click({ force: true }); // First click: shows "Confirm?"
 
-        // Wait for DELETE API call and list reload
-        await page.waitForResponse(r => r.url().includes("/api/bills/predefined-payments") && r.request().method() === "DELETE");
+        await Promise.all([
+            page.waitForResponse(r => r.url().includes("/api/bills/predefined-payments") && r.request().method() === "DELETE"),
+            deleteWaterBtn.click({ force: true }), // Second click: confirms deletion
+        ]);
+
         await expect(page.getByTestId("predefined-item").filter({ hasText: "Water" })).toHaveCount(0);
 
         // 3. User: Go to bills page and add manual bill using predefined
