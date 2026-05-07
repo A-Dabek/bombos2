@@ -116,19 +116,33 @@ test.describe("Money Allowance Module Journeys", () => {
   });
 
   test("Run Allowance Check button adds allowance", async ({ page }) => {
-    // 1. Navigate to allowance admin
+    // 1. Set config to today's day so check runs - wait for response
+    const today = new Date().getDate();
+    await page.request.post("/api/allowance/config", {
+      data: { day_of_month: today, monthly_amount: 600 }
+    });
+
+    // 2. Navigate to allowance admin
     await page.goto("/money/allowance/admin");
     await page.getByTestId("loader").waitFor({ state: "hidden" });
 
-    // 2. Click "Run Allowance Check" twice - first enters confirming state, second triggers
+    // 3. Click "Run Allowance Check" twice - first enters confirming state, second triggers
     const runBtn = page.getByTestId("run-check-btn");
     await runBtn.click();
     await runBtn.click();
 
-    // 3. Wait for API call
+    // 4. Wait for API call
     await page.waitForResponse((res) => res.url().includes("/api/allowance/admin/run-check"));
 
-    // 4. Verify success message
+    // 5. Verify success message
     await expect(page.getByTestId("run-success")).toBeVisible();
+
+    // 6. Navigate to allowance page, wait for data load, verify transaction appears
+    await page.goto("/money/allowance");
+    await page.getByTestId("loader").waitFor({ state: "hidden" });
+    await page.waitForTimeout(1000); // Allow transaction data to load
+    
+    // Should see non-zero balance
+    await expect(page.getByTestId("allowance-balance")).not.toHaveText("0");
   });
 });

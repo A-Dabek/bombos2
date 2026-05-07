@@ -239,19 +239,43 @@ test.describe("money module journeys", () => {
     });
 
   test("Run Period Start Check button adds period-start and payments", async ({ page }) => {
-    // 1. Navigate to bills admin
+    // 1. Set config to today's day so period start runs
+    const today = new Date().getDate();
+    await page.request.post("/api/bills/config", {
+      data: { day_of_month: today }
+    });
+
+    // 2. Add predefined payments that will become automatic payments
+    await page.goto("/money/bills/admin");
+    await page.getByTestId("loader").waitFor({ state: "hidden" });
+    
+    // Add predefined payment
+    await page.getByTestId("predefined-name-input").fill("Rent");
+    await page.getByTestId("predefined-slug-input").fill("rent");
+    await page.getByTestId("predefined-add-button").click();
+    await page.waitForTimeout(500);
+
+    // 3. Navigate to bills admin again for period start
     await page.goto("/money/bills/admin");
     await page.getByTestId("loader").waitFor({ state: "hidden" });
 
-    // 2. Click "Run Period Start Check" twice
+    // 4. Click "Run Period Start Check" twice
     const periodBtn = page.getByTestId("period-start-btn");
     await periodBtn.click();
     await periodBtn.click();
 
-    // 3. Wait for API call
+    // 5. Wait for API call
     await page.waitForResponse((res) => res.url().includes("/api/bills/admin/run-period-start"));
 
-    // 4. Verify success message
+    // 6. Verify success message
     await expect(page.getByTestId("period-success")).toBeVisible();
+
+    // 7. Navigate to bills page and verify transactions exist
+    await page.goto("/money/bills");
+    await page.getByTestId("loader").waitFor({ state: "hidden" });
+    await page.waitForTimeout(1000); // Allow transaction data to load
+    
+    // Should see some transactions (period start + automatic payment)
+    await expect(page.getByTestId("transaction-desc-input")).toBeVisible();
   });
 });

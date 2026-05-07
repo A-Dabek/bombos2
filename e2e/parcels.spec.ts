@@ -161,6 +161,7 @@ test.describe("parcels journeys", () => {
     const now = Date.now();
     addParcelSql("incoming", now); // completed
     addParcelSql("outgoing", now); // completed
+    addParcelSql("incoming"); // incomplete - should remain
 
     // 2. Navigate to parcels admin via button
     await page.goto("/parcels/incoming");
@@ -178,5 +179,10 @@ test.describe("parcels journeys", () => {
 
     // 4. Verify success message appears
     await expect(page.getByText(/Deleted 2 parcels/)).toBeVisible();
+
+    // 5. Verify incomplete parcels still exist - navigate to incoming
+    await page.goto("/parcels/incoming");
+    await page.getByTestId("loader").waitFor({ state: "hidden" });
+    await expect(page.getByTestId("parcel-image")).toBeVisible(); // incomplete parcel remains
   });
 });

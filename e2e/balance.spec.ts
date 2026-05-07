@@ -126,19 +126,33 @@ test.describe("money module journeys", () => {
     });
 
   test("Run Period Start Check button adds period-start", async ({ page }) => {
-    // 1. Navigate to balance admin
+    // 1. Set config to today's day so period start runs
+    const today = new Date().getDate();
+    await page.request.post("/api/balance/config", {
+      data: { day_of_month: today }
+    });
+
+    // 2. Navigate to balance admin
     await page.goto("/money/balance/admin");
     await page.getByTestId("loader").waitFor({ state: "hidden" });
 
-    // 2. Click "Run Period Start Check" twice
+    // 3. Click "Run Period Start Check" twice
     const periodBtn = page.getByTestId("period-start-btn");
     await periodBtn.click();
     await periodBtn.click();
 
-    // 3. Wait for API call
+    // 4. Wait for API call
     await page.waitForResponse((res) => res.url().includes("/api/balance/admin/run-period-start"));
 
-    // 4. Verify success message
+    // 5. Verify success message
     await expect(page.getByTestId("period-success")).toBeVisible();
+
+    // 6. Navigate to balance page and verify transactions exist
+    await page.goto("/money/balance");
+    await page.getByTestId("loader").waitFor({ state: "hidden" });
+    await page.waitForTimeout(1000); // Allow transaction data to load
+    
+    // Should see some transactions
+    await expect(page.getByTestId("transaction-desc-input")).toBeVisible();
   });
 });
