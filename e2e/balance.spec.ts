@@ -1,15 +1,17 @@
 import {expect, test} from "@playwright/test";
 import {addBalancePeriodStartMarker, clearBalance, setupBalanceConfig,} from "./setup.ts";
 
+// Polish months in genitive case (for dates like "8 maja")
+const polishMonths = ["stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca", "lipca", "sierpnia", "września", "października", "listopada", "grudnia"];
+
 function formatPeriodLabel(ts: number): string {
   const start = new Date(ts * 1000);
   const end = new Date(start);
   end.setMonth(end.getMonth() + 1);
   const f = (d: Date) => {
-    const month = d.toLocaleString("en-US", { month: "long" });
     const day = d.getDate();
-    const suffix = day >= 11 && day <= 13 ? "th" : ["st", "nd", "rd"][(day % 10) - 1] || "th";
-    return `${month} ${day}${suffix}, ${d.getFullYear()}`;
+    const month = polishMonths[d.getMonth()];
+    return `${day} ${month}, ${d.getFullYear()}`;
   };
   return `${f(start)} – ${f(end)}`;
 }
@@ -123,7 +125,7 @@ test.describe("money module journeys", () => {
         await page.locator("#day-of-month").fill("25");
         await Promise.all([
             page.waitForResponse(r => r.url().endsWith("/api/balance/config") && r.request().method() === "POST"),
-            page.getByRole("button", {name: "Save"}).click(),
+            page.getByTestId("balance-config-save").click(),
         ]);
         await expect(page.getByTestId("save-success")).toBeVisible();
 
@@ -151,7 +153,7 @@ test.describe("money module journeys", () => {
     await page.getByTestId("loader").waitFor({ state: "hidden" });
 
     // 3. Click "Run Period Start Check" twice
-    const periodBtn = page.getByTestId("run-period-start-check-btn");
+    const periodBtn = page.getByTestId("wykonaj-rozpoczęcie-okresu-btn");
     await periodBtn.click();
     await periodBtn.click();
 
@@ -159,7 +161,7 @@ test.describe("money module journeys", () => {
     await page.waitForResponse((res) => res.url().includes("/api/balance/admin/run-period-start"));
 
     // 5. Verify success message
-    await expect(page.getByTestId("run-period-start-check-success")).toBeVisible();
+    await expect(page.getByTestId("wykonaj-rozpoczęcie-okresu-success")).toBeVisible();
 
     // 6. Navigate to balance page and verify transactions exist
     await page.goto("/money/balance");

@@ -7,5 +7,5 @@ export default component$(() => {
 });
 
 export const head: DocumentHead = {
-  title: "Supper - Meals",
+  title: "Kolacja - Posiłki",
 };

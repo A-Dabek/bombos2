@@ -21,7 +21,7 @@ export const ParcelListItem = component$<Props>((props) => {
         <img
           data-testid="parcel-image"
           src={`data:${parcel.contentType};base64,${parcel.imageBase64}`}
-          alt="Parcel"
+          alt="Paczka"
           class="h-full w-full object-cover"
         />
         {parcel.completedAt !== null && (
@@ -34,7 +34,7 @@ export const ParcelListItem = component$<Props>((props) => {
         type="text"
         data-testid="parcel-note-input"
         value={parcel.note ?? ""}
-        placeholder="Note..."
+        placeholder="Notatka..."
         maxLength={100}
         class="mt-1 w-full px-1 py-0.5 text-xs focus:ring-1 focus:ring-blue-500"
         onInput$={(e: InputEvent) => {

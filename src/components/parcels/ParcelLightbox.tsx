@@ -18,7 +18,7 @@ export default component$<Props>((props) => {
     >
       <img
         src={`data:${props.parcel.contentType};base64,${props.parcel.imageBase64}`}
-        alt="Full size parcel"
+        alt="Pełny rozmiar paczki"
         data-testid="parcel-lightbox-image"
         class="max-h-full max-w-full object-contain"
         onClick$={props.onClose$}
@@ -36,10 +36,10 @@ export default component$<Props>((props) => {
           {props.isCompleting ? (
             <span class="flex items-center gap-2" data-testid="parcel-lightbox-saving">
               <Loader size="sm" color="border-white" />
-              Saving...
+              Zapisywanie...
             </span>
           ) : (
-            "Mark as Completed"
+            "Gotowe!"
           )}
         </button>
       )}

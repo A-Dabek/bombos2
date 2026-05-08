@@ -81,23 +81,24 @@ export default component$(() => {
     <div class="min-h-screen p-4" data-testid="plan-admin">
        <BackButton href="/plan/lists" />
 
-      <h1 class="text-xl font-bold text-gray-800 mb-4">Manage Lists</h1>
+      <h1 class="text-xl font-bold text-gray-800 mb-4">Zarządzaj listami</h1>
 
       <div class="flex items-center mb-4 space-x-2">
         <TextInput
           type="text"
           value={newListTitle.value}
           onInput$={(e) => (newListTitle.value = (e.target as HTMLInputElement).value)}
-          placeholder="New list title..."
+          placeholder="Tytuł nowej listy..."
           class="flex-1"
           containerClass="flex-1"
         />
         <button
           onClick$={handleAdd}
+          data-testid="plan-add-list-btn"
           class="flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
           <HiPlusOutline class="w-5 h-5 mr-1" />
-          <span>Add List</span>
+          <span>Dodaj listę</span>
         </button>
       </div>
 
@@ -106,7 +107,7 @@ export default component$(() => {
           <Loader />
         </div>
       ) : lists.value.length === 0 ? (
-        <p class="text-lg text-gray-500">No lists yet</p>
+        <p class="text-lg text-gray-500">Brak list</p>
       ) : (
         <ul class="space-y-2">
           {lists.value.map((list, index) => (
@@ -120,7 +121,7 @@ export default component$(() => {
                   onClick$={() => handleMove(list.id, "up")}
                   disabled={index === 0}
                   class={`p-1 ${index === 0 ? "text-gray-300" : "text-gray-500 hover:text-gray-700"}`}
-                  aria-label="Move up"
+                  aria-label="Przenieś w górę"
                 >
                   <HiArrowUpOutline class="w-5 h-5" />
                 </button>
@@ -128,7 +129,7 @@ export default component$(() => {
                   onClick$={() => handleMove(list.id, "down")}
                   disabled={index === lists.value.length - 1}
                   class={`p-1 ${index === lists.value.length - 1 ? "text-gray-300" : "text-gray-500 hover:text-gray-700"}`}
-                  aria-label="Move down"
+                  aria-label="Przenieś w dół"
                 >
                   <HiArrowDownOutline class="w-5 h-5" />
                 </button>

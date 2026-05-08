@@ -77,7 +77,7 @@ export default component$<MealRandomizerProps>((props) => {
       {!isLoaded.value ? (
         <Loader />
       ) : meals.value.length === 0 ? (
-        <p class="text-lg text-gray-500">No meals yet</p>
+        <p class="text-lg text-gray-500">Brak dań</p>
       ) : (
         <>
           <button
@@ -87,7 +87,7 @@ export default component$<MealRandomizerProps>((props) => {
             class="flex flex-col items-center justify-center w-32 h-32 rounded-full bg-blue-50 hover:bg-blue-100 transition-colors animate-[scaleUpDown_0.2s_ease-out]"
           >
             <HiSparklesSolid class="w-16 h-16 text-blue-600" />
-            <span class="text-xs text-blue-600 font-medium">Roll</span>
+            <span class="text-xs text-blue-600 font-medium">Losuj</span>
           </button>
 
           {currentMeal && (
@@ -104,7 +104,7 @@ export default component$<MealRandomizerProps>((props) => {
               key="picky-eater"
               class="mt-6 text-lg text-gray-600 italic animate-[fadeIn_0.3s_ease-out]"
             >
-              You're a picky eater
+              Aleś wybredna!
             </p>
           )}
         </>

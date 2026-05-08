@@ -146,7 +146,7 @@ export default component$(() => {
           <Loader />
         </div>
       ) : lists.value.length === 0 ? (
-        <p class="text-lg text-gray-500 px-4">No lists yet</p>
+        <p class="text-lg text-gray-500 px-4">Brak list</p>
       ) : (
         <div class="starting:opacity-0 opacity-100 transition-opacity duration-300">
           <ul class="divide-y divide-gray-200">

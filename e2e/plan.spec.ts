@@ -21,10 +21,10 @@ test.describe("plan", () => {
     await page.goto("/plan/lists");
     await page.getByTestId("loader").waitFor({ state: "hidden" });
     await page.waitForTimeout(500); // Hydration safety
-    await expect(page.getByText("No lists yet")).toBeVisible();
+    await expect(page.getByText("Brak list")).toBeVisible();
 
     // 2. Go to Admin
-    await page.getByRole("link", { name: "Admin" }).click();
+    await page.getByTestId("admin-button").click();
     await page.getByTestId("loader").waitFor({ state: "hidden" });
     await page.waitForTimeout(500);
 
@@ -32,17 +32,17 @@ test.describe("plan", () => {
     const list1 = "Groceries";
     const list2 = "Todo";
     
-    await page.getByPlaceholder("New list title...").fill(list1);
+    await page.getByPlaceholder("Tytuł nowej listy...").fill(list1);
     await Promise.all([
       page.waitForResponse(r => r.url().endsWith("/api/plan/lists") && r.request().method() === "POST"),
-      page.getByRole("button", { name: "Add List" }).click({ force: true }),
+      page.getByTestId("plan-add-list-btn").click({ force: true }),
     ]);
     await expect(page.locator("li").filter({ hasText: list1 })).toBeVisible();
 
-    await page.getByPlaceholder("New list title...").fill(list2);
+    await page.getByPlaceholder("Tytuł nowej listy...").fill(list2);
     await Promise.all([
       page.waitForResponse(r => r.url().endsWith("/api/plan/lists") && r.request().method() === "POST"),
-      page.getByRole("button", { name: "Add List" }).click({ force: true }),
+      page.getByTestId("plan-add-list-btn").click({ force: true }),
     ]);
     await expect(page.locator("li").filter({ hasText: list2 })).toBeVisible();
 
@@ -50,7 +50,7 @@ test.describe("plan", () => {
     const todoItemAdmin = page.locator("li").filter({ hasText: list2 }).first();
     await Promise.all([
       page.waitForResponse(r => r.url().includes("/api/plan/lists/") && r.request().method() === "PATCH"),
-      todoItemAdmin.getByLabel("Move up").click({ force: true }),
+      todoItemAdmin.getByLabel("Przenieś w górę").click({ force: true }),
     ]);
     await page.waitForTimeout(500);
     
@@ -59,13 +59,13 @@ test.describe("plan", () => {
     await expect(page.locator("li").nth(1)).toContainText(list1);
 
     // 6. Verify order in Lists page
-    await page.getByRole("link", { name: "Back" }).click();
+    await page.getByTestId("back-button").click();
     await page.getByTestId("loader").waitFor({ state: "hidden" });
     await expect(page.locator("li").first()).toContainText(list2);
     await expect(page.locator("li").nth(1)).toContainText(list1);
 
     // 7. Delete list in Admin
-    await page.getByRole("link", { name: "Admin" }).click();
+    await page.getByTestId("admin-button").click();
     await page.getByTestId("loader").waitFor({ state: "hidden" });
     
     const groceriesItemAdmin = page.locator("li").filter({ hasText: list1 }).first();
@@ -79,7 +79,7 @@ test.describe("plan", () => {
     await expect(page.getByText(list1)).not.toBeVisible();
 
     // 8. Verify: Gone from Lists page
-    await page.getByRole("link", { name: "Back" }).click();
+    await page.getByTestId("back-button").click();
     await page.getByTestId("loader").waitFor({ state: "hidden" });
     await expect(page.getByText(list2)).toBeVisible();
     await expect(page.getByText(list1)).not.toBeVisible();
@@ -96,22 +96,22 @@ test.describe("plan", () => {
 
     // 3. Expand list
     await page.getByRole("button", { name: "Shopping" }).click();
-    await expect(page.getByRole("button", { name: "Add new" })).toBeVisible();
+    await expect(page.getByTestId("add-item-btn")).toBeVisible();
     
     // 4. Form cancel check
-    await page.getByRole("button", { name: "Add new" }).click();
+    await page.getByTestId("add-item-btn").click();
     await expect(page.getByTestId("edit-form-add")).toBeVisible();
-    await page.getByRole("button", { name: "Cancel" }).click();
+    await page.getByTestId("form-cancel-btn").click();
     await expect(page.getByTestId("edit-form-add")).not.toBeVisible();
 
     // 5. Add item
-    await page.getByRole("button", { name: "Add new" }).click({ force: true });
+    await page.getByTestId("add-item-btn").click({ force: true });
     await expect(page.getByTestId("edit-form-add")).toBeVisible();
     
     await page.locator('input[type="text"]').fill("Milk");
     await Promise.all([
       page.waitForResponse(r => r.url().match(/\/api\/plan\/lists\/\d+$/) && r.request().method() === "POST"),
-      page.getByRole("button", { name: "Save" }).click({ force: true }),
+      page.getByTestId("form-save-btn").click({ force: true }),
     ]);
     
     // 6. Verify item appears
@@ -125,7 +125,7 @@ test.describe("plan", () => {
     await page.getByTestId("loader").waitFor({ state: "hidden" });
     await page.waitForTimeout(500);
     await page.getByRole("button", { name: "Shopping" }).click();
-    await page.getByRole("button", { name: "Add new" }).click({ force: true });
+    await page.getByTestId("add-item-btn").click({ force: true });
     
     // Verify autofocus attribute is present (Qwik handles focus via this attribute)
     const nameInput = page.getByTestId("edit-form-add").locator('input[type="text"]');
@@ -138,13 +138,13 @@ test.describe("plan", () => {
     await page.getByTestId("loader").waitFor({ state: "hidden" });
     await page.waitForTimeout(500);
     await page.getByRole("button", { name: "Shopping" }).click();
-    await page.getByRole("button", { name: "Add new" }).click({ force: true });
+    await page.getByTestId("add-item-btn").click({ force: true });
     
     await page.getByTestId("edit-form-add").locator('input[type="text"]').fill("Urgent Item");
     await page.getByTestId("edit-form-add").locator('input[type="checkbox"]').check();
     await Promise.all([
       page.waitForResponse(r => r.url().match(/\/api\/plan\/lists\/\d+$/) && r.request().method() === "POST"),
-      page.getByRole("button", { name: "Save" }).click({ force: true }),
+      page.getByTestId("form-save-btn").click({ force: true }),
     ]);
     
     // Verify urgent item displays with red bold text - use more specific locator
@@ -160,13 +160,13 @@ test.describe("plan", () => {
     await page.getByTestId("loader").waitFor({ state: "hidden" });
     await page.waitForTimeout(500);
     await page.getByRole("button", { name: "Shopping" }).click();
-    await page.getByRole("button", { name: "Add new" }).click({ force: true });
+    await page.getByTestId("add-item-btn").click({ force: true });
     
     // Fill first item and click Next
     await page.getByTestId("edit-form-add").locator('input[type="text"]').fill("First Item");
     await Promise.all([
       page.waitForResponse(r => r.url().match(/\/api\/plan\/lists\/\d+$/) && r.request().method() === "POST"),
-      page.getByRole("button", { name: "Next" }).click({ force: true }),
+      page.getByTestId("form-next-btn").click({ force: true }),
     ]);
     
     // Wait for animation and API response
@@ -188,7 +188,7 @@ test.describe("plan", () => {
     await nameInput.fill("Second Item");
     await Promise.all([
       page.waitForResponse(r => r.url().match(/\/api\/plan\/lists\/\d+$/) && r.request().method() === "POST"),
-      page.getByRole("button", { name: "Next" }).click({ force: true }),
+      page.getByTestId("form-next-btn").click({ force: true }),
     ]);
     
     await page.waitForTimeout(800);
@@ -201,13 +201,12 @@ test.describe("plan", () => {
     await page.getByTestId("loader").waitFor({ state: "hidden" });
     await page.waitForTimeout(500);
     await page.getByRole("button", { name: "Shopping" }).click();
-    await page.getByRole("button", { name: "Add new" }).click({ force: true });
+    await page.getByTestId("add-item-btn").click({ force: true });
     
-    // Scope to form buttons only
-    const formButtons = page.getByTestId("edit-form-add").locator("button");
-    await expect(formButtons.nth(0)).toHaveText("Cancel");
-    await expect(formButtons.nth(1)).toHaveText("Save");
-    await expect(formButtons.nth(2)).toHaveText("Next");
+    // Verify button order by data-testid
+    await expect(page.getByTestId("form-cancel-btn")).toBeVisible();
+    await expect(page.getByTestId("form-save-btn")).toBeVisible();
+    await expect(page.getByTestId("form-next-btn")).toBeVisible();
   });
 
   test("Amount input and buttons are removed from UI", async ({ page }) => {
@@ -216,7 +215,7 @@ test.describe("plan", () => {
     await page.getByTestId("loader").waitFor({ state: "hidden" });
     await page.waitForTimeout(500);
     await page.getByRole("button", { name: "Shopping" }).click();
-    await page.getByRole("button", { name: "Add new" }).click({ force: true });
+    await page.getByTestId("add-item-btn").click({ force: true });
     
     // No amount input in form
     await expect(page.locator('input[type="number"]')).not.toBeVisible();
@@ -225,7 +224,7 @@ test.describe("plan", () => {
     await page.locator('input[type="text"]').fill("Item");
     await Promise.all([
       page.waitForResponse(r => r.url().match(/\/api\/plan\/lists\/\d+$/) && r.request().method() === "POST"),
-      page.getByRole("button", { name: "Save" }).click({ force: true }),
+      page.getByTestId("form-save-btn").click({ force: true }),
     ]);
     
     // Click item to show controls
@@ -247,32 +246,32 @@ test.describe("plan", () => {
     await page.waitForTimeout(500);
     await page.getByRole("button", { name: "Shopping" }).click();
     
-    await page.getByRole("button", { name: "Add new" }).click({ force: true });
+    await page.getByTestId("add-item-btn").click({ force: true });
     await page.locator('input[type="text"]').fill("Milk");
     await Promise.all([
       page.waitForResponse(r => r.url().match(/\/api\/plan\/lists\/\d+$/) && r.request().method() === "POST"),
-      page.getByRole("button", { name: "Save" }).click({ force: true }),
+      page.getByTestId("form-save-btn").click({ force: true }),
     ]);
 
     // 2. Selection and UI state toggle
     await page.locator("li.cursor-pointer").filter({ hasText: "Milk" }).click();
-    await expect(page.getByLabel("Edit")).toBeVisible();
+    await expect(page.getByTestId("edit-item-btn")).toBeVisible();
     
     await page.locator("li.cursor-pointer").filter({ hasText: "Milk" }).click();
-    await expect(page.getByLabel("Edit")).not.toBeVisible();
+    await expect(page.getByTestId("edit-item-btn")).not.toBeVisible();
     
     await page.locator("li.cursor-pointer").filter({ hasText: "Milk" }).click();
-    await expect(page.getByLabel("Edit")).toBeVisible();
+    await expect(page.getByTestId("edit-item-btn")).toBeVisible();
 
     // 3. Edit item via form - add urgent flag
-    await page.getByLabel("Edit").click({ force: true });
+    await page.getByTestId("edit-item-btn").click({ force: true });
     await expect(page.getByTestId("edit-form-edit")).toBeVisible();
     await page.locator('input[type="text"]').fill("Whole Milk");
     await page.locator('textarea').fill("From local farm");
     await page.locator('input[type="checkbox"]').check();
     await Promise.all([
       page.waitForResponse(r => r.url().includes("/api/plan/items/") && r.request().method() === "PATCH"),
-      page.getByRole("button", { name: "Save" }).click({ force: true }),
+      page.getByTestId("form-save-btn").click({ force: true }),
     ]);
     
     await expect(page.getByText("Whole Milk")).toBeVisible();
@@ -292,19 +291,19 @@ test.describe("plan", () => {
     await expect(page.getByText("Whole Milk")).not.toBeVisible();
 
     // 5. Remove all items
-    await page.getByRole("button", { name: "Add new" }).click({ force: true });
+    await page.getByTestId("add-item-btn").click({ force: true });
     await page.locator('input[type="text"]').fill("Bread");
     await Promise.all([
       page.waitForResponse(r => r.url().match(/\/api\/plan\/lists\/\d+$/) && r.request().method() === "POST"),
-      page.getByRole("button", { name: "Save" }).click({ force: true }),
+      page.getByTestId("form-save-btn").click({ force: true }),
     ]);
 
-    await page.getByTestId("delete-btn").filter({ hasText: "Remove all" }).click({ force: true });
+    await page.getByTestId("delete-btn").filter({ hasText: "Usuń wszystkie" }).click({ force: true });
 
     await Promise.all([
       page.waitForResponse(r => r.url().match(/\/api\/plan\/lists\/\d+\/items$/) && r.request().method() === "DELETE"),
-      page.getByTestId("delete-btn").filter({ hasText: "Remove all" }).click({ force: true }),
+      page.getByTestId("delete-btn").filter({ hasText: "Usuń wszystkie" }).click({ force: true }),
     ]);
-    await expect(page.getByText("No items yet")).toBeVisible();
+    await expect(page.getByText("Brak pozycji")).toBeVisible();
   });
 });

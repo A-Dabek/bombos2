@@ -7,5 +7,5 @@ export default component$(() => {
 });
 
 export const head: DocumentHead = {
-  title: "Bills Admin - Money",
+  title: "Zarządzanie rachunkami - Finanse",
 };

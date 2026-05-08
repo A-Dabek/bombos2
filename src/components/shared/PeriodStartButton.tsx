@@ -31,16 +31,16 @@ export default component$<PeriodStartButtonProps>((props) => {
       if (data.added !== undefined) {
         // Allowance: { success, added, newBalance }
         result.value = data.added 
-          ? `Added allowance. Balance: $${data.newBalance}` 
-          : "No allowance needed";
+          ? `Dodano kieszonkowe. Saldo: ${data.newBalance} zł` 
+          : "Kieszonkowe nie jest potrzebne";
       } else if (data.periodAdded !== undefined) {
         // Bills: { success, periodAdded, paymentsCreated }
         result.value = data.periodAdded 
-          ? `${props.successPrefix || "Added"} ${data.paymentsCreated} payments.` 
-          : "No period-start needed";
+          ? `${props.successPrefix || "Dodano"} ${data.paymentsCreated} płatności.` 
+          : "Rozpoczęcie okresu nie jest potrzebne";
       } else if (data.added !== undefined) {
         // Balance: { success, added }
-        result.value = data.added ? "Added period-start." : "No period-start needed";
+        result.value = data.added ? "Dodano rozpoczęcie okresu." : "Rozpoczęcie okresu nie jest potrzebne";
       }
       
       success.value = true;

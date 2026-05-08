@@ -38,10 +38,10 @@ test.describe("meals", () => {
 
     // Click once more - see picky eater
     await page.getByTestId("meal-roll-button").click();
-    await expect(page.getByText("You're a picky eater")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText("Aleś wybredna!")).toBeVisible({ timeout: 5000 });
 
     // Go to admin, add 1, delete different
-    await page.getByRole("link", { name: "Admin" }).click();
+    await page.getByTestId("admin-button").click();
     await expect(page).toHaveURL(/\/meals\/dinner\/admin\/?$/);
 
     await page.getByTestId("meal-admin-input").fill("New Dish");
@@ -54,7 +54,7 @@ test.describe("meals", () => {
     await expect(page.getByText("Dinner 1")).not.toBeVisible();
 
     // Back to meals
-    await page.getByRole("link", { name: "Back" }).click();
+    await page.getByTestId("back-button").click();
     await expect(page).toHaveURL(/\/meals\/dinner\/?$/);
 
     // Roll again - should see different meals
@@ -88,9 +88,9 @@ test.describe("meals", () => {
     expect(mealsSeen.size).toBe(3);
 
     await page.getByTestId("meal-roll-button").click();
-    await expect(page.getByText("You're a picky eater")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText("Aleś wybredna!")).toBeVisible({ timeout: 5000 });
 
-    await page.getByRole("link", { name: "Admin" }).click();
+    await page.getByTestId("admin-button").click();
     await expect(page).toHaveURL(/\/meals\/supper\/admin\/?$/);
 
     await page.getByTestId("meal-admin-input").fill("New Supper");
@@ -102,7 +102,7 @@ test.describe("meals", () => {
     await deleteBtn.click();
     await expect(page.getByText("Supper 1")).not.toBeVisible();
 
-    await page.getByRole("link", { name: "Back" }).click();
+    await page.getByTestId("back-button").click();
     await expect(page).toHaveURL(/\/meals\/supper\/?$/);
 
     await page.getByTestId("meal-roll-button").waitFor({ state: "visible", timeout: 5000 });

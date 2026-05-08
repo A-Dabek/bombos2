@@ -51,10 +51,10 @@ export default component$<Props>((props) => {
         {isUploading.value ? (
           <span class="flex items-center justify-center gap-2" data-testid="parcel-uploading">
             <Loader size="sm" color="border-white" />
-            Uploading...
+            Wysyłanie...
           </span>
         ) : (
-          "Upload Image"
+          "Dodaj zdjęcie"
         )}
       </button>
     </div>

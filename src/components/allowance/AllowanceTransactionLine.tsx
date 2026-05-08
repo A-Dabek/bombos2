@@ -30,7 +30,7 @@ export default component$<AllowanceTransactionLineProps>(({ tx, isLast, onDelete
           data-testid="delete-last-tx"
           onClick$={() => onDelete$(tx.id)}
           class="ml-2 text-red-500 hover:text-red-700 text-xs"
-          title="Delete"
+          title="Usuń"
         >
           X
         </button>

@@ -7,5 +7,5 @@ export default component$(() => {
 });
 
 export const head: DocumentHead = {
-  title: "Plan Lists",
+  title: "Listy - Plan",
 };

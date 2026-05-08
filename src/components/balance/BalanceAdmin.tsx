@@ -61,7 +61,7 @@ export default component$(() => {
   return (
     <div class="p-4">
       <BackButton href="/money/balance" />
-      <h1 class="text-xl font-semibold">Balance Admin</h1>
+      <h1 class="text-xl font-semibold">Zarządzanie saldem</h1>
 
       {loading.value && (
         <div class="flex justify-center py-4">
@@ -74,7 +74,7 @@ export default component$(() => {
       )}
 
       {success.value && (
-        <p data-testid="save-success" class="mt-2 text-green-600">Settings saved successfully!</p>
+        <p data-testid="save-success" class="mt-2 text-green-600">Ustawienia zapisane!</p>
       )}
 
       <div class="mt-4 flex flex-col gap-3">
@@ -86,17 +86,18 @@ export default component$(() => {
         <button
           onClick$={handleSave}
           disabled={loading.value}
+          data-testid="balance-config-save"
           class="w-fit rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-600 disabled:opacity-50"
         >
-          {loading.value ? "Saving..." : "Save"}
+          {loading.value ? "Zapisywanie..." : "Zapisz"}
         </button>
       </div>
 
       <div class="mt-8 border-t pt-6">
-        <h2 class="mb-4 text-lg font-semibold">Period Start</h2>
+        <h2 class="mb-4 text-lg font-semibold">Rozpoczęcie okresu</h2>
         <PeriodStartButton
           apiEndpoint="/api/balance/admin/run-period-start"
-          buttonText="Run Period Start Check"
+          buttonText="Wykonaj rozpoczęcie okresu"
         />
       </div>
     </div>

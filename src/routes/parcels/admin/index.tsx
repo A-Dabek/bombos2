@@ -8,7 +8,7 @@ export default component$(() => {
   const error = useSignal<string | null>(null);
   const success = useSignal(false);
   const deletedCount = useSignal(0);
-  
+
   const handleCleanup = $(async () => {
     loading.value = true;
     error.value = null;
@@ -25,23 +25,23 @@ export default component$(() => {
       loading.value = false;
     }
   });
-  
+
   return (
     <div class="p-4">
       <BackButton href="/parcels" />
-      <h1 class="text-xl font-semibold">Parcels Admin</h1>
-      
+      <h1 class="text-xl font-semibold">Zarządzanie paczkami</h1>
+
       {error.value && <p class="mt-2 text-red-600">{error.value}</p>}
       {success.value && (
         <p class="mt-2 text-green-600">
-          Cleanup complete. Deleted {deletedCount.value} parcels.
+          Sprzątanie zakończone. Usunięto {deletedCount.value} paczek.
         </p>
       )}
-      
+
       <div class="mt-4">
         <DoubleConfirmButton
           onConfirm$={handleCleanup}
-          text="Run Cleanup"
+          text="Sprzątnij gotowe paczki"
           class="px-3 py-1.5 text-sm rounded bg-red-500 text-white hover:bg-red-600 disabled:opacity-50"
           disabled={loading.value}
         />
@@ -51,5 +51,5 @@ export default component$(() => {
 });
 
 export const head: DocumentHead = {
-  title: "Parcels Admin",
+  title: "Zarządzanie paczkami",
 };

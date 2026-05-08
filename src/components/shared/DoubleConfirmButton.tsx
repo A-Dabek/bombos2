@@ -49,7 +49,7 @@ export default component$<DoubleConfirmButtonProps>((props) => {
         props.class,
       ]}
       data-testid={props["data-testid"] || "delete-btn"}
-      aria-label={isConfirming.value ? "Confirm" : "Delete"}
+      aria-label={isConfirming.value ? "Potwierdź" : "Usuń"}
     >
       {isConfirming.value ? (
         <>

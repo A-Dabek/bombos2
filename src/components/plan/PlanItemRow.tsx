@@ -41,8 +41,9 @@ export default component$(({
           <div class="flex items-center space-x-1 ml-2" onClick$={(e) => e.stopPropagation()}>
             <button
               onClick$={() => onEditClick$(item)}
+              data-testid="edit-item-btn"
               class="p-1 text-blue-500 hover:text-blue-700"
-              aria-label="Edit"
+              aria-label="Edytuj"
             >
               <HiPencilOutline class="w-5 h-5" />
             </button>

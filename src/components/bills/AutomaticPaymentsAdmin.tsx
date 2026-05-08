@@ -40,13 +40,13 @@ export default component$(() => {
     // Validate slug format
     const slugVal = newPaymentSlug.value.trim();
     if (!/^[a-zA-Z0-9_]+$/.test(slugVal)) {
-      paymentsError.value = "Slug must be a single word (letters, numbers, underscores only)";
+      paymentsError.value = "Slug musi być jednym słowem (litery, cyfry i podkreślenia)";
       return;
     }
     
     const amount = Number(newPaymentAmount.value);
     if (!newPaymentName.value.trim() || !slugVal || isNaN(amount) || amount <= 0) {
-      paymentsError.value = "Valid name, slug, and positive amount required";
+      paymentsError.value = "Wymagana nazwa, slug i dodatnia kwota";
       return;
     }
 
@@ -114,9 +114,9 @@ export default component$(() => {
     <>
       <hr class="my-6" />
       
-      <h2 class="text-lg font-semibold">Automatic Payments</h2>
+      <h2 class="text-lg font-semibold" data-testid="automatic-payments-heading">Płatności automatyczne</h2>
       <p class="mt-1 text-sm text-gray-600">
-        These payments will be automatically added when a new billing period starts.
+        Te płatności zostaną automatycznie dodane przy rozpoczęciu nowego okresu rozliczeniowego.
       </p>
 
       {paymentsLoading.value && payments.value.length === 0 && (
@@ -130,7 +130,7 @@ export default component$(() => {
       )}
 
       {paymentsSuccess.value && (
-        <p class="mt-2 text-green-600">Payment added successfully!</p>
+        <p class="mt-2 text-green-600">Płatność dodana!</p>
       )}
 
       {/* Payments List */}
@@ -152,10 +152,10 @@ export default component$(() => {
       {/* Add Payment Form */}
       <div class="mt-4 flex flex-col gap-3">
         <TextInput
-          label="Name"
+          label="Nazwa"
           data-testid="payment-name-input"
           type="text"
-          placeholder="e.g., Rent"
+          placeholder="np. Czynsz"
           class="mt-1 w-full px-2 py-1 text-sm"
           value={newPaymentName.value}
           onInput$={(e) => (newPaymentName.value = (e.target as HTMLInputElement).value)}
@@ -165,21 +165,21 @@ export default component$(() => {
           label="Slug"
           data-testid="payment-slug-input"
           type="text"
-          placeholder="e.g., rent"
+          placeholder="np. czynsz"
           class="mt-1 w-full px-2 py-1 text-sm"
           value={newPaymentSlug.value}
           onInput$={(e) => (newPaymentSlug.value = (e.target as HTMLInputElement).value)}
         />
         <p class="mt-1 text-xs text-gray-500">
-          Single word, letters/numbers/underscores only
+          Pojedyncze słowo, tylko litery/cyfry/podkreślenia
         </p>
 
         <TextInput
-          label="Amount"
+          label="Kwota"
           data-testid="payment-amount-input"
           type="number"
           min="1"
-          placeholder="e.g., 1200"
+          placeholder="np. 1200"
           class="mt-1 w-full px-2 py-1 text-sm"
           value={newPaymentAmount.value}
           onInput$={(e) => (newPaymentAmount.value = (e.target as HTMLInputElement).value)}
@@ -191,7 +191,7 @@ export default component$(() => {
           disabled={paymentsLoading.value}
           class="w-fit rounded bg-green-500 px-3 py-1.5 text-sm text-white hover:bg-green-600 disabled:opacity-50"
         >
-          {paymentsLoading.value ? "Adding..." : "Add Payment"}
+          {paymentsLoading.value ? "Dodawanie..." : "Dodaj płatność"}
         </button>
       </div>
     </>

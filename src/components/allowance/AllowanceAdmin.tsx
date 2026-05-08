@@ -68,14 +68,14 @@ export default component$(() => {
   return (
     <div class="p-4">
       <BackButton href="/money/allowance" />
-      <h1 class="text-xl font-semibold">Allowance Admin</h1>
+      <h1 class="text-xl font-semibold">Zarządzanie kieszonkowym</h1>
 
       {error.value && (
         <p class="mt-2 text-red-600">{error.value}</p>
       )}
 
       {success.value && (
-        <p data-testid="save-success" class="mt-2 text-green-600">Settings saved successfully!</p>
+        <p data-testid="save-success" class="mt-2 text-green-600">Ustawienia zapisane!</p>
       )}
 
       <div class="mt-4 flex flex-col gap-3">
@@ -85,7 +85,7 @@ export default component$(() => {
         />
 
         <TextInput
-          label="Monthly Amount"
+          label="Miesięczna kwota"
           type="number"
           min="0"
           data-testid="allowance-config-amount"
@@ -100,18 +100,18 @@ export default component$(() => {
           data-testid="allowance-config-save"
           class="w-fit rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-600 disabled:opacity-50"
         >
-          {loading.value ? "Saving..." : "Save"}
+          {loading.value ? "Zapisywanie..." : "Zapisz"}
         </button>
       </div>
 
       <hr class="my-6 border-gray-200" />
 
-      <h2 class="text-lg font-semibold">Manual Check</h2>
+      <h2 class="text-lg font-semibold">Ręczne sprawdzenie</h2>
       
       <div class="mt-4">
         <PeriodStartButton
           apiEndpoint="/api/allowance/admin/run-check"
-          buttonText="Run Allowance Check"
+          buttonText="Wykonaj sprawdzenie kieszonkowego"
         />
       </div>
     </div>

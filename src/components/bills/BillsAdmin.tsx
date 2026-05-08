@@ -73,11 +73,11 @@ export default component$(() => {
   const handleAddPredefined = $(async () => {
     const slugVal = newPredefinedSlug.value.trim();
     if (!newPredefinedName.value.trim() || !slugVal) {
-      predefinedError.value = "Valid name and slug required";
+      predefinedError.value = "Wymagana nazwa i slug";
       return;
     }
     if (!/^[a-zA-Z0-9_]+$/.test(slugVal)) {
-      predefinedError.value = "Slug must be a single word (alphanumeric + underscores only)";
+      predefinedError.value = "Slug musi być jednym słowem (litery, cyfry i podkreślenia)";
       return;
     }
 
@@ -145,7 +145,7 @@ export default component$(() => {
   return (
     <div class="p-4">
       <BackButton href="/money/bills" />
-      <h1 class="text-xl font-semibold">Bills Admin</h1>
+      <h1 class="text-xl font-semibold">Zarządzanie rachunkami</h1>
 
       {loading.value && (
         <div class="flex justify-center py-4">
@@ -158,7 +158,7 @@ export default component$(() => {
       )}
 
       {success.value && (
-        <p data-testid="save-success" class="mt-2 text-green-600">Settings saved successfully!</p>
+        <p data-testid="save-success" class="mt-2 text-green-600">Ustawienia zapisane!</p>
       )}
 
       <div class="mt-4 flex flex-col gap-3">
@@ -170,25 +170,26 @@ export default component$(() => {
         <button
           onClick$={handleSave}
           disabled={loading.value}
+          data-testid="bills-config-save"
           class="w-fit rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-600 disabled:opacity-50"
         >
-          {loading.value ? "Saving..." : "Save"}
+          {loading.value ? "Zapisywanie..." : "Zapisz"}
         </button>
       </div>
 
       <AutomaticPaymentsAdmin />
 
       <div class="mt-8 border-t pt-6">
-        <h2 class="mb-4 text-lg font-semibold">Period Start</h2>
+        <h2 class="mb-4 text-lg font-semibold">Rozpoczęcie okresu</h2>
         <PeriodStartButton
           apiEndpoint="/api/bills/admin/run-period-start"
-          buttonText="Run Period Start Check"
+          buttonText="Wykonaj rozpoczęcie okresu"
           successPrefix="Created"
         />
       </div>
 
       <div class="mt-8 border-t pt-6">
-        <h2 class="mb-4 text-lg font-semibold">Predefined Payments</h2>
+        <h2 class="mb-4 text-lg font-semibold">Predefiniowane płatności</h2>
 
         {predefinedError.value && (
           <p class="mb-2 text-red-600">{predefinedError.value}</p>
@@ -211,28 +212,28 @@ export default component$(() => {
                 </span>
                 <DoubleConfirmButton
                   onConfirm$={() => handleDeletePredefined(payment.id)}
-                  text="Delete"
+                  text="Usuń"
                   class="px-2 py-1 text-sm rounded"
                 />
               </div>
             ))}
             {predefinedPayments.value.length === 0 && (
-              <p class="text-sm text-gray-500">No predefined payments yet.</p>
+              <p class="text-sm text-gray-500">Brak predefiniowanych płatności.</p>
             )}
           </div>
         )}
 
         <div class="flex flex-col gap-2">
           <TextInput
-            label="Name"
-            placeholder="e.g. Electricity"
+            label="Nazwa"
+            placeholder="np. Prąd"
             value={newPredefinedName.value}
             onInput$={(e: any) => (newPredefinedName.value = e.target.value)}
             data-testid="predefined-name-input"
           />
           <TextInput
             label="Slug"
-            placeholder="e.g. electricity"
+            placeholder="np. prad"
             value={newPredefinedSlug.value}
             onInput$={(e: any) => (newPredefinedSlug.value = e.target.value)}
             data-testid="predefined-slug-input"
@@ -242,7 +243,7 @@ export default component$(() => {
             data-testid="predefined-add-button"
             class="w-fit rounded bg-green-500 px-3 py-1.5 text-sm text-white hover:bg-green-600"
           >
-            Add Predefined Payment
+            Dodaj płatność
           </button>
         </div>
       </div>

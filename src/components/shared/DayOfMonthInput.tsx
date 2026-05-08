@@ -11,7 +11,7 @@ export default component$<DayOfMonthInputProps>((props) => {
   return (
     <TextInput
       id={props.id}
-      label="Day of Month (1-28)"
+      label="Dzień miesiąca (1-28)"
       type="number"
       min="1"
       max="28"

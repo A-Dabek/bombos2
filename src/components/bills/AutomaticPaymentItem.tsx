@@ -22,7 +22,7 @@ export default component$<AutomaticPaymentItemProps>(({ payment, isLoading, onDe
       <DoubleConfirmButton
         onConfirm$={() => onDelete$(payment.id)}
         disabled={isLoading}
-        text="Delete"
+        text="Usuń"
         class="rounded px-2 py-1 text-sm"
       />
     </li>
