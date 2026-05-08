@@ -196,7 +196,7 @@ Page titles:
 | Predefined Payments | Predefiniowane płatności |
 | No predefined payments yet. | Brak predefiniowanych płatności. |
 | Name | Nazwa |
-| Slug | Identyfikator |
+| Slug | Slug (stays English) |
 | placeholder="e.g. Electricity" | placeholder="np. Prąd" |
 | placeholder="e.g. electricity" | placeholder="np. prad" |
 | Add Predefined Payment | Dodaj płatność |
@@ -209,7 +209,7 @@ Page titles:
 | These payments will be automatically added when a new billing period starts. | Te płatności zostaną automatycznie dodane przy rozpoczęciu nowego okresu rozliczeniowego. |
 | Payment added successfully! | Płatność dodana! |
 | Name | Nazwa |
-| Slug | Identyfikator |
+| Slug | Slug (stays English) |
 | Amount | Kwota |
 | placeholder="e.g., Rent" | placeholder="np. Czynsz" |
 | placeholder="e.g., rent" | placeholder="np. czynsz" |
@@ -327,7 +327,7 @@ The `getOrdinal()` function (English ordinal suffixes: st, nd, rd, th) becomes u
 
 - All routing paths (e.g. `/parcels/incoming`, `/meals/dinner`)
 - Code identifiers (variable names, function names, DB column names)
-- `data-testid` attribute values
+- `data-testid` attribute values (exception: `PeriodStartButton.tsx` derives testId from Polish `buttonText` — see mapping below)
 - DB slug values (e.g. `"electricity"`, `"rent"`)
 - The word "Slug" as a field label stays as "Slug" (user confirmed)
 - App name "Bombos 2.5" stays as-is
@@ -337,7 +337,7 @@ The `getOrdinal()` function (English ordinal suffixes: st, nd, rd, th) becomes u
 ## Acceptance criteria
 
 1. Every string listed in the mapping above is translated to the Polish equivalent.
-2. `data-testid` values remain unchanged.
+2. `data-testid` values remain unchanged (exception: `PeriodStartButton.tsx` generates testId dynamically from Polish `buttonText`, see §PeriodStartButton mapping).
 3. Routing paths remain unchanged.
 4. All `.tsx` literals are changed inline — no i18n framework, no dictionary file.
 5. `lang="pl"` on `<body>`.
