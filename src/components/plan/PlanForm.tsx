@@ -1,4 +1,4 @@
-import { component$, useSignal, $ } from "@builder.io/qwik";
+import { component$, useSignal, $, useVisibleTask$ } from "@builder.io/qwik";
 import TextInput from "~/components/shared/TextInput";
 import TextArea from "~/components/shared/TextArea";
 import Checkbox from "~/components/shared/Checkbox";
@@ -26,6 +26,21 @@ export default component$(({
   const formName = useSignal(initialName);
   const formDescription = useSignal(initialDescription);
   const formUrgent = useSignal(initialUrgent);
+
+  // Scroll name input to top of screen when form opens (mobile keyboard UX)
+  useVisibleTask$(({ track }) => {
+    track(() => mode);
+    // Wait for CSS transition (accordion expand + form slide, both 300ms) to settle
+    const timer = setTimeout(() => {
+      const input = document.querySelector<HTMLElement>(
+        '[data-testid="edit-form-add"] input, [data-testid="edit-form-edit"] input'
+      );
+      if (input) {
+        input.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  });
 
   return (
     <div class="p-4 bg-white min-h-full" data-testid={mode === "add" ? "edit-form-add" : "edit-form-edit"}>
