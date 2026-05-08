@@ -4,6 +4,7 @@ import { useLocation, Link } from "@builder.io/qwik-city";
 export interface TabItem {
   label: string;
   path: string;
+  testId?: string; // Optional explicit test ID (English)
 }
 
 export interface SubNavProps {
@@ -21,7 +22,7 @@ export default component$(({ tabs }: SubNavProps) => {
           <Link
             key={tab.path}
             href={tab.path}
-            data-testid={`sub-nav-tab-${tab.label.toLowerCase()}`}
+            data-testid={tab.testId || `sub-nav-tab-${tab.label.toLowerCase()}`}
             class={[
               "flex-1 py-2 text-center text-sm font-medium transition-colors",
               isActive

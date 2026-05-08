@@ -3,9 +3,9 @@ import type { DocumentHead } from "@builder.io/qwik-city";
 import ParcelsPage from "../../../components/parcels/ParcelsPage";
 
 export default component$(() => {
-  return <ParcelsPage type="outgoing" title="Outgoing Parcels" />;
+  return <ParcelsPage type="outgoing" title="Wychodzące paczki" />;
 });
 
 export const head: DocumentHead = {
-  title: "Outgoing Parcels",
+  title: "Wychodzące paczki",
 };

@@ -7,7 +7,7 @@ interface MealPageProps {
 }
 
 export default component$<MealPageProps>((props) => {
-  const title = props.category === "dinner" ? "Dinner" : "Supper";
+  const title = props.category === "dinner" ? "Obiad" : "Kolacja";
 
   return (
     <div class="relative min-h-screen">

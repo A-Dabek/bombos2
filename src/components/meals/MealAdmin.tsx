@@ -66,7 +66,7 @@ export default component$<MealAdminProps>((props) => {
           data-testid="meal-admin-input"
           value={newMealName.value}
           onInput$={(e) => (newMealName.value = (e.target as HTMLInputElement).value)}
-          placeholder="Add new dish..."
+          placeholder="Dodaj nowe danie..."
           class="flex-1"
           containerClass="flex-1"
         />
@@ -76,12 +76,12 @@ export default component$<MealAdminProps>((props) => {
           class="flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
           <HiPlusSolid class="w-5 h-5 mr-1" />
-          <span>Add</span>
+          <span>Dodaj</span>
         </button>
       </div>
 
       {meals.value.length === 0 ? (
-        <p class="text-lg text-gray-500">No meals yet</p>
+        <p class="text-lg text-gray-500">Brak dań</p>
       ) : (
         <ul>
           {meals.value.map((meal) => (

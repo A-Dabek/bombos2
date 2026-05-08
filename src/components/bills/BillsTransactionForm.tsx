@@ -60,7 +60,7 @@ export default component$<BillsTransactionFormProps>(({ loading, onSubmit$ }) =>
             }}
             class="w-full px-2 py-1 text-sm border rounded"
           >
-            <option value="">Select predefined payment (optional)</option>
+            <option value="">Wybierz płatność (opcjonalnie)</option>
             {predefinedPayments.value.map(p => (
               <option key={p.id} value={p.slug}>
                 {`${p.name} (${p.slug})`}
@@ -78,7 +78,7 @@ export default component$<BillsTransactionFormProps>(({ loading, onSubmit$ }) =>
       >
         <TextInput
           type="text"
-          placeholder="Description"
+          placeholder="Opis"
           data-testid="transaction-desc-input"
           class="px-2 py-1 text-sm"
           value={description.value}
@@ -87,7 +87,7 @@ export default component$<BillsTransactionFormProps>(({ loading, onSubmit$ }) =>
         <TextInput
           type="text"
           inputMode="decimal"
-          placeholder="Amount (negative for expense)"
+          placeholder="Kwota (ujemna = wydatek)"
           data-testid="transaction-amount-input"
           class="px-2 py-1 text-sm"
           value={amount.value}
@@ -99,7 +99,7 @@ export default component$<BillsTransactionFormProps>(({ loading, onSubmit$ }) =>
           disabled={loading || !description.value || !amount.value}
           class="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-600 disabled:opacity-50"
         >
-          {loading ? "Adding..." : "Add"}
+          {loading ? "Dodawanie..." : "Dodaj"}
         </button>
       </form>
     </div>

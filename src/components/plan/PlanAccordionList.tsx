@@ -66,7 +66,7 @@ export default component$(
               ) : (
                 <>
                   {items.length === 0 ? (
-                    <p class="text-lg text-gray-500">No items yet</p>
+                    <p class="text-lg text-gray-500">Brak pozycji</p>
                   ) : (
                     <div class="starting:opacity-0 opacity-100 transition-opacity duration-300">
                       <ul class="space-y-2">
@@ -87,15 +87,16 @@ export default component$(
                   <div class="flex space-x-2 mt-4">
                     <button
                       onClick$={onAddClick$}
+                      data-testid="add-item-btn"
                       class="flex items-center px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                     >
                       <HiPlusOutline class="w-5 h-5 mr-1" />
-                      <span>Add new</span>
+                      <span>Nowy</span>
                     </button>
                     <DoubleConfirmButton
                       onConfirm$={onRemoveAll$}
                       disabled={items.length === 0}
-                      text="Remove all"
+                      text="Usuń wszystkie"
                       class={`px-3 py-2 rounded ${items.length === 0 ? "bg-gray-200 text-gray-400" : ""}`}
                     />
                   </div>

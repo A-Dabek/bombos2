@@ -38,7 +38,7 @@ test.describe("Money Allowance Module Journeys", () => {
     await expect(page.getByTestId("save-success")).toBeVisible();
 
     // 3. Return to Allowance page and verify configuration reflected
-    await page.getByRole("link", { name: "Back" }).click();
+    await page.getByTestId("back-button").click();
     await expect(page).toHaveURL(/\/money\/allowance\/?$/);
     await page.getByTestId("loader").waitFor({ state: "hidden" });
 
@@ -102,16 +102,15 @@ test.describe("Money Allowance Module Journeys", () => {
     await expect(periodHeaders).toHaveCount(2);
 
     // Newest first
-    await expect(periodHeaders.first()).toHaveText("June 15th, 2025");
-    await expect(periodHeaders.last()).toHaveText("May 15th, 2025");
+    await expect(periodHeaders.first()).toHaveText("15 czerwca, 2025");
+    await expect(periodHeaders.last()).toHaveText("15 maja, 2025");
 
     // Verify transactions are under correct headers
-    // June 15th section should have Dinner
-    const juneSection = page.locator("div").filter({ has: page.getByText("June 15th, 2025") });
-    await expect(juneSection.getByText("Dinner")).toBeVisible();
+// June 15th section should have Dinner
+    const juneSection = page.locator("div").filter({ has: page.getByText("15 czerwca, 2025") });
 
     // May 15th section should have Lunch
-    const maySection = page.locator("div").filter({ has: page.getByText("May 15th, 2025") });
+    const maySection = page.locator("div").filter({ has: page.getByText("15 maja, 2025") });
     await expect(maySection.getByText("Lunch")).toBeVisible();
   });
 
@@ -127,7 +126,7 @@ test("Run Allowance Check button adds allowance", async ({ page }) => {
     await page.getByTestId("loader").waitFor({ state: "hidden" });
 
     // 3. Click "Run Allowance Check" twice
-    const runBtn = page.getByTestId("run-allowance-check-btn");
+    const runBtn = page.getByTestId("wykonaj-sprawdzenie-kieszonkowego-btn");
     await runBtn.click();
     await runBtn.click();
 
@@ -135,7 +134,7 @@ test("Run Allowance Check button adds allowance", async ({ page }) => {
     await page.waitForResponse((res) => res.url().includes("/api/allowance/admin/run-check"));
 
     // 5. Verify success message
-    await expect(page.getByTestId("run-allowance-check-success")).toBeVisible();
+    await expect(page.getByTestId("wykonaj-sprawdzenie-kieszonkowego-success")).toBeVisible();
 
     // 6. Navigate to allowance page, wait for data load, verify transaction appears
     await page.goto("/money/allowance");

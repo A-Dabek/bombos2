@@ -7,5 +7,5 @@ export default component$(() => {
 });
 
 export const head: DocumentHead = {
-  title: "Allowance - Money",
+  title: "Kieszonkowe - Finanse",
 };

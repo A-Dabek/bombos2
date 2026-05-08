@@ -30,11 +30,11 @@ export default component$(({
   return (
     <div class="p-4 bg-white min-h-full" data-testid={mode === "add" ? "edit-form-add" : "edit-form-edit"}>
       <h2 class="text-xl font-bold text-gray-800 mb-4">
-        {mode === "add" ? "Add Item" : "Edit Item"}
+        {mode === "add" ? "Dodaj pozycję" : "Edytuj pozycję"}
       </h2>
       <div class="space-y-4">
         <TextInput
-          label="Name *"
+          label="Nazwa *"
           value={formName.value}
           onInput$={(e) => (formName.value = (e.target as HTMLInputElement).value)}
           maxLength={100}
@@ -42,7 +42,7 @@ export default component$(({
           autofocus
         />
         <TextArea
-          label="Description"
+          label="Opis"
           value={formDescription.value}
           onInput$={(e) => (formDescription.value = (e.target as HTMLTextAreaElement).value)}
           maxLength={300}
@@ -51,7 +51,7 @@ export default component$(({
         />
         <div class="flex justify-end">
           <Checkbox
-            label="Urgent"
+            label="Pilne"
             checked={formUrgent.value}
             onChange$={(e) => (formUrgent.value = (e.target as HTMLInputElement).checked)}
             class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
@@ -60,22 +60,25 @@ export default component$(({
         <div class="flex space-x-2">
           <button
             onClick$={onCancel$}
+            data-testid="form-cancel-btn"
             class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
           >
-            Cancel
+            Anuluj
           </button>
           <button
             onClick$={() => onSave$(formName.value, formDescription.value, formUrgent.value)}
+            data-testid="form-save-btn"
             class="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            Save
+            Zapisz
           </button>
           {mode === "add" && onNext$ && (
             <button
               onClick$={() => onNext$(formName.value, formDescription.value, formUrgent.value)}
+              data-testid="form-next-btn"
               class="flex-1 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
             >
-              Next
+              Dalej
             </button>
           )}
         </div>

@@ -1,5 +1,5 @@
 import { component$ } from "@builder.io/qwik";
-import { getOrdinal } from "~/utils/date";
+import { formatPolishDate } from "~/utils/date";
 
 interface PeriodHeaderProps {
   startTs: number;       // unix ts, 0 = default "Transactions"
@@ -8,15 +8,13 @@ interface PeriodHeaderProps {
 
 function formatDate(ts: number): string {
   const d = new Date(ts * 1000);
-  const month = d.toLocaleString("en-US", { month: "long" });
-  const day = d.getDate();
-  return `${month} ${day}${getOrdinal(day)}, ${d.getFullYear()}`;
+  return `${formatPolishDate(d)}, ${d.getFullYear()}`;
 }
 
 export default component$<PeriodHeaderProps>(({ startTs, endTs }) => {
   let label: string;
   if (startTs === 0) {
-    label = "Transactions";
+    label = "Transakcje";
   } else if (endTs) {
     label = `${formatDate(startTs)} – ${formatDate(endTs)}`;
   } else {

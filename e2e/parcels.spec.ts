@@ -20,7 +20,7 @@ test.describe("parcels journeys", () => {
     // 3. Verify sub-nav state and empty state
     const incomingTab = page.getByTestId("sub-nav-tab-incoming");
     await expect(incomingTab).toHaveAttribute("class", /border-blue-500/);
-    await expect(page.getByText("No parcels yet")).toBeVisible();
+    await expect(page.getByText("Brak paczek")).toBeVisible();
 
     // 4. Upload an incoming parcel (test compression .jpg -> .png)
     const fileInput = page.getByTestId("parcel-upload-input");
@@ -89,7 +89,7 @@ test.describe("parcels journeys", () => {
     // 3. Verify sub-nav state and empty state
     const outgoingTab = page.getByTestId("sub-nav-tab-outgoing");
     await expect(outgoingTab).toHaveAttribute("class", /border-blue-500/);
-    await expect(page.getByText("No parcels yet")).toBeVisible();
+    await expect(page.getByText("Brak paczek")).toBeVisible();
 
     // 4. Upload an outgoing parcel
     const fileInput = page.getByTestId("parcel-upload-input");
@@ -178,7 +178,7 @@ test.describe("parcels journeys", () => {
     await page.waitForResponse((res) => res.url().includes("/api/parcels/admin/run-cleanup"));
 
     // 4. Verify success message appears
-    await expect(page.getByText(/Deleted 2 parcels/)).toBeVisible();
+    await expect(page.getByText(/Sprzątanie zakończone/)).toBeVisible();
 
     // 5. Verify incomplete parcels still exist - navigate to incoming
     await page.goto("/parcels/incoming");

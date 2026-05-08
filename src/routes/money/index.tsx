@@ -6,12 +6,12 @@ export default component$(() => {
   const nav = useNavigate();
 
   useVisibleTask$(() => {
-    nav("/money/allowance");
+    nav("/money/balance");
   });
 
   return null;
 });
 
 export const head: DocumentHead = {
-  title: "Money",
+  title: "Finanse",
 };

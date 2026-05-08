@@ -90,7 +90,7 @@ export default component$<Props>(({ type, title }) => {
       )}
       {!isLoading.value && parcels.value.length === 0 && (
         <div class="p-8 text-center text-gray-500">
-          No parcels yet
+          Brak paczek
         </div>
       )}
       {parcels.value.length > 0 && (

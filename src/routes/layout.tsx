@@ -10,11 +10,11 @@ import {
 } from "@qwikest/icons/heroicons";
 
 const TABS = [
-  { label: "Parcels", path: "/parcels", Icon: HiCubeOutline },
-  { label: "Meals", path: "/meals", Icon: HiFireOutline },
-  { label: "Plan", path: "/plan", Icon: HiListBulletOutline },
-  { label: "Money", path: "/money", Icon: HiBanknotesOutline },
-  { label: "Shopping", path: "/shopping", Icon: HiShoppingCartOutline },
+  { label: "Paczki", path: "/parcels", Icon: HiCubeOutline, testId: "parcels-nav-link" },
+  { label: "Posiłki", path: "/meals", Icon: HiFireOutline, testId: "meals-nav-link" },
+  { label: "Listy", path: "/plan", Icon: HiListBulletOutline, testId: "plan-nav-link" },
+  { label: "Finanse", path: "/money", Icon: HiBanknotesOutline, testId: "money-nav-link" },
+  { label: "Zakupy", path: "/shopping", Icon: HiShoppingCartOutline, testId: "shopping-nav-link" },
 ];
 
 export default component$(() => {
@@ -53,7 +53,7 @@ export default component$(() => {
             <a
               key={tab.path}
               href={tab.path}
-              data-testid={`${tab.label.toLowerCase()}-nav-link`}
+              data-testid={tab.testId || `${tab.label.toLowerCase()}-nav-link`}
               class={[
                 "relative flex flex-1 flex-col items-center py-2 text-center text-sm font-medium transition-colors",
                 isActive
@@ -62,7 +62,7 @@ export default component$(() => {
               ]}
             >
               <Icon class="h-5 w-5" />
-              {tab.label === "Parcels" && parcelCount.value > 0 && (
+              {tab.path === "/parcels" && parcelCount.value > 0 && (
                 <span class="absolute -right-1 top-1 flex h-3 w-3" data-testid="parcel-notification-dot">
                   <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                   <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
