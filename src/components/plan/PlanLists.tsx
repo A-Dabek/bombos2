@@ -9,7 +9,9 @@ export default component$(() => {
   const lists = useSignal<PlanList[]>([]);
   const isLoaded = useSignal(false);
   const expandedListId = useSignal<number | null>(null);
-  const listItemsCache = useSignal<Map<number, { list: PlanList; items: PlanItem[] }>>(new Map());
+  const listItemsCache = useSignal<
+    Map<number, { list: PlanList; items: PlanItem[] }>
+  >(new Map());
   const loadingListId = useSignal<number | null>(null);
 
   // Form state
@@ -81,9 +83,11 @@ export default component$(() => {
     activeItemId.value = activeItemId.value === itemId ? null : itemId;
   });
 
-  const handleAmountChange = $(async (listId: number, itemId: number, delta: number) => {
-    // Removed - amount functionality no longer exists
-  });
+  const handleAmountChange = $(
+    async (listId: number, itemId: number, delta: number) => {
+      // Removed - amount functionality no longer exists
+    },
+  );
 
   const handleRemove = $(async (listId: number, itemId: number) => {
     await fetch(`/api/plan/items/${itemId}`, { method: "DELETE" });
@@ -105,34 +109,60 @@ export default component$(() => {
     editingItem.value = item;
   });
 
-  const handleSave = $(async (listId: number, name: string, description: string, urgent: boolean) => {
-    if (formMode.value === "add") {
+  const handleSave = $(
+    async (
+      listId: number,
+      name: string,
+      description: string,
+      urgent: boolean,
+    ) => {
+      if (formMode.value === "add") {
+        await fetch(`/api/plan/lists/${listId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            description: description || undefined,
+            urgent,
+          }),
+        });
+      } else if (formMode.value === "edit" && editingItem.value) {
+        await fetch(`/api/plan/items/${editingItem.value.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            description: description || null,
+            urgent,
+          }),
+        });
+      }
+      formMode.value = "none";
+      editingItem.value = null;
+      activeItemId.value = null;
+      await refreshItems(listId);
+    },
+  );
+
+  const handleNext = $(
+    async (
+      listId: number,
+      name: string,
+      description: string,
+      urgent: boolean,
+    ) => {
       await fetch(`/api/plan/lists/${listId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description: description || undefined, urgent }),
+        body: JSON.stringify({
+          name,
+          description: description || undefined,
+          urgent,
+        }),
       });
-    } else if (formMode.value === "edit" && editingItem.value) {
-      await fetch(`/api/plan/items/${editingItem.value.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description: description || null, urgent }),
-      });
-    }
-    formMode.value = "none";
-    editingItem.value = null;
-    activeItemId.value = null;
-    await refreshItems(listId);
-  });
-
-  const handleNext = $(async (listId: number, name: string, description: string, urgent: boolean) => {
-    await fetch(`/api/plan/lists/${listId}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, description: description || undefined, urgent }),
-    });
-    await refreshItems(listId);
-  });
+      await refreshItems(listId);
+    },
+  );
 
   const handleCancel = $(() => {
     formMode.value = "none";
@@ -140,7 +170,7 @@ export default component$(() => {
   });
 
   return (
-    <div class="min-h-screen" data-testid="plan-lists">
+    <div class="min-h-screen pb-[100vh]" data-testid="plan-lists">
       {!isLoaded.value ? (
         <div class="flex justify-center p-8">
           <Loader />
@@ -161,7 +191,9 @@ export default component$(() => {
                     onClick$={() => handleListClick(list.id)}
                     class="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 text-left"
                   >
-                    <span class="text-lg text-gray-800 font-medium">{list.title}</span>
+                    <span class="text-lg text-gray-800 font-medium">
+                      {list.title}
+                    </span>
                     <HiChevronDownOutline
                       class={`w-5 h-5 text-gray-500 transition-transform duration-300 ${
                         isExpanded ? "rotate-180" : ""
@@ -182,8 +214,12 @@ export default component$(() => {
                       onRemove$={(itemId) => handleRemove(list.id, itemId)}
                       onAddClick$={() => handleAddClick(list.id)}
                       onRemoveAll$={() => handleRemoveAll(list.id)}
-                      onSave$={(name, desc, urgent) => handleSave(list.id, name, desc, urgent)}
-                      onNext$={(name, desc, urgent) => handleNext(list.id, name, desc, urgent)}
+                      onSave$={(name, desc, urgent) =>
+                        handleSave(list.id, name, desc, urgent)
+                      }
+                      onNext$={(name, desc, urgent) =>
+                        handleNext(list.id, name, desc, urgent)
+                      }
                       onCancel$={handleCancel}
                       editingItem={isExpanded ? editingItem.value : null}
                     />
