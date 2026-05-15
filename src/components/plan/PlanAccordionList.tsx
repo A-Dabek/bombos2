@@ -43,13 +43,8 @@ export default component$(
   }: PlanAccordionListProps) => {
     return (
       <div
-        class={`overflow-hidden transition-[max-height] duration-300 ease-in-out ${
-          isExpanded
-            ? formMode !== "none"
-              ? "max-h-[2000px]"
-              : "max-h-[1000px]"
-            : "max-h-0"
-        }`}
+        class="overflow-hidden transition-height duration-300 ease-in-out"
+        style={isExpanded ? "height: calc-size(auto, size)" : "height: 0"}
       >
         <div class="relative" style="min-height: 100px;">
           {/* Items View */}
