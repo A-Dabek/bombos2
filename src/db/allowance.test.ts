@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { test, expect, vi } from "vitest";
 import {
   getAllowanceConfig,
   getCurrentBalance,
@@ -182,12 +182,17 @@ test("updateAllowanceConfig updates values", () => {
 });
 
 test("checkAndAddAllowance does not add if not allowance day", () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date(2026, 0, 10)); // Jan 10, not the 15th
+
   resetDb();
   const db = openDb(":memory:");
   const result = shouldAddAllowance(db);
   expect(result).toBe(false);
   db.close();
   resetDb();
+
+  vi.useRealTimers();
 });
 
 test("checkAndAddAllowance adds allowance on correct day", () => {

@@ -258,6 +258,23 @@ export function deleteBillsAutomaticPayment(
   ).run(id);
 }
 
+export function shouldAddAutomaticPayments(db?: Database.Database): boolean {
+  const dbConn = db ?? getDb();
+  const config = getBillsConfig(dbConn);
+
+  const target = getBillsTargetDate(config.day_of_month);
+  const year = target.getFullYear();
+  const month = target.getMonth();
+  const periodStartTs = Math.floor(new Date(year, month, config.day_of_month).getTime() / 1000);
+  const nextPeriodStartTs = Math.floor(new Date(year, month + 1, config.day_of_month).getTime() / 1000);
+
+  const row = dbConn.prepare(
+    "SELECT COUNT(*) as count FROM bills_transactions WHERE predefined_slug IS NOT NULL AND created_at >= ? AND created_at < ?"
+  ).get(periodStartTs, nextPeriodStartTs) as { count: number };
+
+  return row.count === 0;
+}
+
 export function createAutomaticPaymentTransactions(
   db?: Database.Database,
 ): number {

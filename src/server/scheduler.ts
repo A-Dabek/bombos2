@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import { deleteCompletedParcels } from "../db/parcels.ts";
 import { shouldAddAllowance, runAllowance } from "../db/allowance.ts";
-import { shouldAddBillsPeriodStart, runBillsPeriodStart, createAutomaticPaymentTransactions } from "../db/bills.ts";
+import { shouldAddBillsPeriodStart, runBillsPeriodStart, createAutomaticPaymentTransactions, shouldAddAutomaticPayments } from "../db/bills.ts";
 import { shouldAddBalancePeriodStart, runBalancePeriodStart } from "../db/balance.ts";
 
 let started = false;
@@ -46,15 +46,21 @@ function runPeriodStartChecks(): void {
     try {
       const billsResult = runBillsPeriodStart();
       if (billsResult.added) {
-        log("period-start", `Added Bills period-start.`);
-        
-        // After adding period marker, create automatic payment transactions
+        log("period-start", "Added Bills period-start.");
+      } else {
+        log("period-start", "Period-start marker already exists, skipping.");
+      }
+
+      // Automatic payments: check separately from period marker
+      if (shouldAddAutomaticPayments()) {
         try {
           const createdCount = createAutomaticPaymentTransactions();
           log("period-start", `Created ${createdCount} automatic payment transactions for Bills.`);
         } catch (err) {
           log("error", `Failed to create automatic payment transactions: ${err}`);
         }
+      } else {
+        log("period-start", "Automatic payments already exist for this period, skipping.");
       }
     } catch (err) {
       log("error", `Failed to run bills period-start: ${err}`);
