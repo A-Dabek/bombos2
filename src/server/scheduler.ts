@@ -41,6 +41,7 @@ export function runAllowanceCheck(): void {
 function runPeriodStartChecks(): void {
   log("period-start", "Checking if period-start transactions should be added");
 
+  // Period marker — independent from auto-payments
   if (shouldAddBillsPeriodStart()) {
     log("period-start", "Scheduler triggered: adding bills period-start");
     try {
@@ -50,23 +51,24 @@ function runPeriodStartChecks(): void {
       } else {
         log("period-start", "Period-start marker already exists, skipping.");
       }
-
-      // Automatic payments: check separately from period marker
-      if (shouldAddAutomaticPayments()) {
-        try {
-          const createdCount = createAutomaticPaymentTransactions();
-          log("period-start", `Created ${createdCount} automatic payment transactions for Bills.`);
-        } catch (err) {
-          log("error", `Failed to create automatic payment transactions: ${err}`);
-        }
-      } else {
-        log("period-start", "Automatic payments already exist for this period, skipping.");
-      }
     } catch (err) {
       log("error", `Failed to run bills period-start: ${err}`);
     }
   } else {
     log("period-start", "Not the configured day for bills, skipping");
+  }
+
+  // Automatic payments — independent from period marker
+  if (shouldAddAutomaticPayments()) {
+    log("period-start", "Scheduler triggered: adding automatic payments");
+    try {
+      const createdCount = createAutomaticPaymentTransactions();
+      log("period-start", `Created ${createdCount} automatic payment transactions for Bills.`);
+    } catch (err) {
+      log("error", `Failed to create automatic payment transactions: ${err}`);
+    }
+  } else {
+    log("period-start", "Automatic payments already exist for this period, skipping.");
   }
 
   if (shouldAddBalancePeriodStart()) {
