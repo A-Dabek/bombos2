@@ -21,15 +21,15 @@ export default component$(({
   return (
     <li
       key={item.id}
-      class={`p-3 border rounded cursor-pointer ${
-        isActive ? "bg-blue-50 border-blue-300" : "bg-white"
+      class={`cursor-pointer ${
+        isActive ? "p-3 bg-blue-50" : "py-1 px-2 bg-white"
       }`}
       onClick$={() => onItemClick$(item.id)}
     >
       <div class="flex items-start justify-between">
         <div class="flex-1">
           <div class="flex items-center">
-            <span class={`text-gray-800 font-medium ${item.urgent ? "text-red-600 font-bold" : ""}`}>
+            <span class={`text-gray-800 font-medium ${item.urgent ? "text-red-600 font-bold underline" : ""}`}>
               {item.name}
             </span>
           </div>
