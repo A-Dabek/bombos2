@@ -269,7 +269,7 @@ export function shouldAddAutomaticPayments(db?: Database.Database): boolean {
   const nextPeriodStartTs = Math.floor(new Date(year, month + 1, config.day_of_month).getTime() / 1000);
 
   const row = dbConn.prepare(
-    "SELECT COUNT(*) as count FROM bills_transactions WHERE predefined_slug IS NOT NULL AND created_at >= ? AND created_at < ?"
+    "SELECT COUNT(*) as count FROM bills_transactions WHERE predefined_slug IS NOT NULL AND is_automatic = 1 AND created_at >= ? AND created_at < ?"
   ).get(periodStartTs, nextPeriodStartTs) as { count: number };
 
   return row.count === 0;
