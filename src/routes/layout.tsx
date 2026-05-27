@@ -14,7 +14,7 @@ const TABS = [
   { label: "Posiłki", path: "/meals", Icon: HiFireOutline, testId: "meals-nav-link" },
   { label: "Listy", path: "/plan", Icon: HiListBulletOutline, testId: "plan-nav-link" },
   { label: "Finanse", path: "/money", Icon: HiBanknotesOutline, testId: "money-nav-link" },
-  { label: "Zakupy", path: "/shopping", Icon: HiShoppingCartOutline, testId: "shopping-nav-link" },
+  { label: "Spożywcze", path: "/groceries", Icon: HiShoppingCartOutline, testId: "groceries-nav-link" },
 ];
 
 export default component$(() => {

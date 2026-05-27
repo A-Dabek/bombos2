@@ -149,6 +149,12 @@ export function addAllowanceTransactionSql(type: string, description: string, am
   db.close();
 }
 
+export function clearGroceries() {
+  const db = new Database(DB_PATH);
+  db.prepare("DELETE FROM groceries_items").run();
+  db.close();
+}
+
 export function clearAll() {
   const db = new Database(DB_PATH);
   db.prepare("DELETE FROM parcels").run();
@@ -158,6 +164,7 @@ export function clearAll() {
   db.prepare("DELETE FROM allowance_transactions").run();
   db.prepare("DELETE FROM allowance_config").run();
   db.prepare("DELETE FROM bills_automatic_payments").run();
+  db.prepare("DELETE FROM groceries_items").run();
   db.close();
 }
 

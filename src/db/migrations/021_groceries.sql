@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS groceries_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  description TEXT,
+  urgent INTEGER NOT NULL DEFAULT 0,
+  bought INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL DEFAULT (unixepoch())
+);
