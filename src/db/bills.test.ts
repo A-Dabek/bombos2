@@ -17,9 +17,14 @@ test("shouldAddAutomaticPayments returns false when automatic payment already ex
   const db = new Database(":memory:");
   runMigrations(db);
 
-  // Insert an automatic payment transaction (is_automatic=1, predefined_slug set)
+  // Seed an automatic payment definition
   db.prepare(
-    "INSERT INTO bills_transactions (description, amount, is_automatic, predefined_slug, created_at) VALUES (?, ?, 1, ?, ?)"
+    "INSERT INTO bills_automatic_payments (name, slug, amount) VALUES (?, ?, ?)"
+  ).run("Rent", "rent", 1000);
+
+  // Insert a matching transaction (predefined_slug matches auto-payment slug)
+  db.prepare(
+    "INSERT INTO bills_transactions (description, amount, is_automatic, predefined_slug, created_at) VALUES (?, ?, 0, ?, ?)"
   ).run("Rent", -1000, "rent", Math.floor(Date.now() / 1000));
 
   const result = shouldAddAutomaticPayments(db);
@@ -32,8 +37,8 @@ test("shouldAddAutomaticPayments returns true when only manual predefined transa
   const db = new Database(":memory:");
   runMigrations(db);
 
-  // Insert a manually-added predefined payment transaction (is_automatic=0, predefined_slug set)
-  // This should NOT suppress automatic payments — only is_automatic=1 transactions count
+  // Insert a manual transaction with predefined_slug that is NOT in bills_automatic_payments
+  // This should NOT suppress automatic payments
   db.prepare(
     "INSERT INTO bills_transactions (description, amount, is_automatic, predefined_slug, created_at) VALUES (?, ?, 0, ?, ?)"
   ).run("Electricity", -200, "electricity", Math.floor(Date.now() / 1000));

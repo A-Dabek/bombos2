@@ -269,7 +269,7 @@ export function shouldAddAutomaticPayments(db?: Database.Database): boolean {
   const nextPeriodStartTs = Math.floor(new Date(year, month + 1, config.day_of_month).getTime() / 1000);
 
   const row = dbConn.prepare(
-    "SELECT COUNT(*) as count FROM bills_transactions WHERE predefined_slug IS NOT NULL AND is_automatic = 1 AND created_at >= ? AND created_at < ?"
+    "SELECT COUNT(*) as count FROM bills_transactions WHERE predefined_slug IN (SELECT slug FROM bills_automatic_payments) AND created_at >= ? AND created_at < ?"
   ).get(periodStartTs, nextPeriodStartTs) as { count: number };
 
   return row.count === 0;
@@ -288,12 +288,12 @@ export function createAutomaticPaymentTransactions(
   let createdCount = 0;
   
   for (const payment of payments) {
-    // Create transaction with is_automatic=1
+    // Create transaction visible in list (is_automatic=0)
     // Description stores the "name" for UI display
     // Amount is NEGATED because automatic payments are expenses
-    // predefined_slug links back to the predefined payment
+    // predefined_slug links back to the automatic payment definition
     dbConn.prepare(
-      "INSERT INTO bills_transactions (description, amount, is_automatic, predefined_slug) VALUES (?, ?, 1, ?)"
+      "INSERT INTO bills_transactions (description, amount, is_automatic, predefined_slug) VALUES (?, ?, 0, ?)"
     ).run(payment.name, -payment.amount, payment.slug);
     createdCount++;
   }
