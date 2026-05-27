@@ -1,11 +1,11 @@
 import { type RequestHandler } from "@builder.io/qwik-city";
-import { runBillsPeriodStart, createAutomaticPaymentTransactions } from "~/db/bills";
+import { runBillsPeriodStart, createAutomaticPaymentTransactions, shouldAddAutomaticPayments } from "~/db/bills";
 
 export const onPost: RequestHandler = async ({ json }) => {
   const periodResult = runBillsPeriodStart();
   let paymentsCreated = 0;
   
-  if (periodResult.added) {
+  if (shouldAddAutomaticPayments()) {
     paymentsCreated = createAutomaticPaymentTransactions();
   }
   
