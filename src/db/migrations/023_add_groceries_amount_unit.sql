@@ -1,0 +1,2 @@
+ALTER TABLE groceries_items ADD COLUMN amount REAL NOT NULL DEFAULT 1.0;
+ALTER TABLE groceries_items ADD COLUMN unit TEXT NOT NULL DEFAULT 'x';

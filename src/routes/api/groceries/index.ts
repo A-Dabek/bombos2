@@ -11,6 +11,8 @@ export const onPost: RequestHandler = async ({ json, parseBody }) => {
   const name = (body as { name?: string })?.name;
   const description = (body as { description?: string })?.description;
   const urgent = (body as { urgent?: boolean })?.urgent;
+  const amount = (body as { amount?: number })?.amount ?? 1.0;
+  const unit = (body as { unit?: string })?.unit ?? "x";
 
   if (typeof name !== "string" || name.trim().length === 0) {
     json(400, { error: "Name is required" });
@@ -27,7 +29,7 @@ export const onPost: RequestHandler = async ({ json, parseBody }) => {
     return;
   }
 
-  const id = createGroceryItem(name.trim(), description || null, !!urgent);
+  const id = createGroceryItem(name.trim(), description || null, !!urgent, amount, unit);
   json(201, { id });
 };
 

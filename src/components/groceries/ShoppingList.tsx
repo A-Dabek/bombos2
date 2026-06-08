@@ -64,7 +64,7 @@ export default component$(() => {
                   onClick$={() => handleToggleBought(item)}
                   data-testid={`grocery-item-${item.id}`}
                 >
-                  <div class="flex items-center">
+                  <div class="flex items-center justify-between">
                     <span
                       class={`text-lg ${
                         item.bought ? "text-gray-400 line-through" : "text-gray-800"
@@ -72,6 +72,11 @@ export default component$(() => {
                     >
                       {item.name}
                     </span>
+                    {!(item.amount === 1 && item.unit === "x") && (
+                      <span class={`font-semibold ml-2 ${item.bought ? "text-gray-300 line-through" : "text-blue-600"}`}>
+                        {item.amount}{item.unit}
+                      </span>
+                    )}
                   </div>
                   {item.description && (
                     <p class={`text-sm mt-1 ${item.bought ? "text-gray-300 line-through" : "text-gray-600"}`}>

@@ -8,8 +8,22 @@ interface GroceryFormProps {
   initialName?: string;
   initialDescription?: string;
   initialUrgent?: boolean;
-  onSave$: (name: string, description: string, urgent: boolean) => void;
-  onNext$?: (name: string, description: string, urgent: boolean) => void;
+  initialAmount?: number;
+  initialUnit?: string;
+  onSave$: (
+    name: string,
+    description: string,
+    urgent: boolean,
+    amount: number,
+    unit: string,
+  ) => void;
+  onNext$?: (
+    name: string,
+    description: string,
+    urgent: boolean,
+    amount: number,
+    unit: string,
+  ) => void;
   onCancel$: () => void;
 }
 
@@ -19,6 +33,8 @@ export default component$(
     initialName = "",
     initialDescription = "",
     initialUrgent = false,
+    initialAmount,
+    initialUnit = "x",
     onSave$,
     onNext$,
     onCancel$,
@@ -26,6 +42,8 @@ export default component$(
     const formName = useSignal(initialName);
     const formDescription = useSignal(initialDescription);
     const formUrgent = useSignal(initialUrgent);
+    const formAmount = useSignal<number | null>(initialAmount ?? null);
+    const formUnit = useSignal(initialUnit);
 
     useVisibleTask$(({ track }) => {
       track(() => mode);
@@ -70,6 +88,39 @@ export default component$(
             rows={3}
             class="w-full"
           />
+          <div class="flex space-x-4">
+            <div class="flex-1">
+              <TextInput
+                label="Ilość"
+                type="number"
+                step="0.01"
+                placeholder="1"
+                value={formAmount.value?.toString() ?? ""}
+                onInput$={(e) =>
+                  (formAmount.value =
+                    parseFloat((e.target as HTMLInputElement).value) || null)
+                }
+                class="w-full"
+              />
+            </div>
+            <div class="flex-1">
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Jednostka
+              </label>
+              <select
+                value={formUnit.value}
+                onChange$={(e) =>
+                  (formUnit.value = (e.target as HTMLSelectElement).value)
+                }
+                class="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="x">x</option>
+                <option value="g">g</option>
+                <option value="kg">kg</option>
+                <option value="l">l</option>
+              </select>
+            </div>
+          </div>
           <div class="flex justify-end">
             <Checkbox
               label="Pilne"
@@ -90,7 +141,13 @@ export default component$(
             </button>
             <button
               onClick$={() =>
-                onSave$(formName.value, formDescription.value, formUrgent.value)
+                onSave$(
+                  formName.value,
+                  formDescription.value,
+                  formUrgent.value,
+                  formAmount.value ?? 1.0,
+                  formUnit.value,
+                )
               }
               data-testid="form-save-btn"
               class="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
@@ -104,10 +161,14 @@ export default component$(
                     formName.value,
                     formDescription.value,
                     formUrgent.value,
+                    formAmount.value ?? 1.0,
+                    formUnit.value,
                   );
                   formName.value = "";
                   formDescription.value = "";
                   formUrgent.value = false;
+                  formAmount.value = null;
+                  formUnit.value = "x";
                   // Focus back on name input
                   const input = document.querySelector<HTMLElement>(
                     '[data-testid="edit-form-add"] input',

@@ -49,6 +49,31 @@ test.describe("Groceries Module", () => {
     await expect(page.getByTestId("empty-state")).toBeVisible();
   });
 
+  test("planning page - amount and unit", async ({ page }) => {
+    // Add item with default amount
+    await page.getByTestId("add-item-btn").click();
+    await page.getByLabel("Nazwa *").fill("Milk");
+    await page.getByTestId("form-save-btn").click();
+    await expect(page.getByText("1x")).not.toBeVisible();
+    await expect(page.getByText("Milk", { exact: true })).toBeVisible();
+
+    // Add item with custom amount and unit
+    await page.getByTestId("add-item-btn").click();
+    await page.getByLabel("Nazwa *").fill("Apples");
+    await page.getByLabel("Ilość").fill("1.5");
+    await page.locator("select").selectOption("kg");
+    await page.getByTestId("form-save-btn").click();
+    await expect(page.getByText("1.5kg")).toBeVisible();
+    await expect(page.getByText("Apples", { exact: true })).toBeVisible();
+ 
+    // Use +/- buttons
+    await page.getByText("Milk", { exact: true }).click();
+    await page.getByTestId("increase-amount-btn").click();
+    await expect(page.getByText("2x")).toBeVisible();
+    await page.getByTestId("decrease-amount-btn").click();
+    await expect(page.getByText("1x")).not.toBeVisible();
+  });
+
   test("planning page - remove all", async ({ page }) => {
     // Add two items
     await page.getByTestId("add-item-btn").click();
