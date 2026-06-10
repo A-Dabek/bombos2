@@ -152,6 +152,7 @@ export function addAllowanceTransactionSql(type: string, description: string, am
 export function clearGroceries() {
   const db = new Database(DB_PATH);
   db.prepare("DELETE FROM groceries_items").run();
+  db.prepare("DELETE FROM groceries_product_categories").run();
   db.close();
 }
 

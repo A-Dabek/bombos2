@@ -11,6 +11,7 @@ interface PlanningFormViewProps {
     urgent: boolean,
     amount: number,
     unit: string,
+    category: string | null,
   ) => void>;
   onNext$: PropFunction<(
     name: string,
@@ -18,6 +19,7 @@ interface PlanningFormViewProps {
     urgent: boolean,
     amount: number,
     unit: string,
+    category: string | null,
   ) => void>;
   onCancel$: PropFunction<() => void>;
 }
@@ -64,6 +66,11 @@ export default component$(
               formMode === "edit" && editingItem
                 ? editingItem.unit
                 : "x"
+            }
+            initialCategory={
+              formMode === "edit" && editingItem
+                ? editingItem.category || ""
+                : ""
             }
             onSave$={onSave$}
             onNext$={onNext$}

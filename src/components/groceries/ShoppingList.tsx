@@ -1,10 +1,14 @@
 import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
 import Loader from "~/components/shared/Loader";
 import type { GroceryItem } from "~/db/groceries";
+import CategoryFilter from "./CategoryFilter";
+import ShoppingCategoryGroup from "./ShoppingCategoryGroup";
 
 export default component$(() => {
   const items = useSignal<GroceryItem[]>([]);
   const isLoading = useSignal(true);
+  const selectedCategory = useSignal("All");
+  const lastBoughtId = useSignal<number | null>(null);
 
   const fetchItems = $(async () => {
     isLoading.value = true;
@@ -33,14 +37,63 @@ export default component$(() => {
       });
 
       if (response.ok) {
-        // Optimistic update or just refetch. Let's do optimistic for better UX
-        items.value = items.value.map(i => 
-          i.id === item.id ? { ...i, bought: !i.bought } : i
+        const wasBought = !item.bought;
+        // Optimistic update
+        items.value = items.value.map((i) =>
+          i.id === item.id ? { ...i, bought: wasBought } : i,
         );
+        if (wasBought) {
+          lastBoughtId.value = item.id;
+        } else if (lastBoughtId.value === item.id) {
+          lastBoughtId.value = null;
+        }
       }
     } catch (error) {
       console.error("Failed to toggle bought status:", error);
     }
+  });
+
+  const allCategories = [
+    "All",
+    ...new Set(items.value.map((i) => i.category || "Inne")),
+  ].sort((a, b) => {
+    if (a === "All") return -1;
+    if (b === "All") return 1;
+    if (a === "Inne") return 1;
+    if (b === "Inne") return -1;
+    return a.localeCompare(b);
+  });
+
+  const filteredItems = items.value.filter((item) => {
+    if (selectedCategory.value === "All") return true;
+    const cat = item.category || "Inne";
+    return cat === selectedCategory.value;
+  });
+
+  const groupedItems = filteredItems.reduce(
+    (acc, item) => {
+      const cat = item.category || "Inne";
+      if (!acc[cat]) acc[cat] = [];
+      acc[cat].push(item);
+      return acc;
+    },
+    {} as Record<string, GroceryItem[]>,
+  );
+
+  const displayCategories =
+    selectedCategory.value === "All"
+      ? Object.keys(groupedItems).sort((a, b) => {
+          if (a === "Inne") return 1;
+          if (b === "Inne") return -1;
+          return a.localeCompare(b);
+        })
+      : [selectedCategory.value].filter((c) => groupedItems[c]);
+
+  const completedCategories = allCategories.filter((cat) => {
+    if (items.value.length === 0) return false;
+    if (cat === "All") return items.value.every((i) => i.bought);
+    const catItems = items.value.filter((i) => (i.category || "Inne") === cat);
+    return catItems.length > 0 && catItems.every((i) => i.bought);
   });
 
   return (
@@ -52,40 +105,36 @@ export default component$(() => {
       ) : (
         <>
           {items.value.length === 0 ? (
-            <p class="text-lg text-gray-500" data-testid="empty-state">Brak pozycji</p>
+            <p class="text-lg text-gray-500" data-testid="empty-state">
+              Brak pozycji
+            </p>
           ) : (
-            <ul class="space-y-2">
-              {items.value.map((item) => (
-                <li
-                  key={item.id}
-                  class={`p-3 border rounded cursor-pointer transition-colors ${
-                    item.bought ? "bg-gray-50 border-gray-200" : "bg-white border-gray-200"
-                  }`}
-                  onClick$={() => handleToggleBought(item)}
-                  data-testid={`grocery-item-${item.id}`}
-                >
-                  <div class="flex items-center justify-between">
-                    <span
-                      class={`text-lg ${
-                        item.bought ? "text-gray-400 line-through" : "text-gray-800"
-                      } ${item.urgent && !item.bought ? "text-red-600 font-bold" : ""}`}
-                    >
-                      {item.name}
-                    </span>
-                    {!(item.amount === 1 && item.unit === "x") && (
-                      <span class={`font-semibold ml-2 ${item.bought ? "text-gray-300 line-through" : "text-blue-600"}`}>
-                        {item.amount}{item.unit}
-                      </span>
-                    )}
-                  </div>
-                  {item.description && (
-                    <p class={`text-sm mt-1 ${item.bought ? "text-gray-300 line-through" : "text-gray-600"}`}>
-                      {item.description}
-                    </p>
-                  )}
-                </li>
-              ))}
-            </ul>
+            <>
+              <CategoryFilter
+                categories={allCategories}
+                selectedCategory={selectedCategory.value}
+                completedCategories={completedCategories}
+                onSelect$={(category) => (selectedCategory.value = category)}
+              />
+
+              <div class="space-y-6">
+                {displayCategories.map((category) => (
+                  <ShoppingCategoryGroup
+                    key={category}
+                    category={category}
+                    items={groupedItems[category] || []}
+                    showHeading={selectedCategory.value === "All"}
+                    lastBoughtId={lastBoughtId.value}
+                    onToggle$={handleToggleBought}
+                  />
+                ))}
+                {displayCategories.length === 0 && (
+                  <p class="text-center text-gray-500 py-8">
+                    Brak brakujących produktów w tej kategorii
+                  </p>
+                )}
+              </div>
+            </>
           )}
         </>
       )}

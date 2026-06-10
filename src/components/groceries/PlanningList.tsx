@@ -58,6 +58,7 @@ export default component$(() => {
       urgent: boolean,
       amount: number,
       unit: string,
+      category: string | null,
     ) => {
       const isEdit = formMode.value === "edit";
       const url = isEdit
@@ -69,7 +70,7 @@ export default component$(() => {
         const response = await fetch(url, {
           method,
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, description, urgent, amount, unit }),
+          body: JSON.stringify({ name, description, urgent, amount, unit, category }),
         });
 
       if (response.ok) {
@@ -90,12 +91,13 @@ export default component$(() => {
       urgent: boolean,
       amount: number,
       unit: string,
+      category: string | null,
     ) => {
       try {
         const response = await fetch("/api/groceries", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, description, urgent, amount, unit }),
+          body: JSON.stringify({ name, description, urgent, amount, unit, category }),
         });
 
       if (response.ok) {

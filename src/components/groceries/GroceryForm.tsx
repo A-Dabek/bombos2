@@ -10,12 +10,14 @@ interface GroceryFormProps {
   initialUrgent?: boolean;
   initialAmount?: number;
   initialUnit?: string;
+  initialCategory?: string;
   onSave$: (
     name: string,
     description: string,
     urgent: boolean,
     amount: number,
     unit: string,
+    category: string | null,
   ) => void;
   onNext$?: (
     name: string,
@@ -23,6 +25,7 @@ interface GroceryFormProps {
     urgent: boolean,
     amount: number,
     unit: string,
+    category: string | null,
   ) => void;
   onCancel$: () => void;
 }
@@ -35,6 +38,7 @@ export default component$(
     initialUrgent = false,
     initialAmount,
     initialUnit = "x",
+    initialCategory = "",
     onSave$,
     onNext$,
     onCancel$,
@@ -44,6 +48,39 @@ export default component$(
     const formUrgent = useSignal(initialUrgent);
     const formAmount = useSignal<number | null>(initialAmount ?? null);
     const formUnit = useSignal(initialUnit);
+    const formCategory = useSignal(initialCategory);
+    const allCategories = useSignal<string[]>([]);
+
+    useVisibleTask$(async () => {
+      try {
+        const response = await fetch("/api/groceries/categories");
+        if (response.ok) {
+          allCategories.value = await response.json();
+        }
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      }
+    });
+
+    useVisibleTask$(({ track }) => {
+      const name = track(() => formName.value);
+      if (mode === "add" && name.trim().length > 2) {
+        const timer = setTimeout(async () => {
+          try {
+            const response = await fetch(`/api/groceries/suggest-category?name=${encodeURIComponent(name)}`);
+            if (response.ok) {
+              const { category } = await response.json();
+              if (category && !formCategory.value) {
+                formCategory.value = category;
+              }
+            }
+          } catch (error) {
+            console.error("Failed to fetch suggested category:", error);
+          }
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+    });
 
     useVisibleTask$(({ track }) => {
       track(() => mode);
@@ -121,6 +158,24 @@ export default component$(
               </select>
             </div>
           </div>
+          <div class="w-full">
+            <TextInput
+              label="Kategoria"
+              value={formCategory.value}
+              onInput$={(e) =>
+                (formCategory.value = (e.target as HTMLInputElement).value)
+              }
+              maxLength={50}
+              class="w-full"
+              list="categories-list"
+              placeholder="np. Owoce, Nabiał..."
+            />
+            <datalist id="categories-list">
+              {allCategories.value.map((cat) => (
+                <option key={cat} value={cat} />
+              ))}
+            </datalist>
+          </div>
           <div class="flex justify-end">
             <Checkbox
               label="Pilne"
@@ -147,6 +202,7 @@ export default component$(
                   formUrgent.value,
                   formAmount.value ?? 1.0,
                   formUnit.value,
+                  formCategory.value,
                 )
               }
               data-testid="form-save-btn"
@@ -163,12 +219,14 @@ export default component$(
                     formUrgent.value,
                     formAmount.value ?? 1.0,
                     formUnit.value,
+                    formCategory.value,
                   );
                   formName.value = "";
                   formDescription.value = "";
                   formUrgent.value = false;
                   formAmount.value = null;
                   formUnit.value = "x";
+                  formCategory.value = "";
                   // Focus back on name input
                   const input = document.querySelector<HTMLElement>(
                     '[data-testid="edit-form-add"] input',

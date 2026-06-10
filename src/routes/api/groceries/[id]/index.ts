@@ -21,16 +21,17 @@ export const onPatch: RequestHandler = async ({ params, json, parseBody }) => {
   const bought = (body as { bought?: boolean })?.bought;
   const amount = (body as { amount?: number })?.amount;
   const unit = (body as { unit?: string })?.unit;
+  const category = (body as { category?: string })?.category;
 
   // If only bought is being updated
-  if (bought !== undefined && name === undefined && description === undefined && urgent === undefined && amount === undefined && unit === undefined) {
+  if (bought !== undefined && name === undefined && description === undefined && urgent === undefined && amount === undefined && unit === undefined && category === undefined) {
     setGroceryItemBought(id, bought);
     json(200, { success: true });
     return;
   }
 
   // If only amount is being updated
-  if (amount !== undefined && name === undefined && description === undefined && urgent === undefined && bought === undefined && unit === undefined) {
+  if (amount !== undefined && name === undefined && description === undefined && urgent === undefined && bought === undefined && unit === undefined && category === undefined) {
     updateGroceryItemAmount(id, amount);
     json(200, { success: true });
     return;
@@ -41,6 +42,7 @@ export const onPatch: RequestHandler = async ({ params, json, parseBody }) => {
   const newUrgent = urgent !== undefined ? urgent : item.urgent;
   const newAmount = amount !== undefined ? amount : item.amount;
   const newUnit = unit !== undefined ? unit : item.unit;
+  const newCategory = category !== undefined ? category : item.category;
 
   if (typeof newName !== "string" || newName.trim().length === 0) {
     json(400, { error: "Name is required" });
@@ -57,7 +59,12 @@ export const onPatch: RequestHandler = async ({ params, json, parseBody }) => {
     return;
   }
 
-  updateGroceryItem(id, newName.trim(), newDescription ?? null, newUrgent, newAmount, newUnit);
+  if (newCategory && newCategory.length > 50) {
+    json(400, { error: "Category must be 50 characters or less" });
+    return;
+  }
+
+  updateGroceryItem(id, newName.trim(), newDescription ?? null, newUrgent, newAmount, newUnit, newCategory?.trim() || null);
   
   if (bought !== undefined) {
     setGroceryItemBought(id, bought);

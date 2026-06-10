@@ -13,6 +13,7 @@ export const onPost: RequestHandler = async ({ json, parseBody }) => {
   const urgent = (body as { urgent?: boolean })?.urgent;
   const amount = (body as { amount?: number })?.amount ?? 1.0;
   const unit = (body as { unit?: string })?.unit ?? "x";
+  const category = (body as { category?: string })?.category;
 
   if (typeof name !== "string" || name.trim().length === 0) {
     json(400, { error: "Name is required" });
@@ -29,7 +30,12 @@ export const onPost: RequestHandler = async ({ json, parseBody }) => {
     return;
   }
 
-  const id = createGroceryItem(name.trim(), description || null, !!urgent, amount, unit);
+  if (category && category.length > 50) {
+    json(400, { error: "Category must be 50 characters or less" });
+    return;
+  }
+
+  const id = createGroceryItem(name.trim(), description || null, !!urgent, amount, unit, category?.trim() || null);
   json(201, { id });
 };
 

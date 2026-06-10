@@ -29,6 +29,22 @@ export default component$(
     onAddClick$,
     onRemoveAll$,
   }: PlanningItemsViewProps) => {
+    const groupedItems = items.reduce(
+      (acc, item) => {
+        const cat = item.category || "Inne";
+        if (!acc[cat]) acc[cat] = [];
+        acc[cat].push(item);
+        return acc;
+      },
+      {} as Record<string, GroceryItem[]>,
+    );
+
+    const sortedCategories = Object.keys(groupedItems).sort((a, b) => {
+      if (a === "Inne") return 1;
+      if (b === "Inne") return -1;
+      return a.localeCompare(b);
+    });
+
     return (
       <div class="p-4">
         {isLoading ? (
@@ -43,19 +59,28 @@ export default component$(
               </p>
             ) : (
               <div class="starting:opacity-0 opacity-100 transition-opacity duration-300">
-                <ul class="space-y-2">
-                  {items.map((item) => (
-                    <GroceryItemRow
-                      key={item.id}
-                      item={item}
-                      isActive={activeItemId === item.id}
-                      onItemClick$={onItemClick$}
-                      onEditClick$={onEditClick$}
-                      onRemove$={onRemove$}
-                      onAmountChange$={onAmountChange$}
-                    />
+                <div class="space-y-6">
+                  {sortedCategories.map((category) => (
+                    <div key={category} class="space-y-2">
+                      <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 pb-1">
+                        {category}
+                      </h3>
+                      <ul class="space-y-2">
+                        {groupedItems[category].map((item) => (
+                          <GroceryItemRow
+                            key={item.id}
+                            item={item}
+                            isActive={activeItemId === item.id}
+                            onItemClick$={onItemClick$}
+                            onEditClick$={onEditClick$}
+                            onRemove$={onRemove$}
+                            onAmountChange$={onAmountChange$}
+                          />
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
 
