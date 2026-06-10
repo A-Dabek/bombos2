@@ -8,6 +8,7 @@ export interface PlanList {
   title: string;
   display_order: number;
   created_at: number;
+  hasUrgent?: boolean;
 }
 
 export interface PlanItem {
@@ -21,14 +22,18 @@ export interface PlanItem {
 
 export function getPlanLists(db?: Database.Database): PlanList[] {
   const dbConn = db ?? getDb();
-  const rows = dbConn.prepare(
-    "SELECT id, title, display_order, created_at FROM plan_lists ORDER BY display_order",
-  ).raw(true).all() as unknown[][];
+  const rows = dbConn.prepare(`
+    SELECT l.id, l.title, l.display_order, l.created_at,
+    EXISTS (SELECT 1 FROM plan_items i WHERE i.list_id = l.id AND i.urgent = 1) as has_urgent
+    FROM plan_lists l
+    ORDER BY l.display_order
+  `).raw(true).all() as unknown[][];
   return rows.map((row) => ({
     id: row[0] as number,
     title: row[1] as string,
     display_order: row[2] as number,
     created_at: row[3] as number,
+    hasUrgent: (row[4] as number) === 1,
   }));
 }
 
@@ -161,4 +166,12 @@ export function deleteAllPlanItems(
     "DELETE FROM plan_items WHERE list_id = ?",
   ).run(listId);
   return result.changes;
+}
+
+export function hasUrgentPlanItems(db?: Database.Database): boolean {
+  const dbConn = db ?? getDb();
+  const row = dbConn.prepare(
+    "SELECT COUNT(*) as count FROM plan_items WHERE urgent = 1",
+  ).get() as { count: number };
+  return row.count > 0;
 }

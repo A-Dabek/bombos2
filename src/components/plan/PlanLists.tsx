@@ -1,5 +1,6 @@
 import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
 import Loader from "~/components/shared/Loader";
+import Ping from "~/components/shared/Ping";
 import { HiChevronDownOutline } from "@qwikest/icons/heroicons";
 import type { PlanList, PlanItem } from "~/db/plan";
 import AdminButton from "~/components/shared/AdminButton";
@@ -21,8 +22,7 @@ export default component$(() => {
   // Item interaction state
   const activeItemId = useSignal<number | null>(null);
 
-  // Load lists on mount
-  useVisibleTask$(async () => {
+  const fetchLists = $(async () => {
     try {
       const response = await fetch("/api/plan/lists");
       if (response.ok) {
@@ -31,6 +31,11 @@ export default component$(() => {
     } catch (e) {
       console.error("Fetch error:", e);
     }
+  });
+
+  // Load lists on mount
+  useVisibleTask$(async () => {
+    await fetchLists();
     isLoaded.value = true;
   });
 
@@ -76,7 +81,7 @@ export default component$(() => {
     const newCache = new Map(listItemsCache.value);
     newCache.delete(listId);
     listItemsCache.value = newCache;
-    await loadListItems(listId);
+    await Promise.all([loadListItems(listId), fetchLists()]);
   });
 
   const handleItemClick = $((itemId: number) => {
@@ -191,8 +196,9 @@ export default component$(() => {
                     onClick$={() => handleListClick(list.id)}
                     class="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 text-left"
                   >
-                    <span class="text-lg text-gray-800 font-medium">
+                    <span class="text-lg text-gray-800 font-medium flex items-center">
                       {list.title}
+                      {list.hasUrgent && <Ping class="relative ml-2 inline-flex h-2 w-2" data-testid="plan-list-urgent-dot" />}
                     </span>
                     <HiChevronDownOutline
                       class={`w-5 h-5 text-gray-500 transition-transform duration-300 ${

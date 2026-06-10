@@ -306,4 +306,49 @@ test.describe("plan", () => {
     ]);
     await expect(page.getByText("Brak pozycji")).toBeVisible();
   });
+
+  test("Urgent indicator appears and disappears in navigation and list", async ({ page }) => {
+    // 1. Seed list
+    const listId = seedList("Urgent List");
+    
+    // 2. Go to plan page - verify no indicators initially
+    await page.goto("/plan/lists");
+    await page.getByTestId("loader").waitFor({ state: "hidden" });
+    await expect(page.getByTestId("plan-notification-dot")).not.toBeVisible();
+    await expect(page.getByTestId("plan-list-urgent-dot")).not.toBeVisible();
+
+    // 3. Add urgent item via UI
+    await page.getByRole("button", { name: "Urgent List" }).click();
+    await page.getByTestId("add-item-btn").click({ force: true });
+    await page.getByTestId("edit-form-add").locator('input[type="text"]').fill("Urgent Item");
+    await page.getByTestId("edit-form-add").locator('input[type="checkbox"]').check();
+    await Promise.all([
+      page.waitForResponse(r => r.url().match(/\/api\/plan\/lists\/\d+$/) && r.request().method() === "POST"),
+      page.getByTestId("form-save-btn").click({ force: true }),
+    ]);
+
+    // 4. Verify indicators appear
+    await expect(page.getByTestId("plan-list-urgent-dot")).toBeVisible();
+    await expect(page.getByTestId("plan-notification-dot")).toBeVisible();
+
+    // 5. Navigate away and check nav indicator
+    await page.getByTestId("parcels-nav-link").click();
+    await expect(page.getByTestId("plan-notification-dot")).toBeVisible();
+
+    // 6. Go back and remove urgent item
+    await page.getByTestId("plan-nav-link").click();
+    await page.getByRole("button", { name: "Urgent List" }).click();
+    const item = page.locator("li.cursor-pointer").filter({ hasText: "Urgent Item" });
+    await item.click();
+    await page.getByTestId("edit-item-btn").click({ force: true });
+    await page.getByTestId("edit-form-edit").locator('input[type="checkbox"]').uncheck();
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes("/api/plan/items/") && r.request().method() === "PATCH"),
+      page.getByTestId("form-save-btn").click({ force: true }),
+    ]);
+
+    // 7. Verify indicators disappear
+    await expect(page.getByTestId("plan-list-urgent-dot")).not.toBeVisible();
+    await expect(page.getByTestId("plan-notification-dot")).not.toBeVisible();
+  });
 });

@@ -12,6 +12,7 @@ import {
   deleteAllPlanItems,
   PlanList,
   PlanItem,
+  hasUrgentPlanItems,
 } from "./plan.ts";
 import { test, expect } from "vitest";
 import Database from "better-sqlite3";
@@ -202,6 +203,33 @@ test("deleteAllPlanItems removes all items from a list", () => {
 
   const items = getPlanItems(listId, db);
   expect(items).toHaveLength(0);
+
+  db.close();
+});
+
+test("hasUrgentPlanItems and hasUrgent flag in getPlanLists work correctly", () => {
+  const db = new Database(":memory:");
+  runMigrations(db);
+  db.exec("DELETE FROM plan_lists");
+
+  const listId1 = createPlanList("List 1", 0, db);
+  const listId2 = createPlanList("List 2", 1, db);
+
+  expect(hasUrgentPlanItems(db)).toBe(false);
+
+  createPlanItem(listId1, "Item 1", null, false, db);
+  expect(hasUrgentPlanItems(db)).toBe(false);
+
+  createPlanItem(listId2, "Item 2", null, true, db);
+  expect(hasUrgentPlanItems(db)).toBe(true);
+
+  const lists = getPlanLists(db);
+  expect(lists[0].hasUrgent).toBe(false); // List 1
+  expect(lists[1].hasUrgent).toBe(true);  // List 2
+
+  updatePlanItem(2, "Item 2", null, false, db); // Item 2's id should be 2
+  expect(hasUrgentPlanItems(db)).toBe(false);
+  expect(getPlanLists(db)[1].hasUrgent).toBe(false);
 
   db.close();
 });

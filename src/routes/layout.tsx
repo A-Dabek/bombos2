@@ -1,6 +1,8 @@
 import { component$, Slot, useSignal, useVisibleTask$ } from "@builder.io/qwik";
 import { useLocation } from "@builder.io/qwik-city";
 import { streamParcelCount } from "../utils/parcel-count-stream";
+import { streamPlanUrgent } from "../utils/plan-urgent-stream";
+import Ping from "~/components/shared/Ping";
 import {
   HiCubeOutline,
   HiFireOutline,
@@ -20,20 +22,34 @@ const TABS = [
 export default component$(() => {
   const loc = useLocation();
   const parcelCount = useSignal(0);
+  const hasUrgentItems = useSignal(false);
 
   useVisibleTask$(async ({ cleanup }) => {
-    const stream = await streamParcelCount();
+    const pStream = await streamParcelCount();
+    const uStream = await streamPlanUrgent();
 
-    const iterate = async () => {
+    const iterateParcels = async () => {
       try {
-        for await (const count of stream) {
+        for await (const count of pStream) {
           parcelCount.value = count;
         }
       } catch (error) {
-        console.error("Stream iteration error:", error);
+        console.error("Parcel stream error:", error);
       }
     };
-    iterate();
+
+    const iterateUrgent = async () => {
+      try {
+        for await (const hasUrgent of uStream) {
+          hasUrgentItems.value = hasUrgent;
+        }
+      } catch (error) {
+        console.error("Urgent stream error:", error);
+      }
+    };
+
+    iterateParcels();
+    iterateUrgent();
 
     cleanup(() => {
       // Stream cleanup happens automatically when component unmounts
@@ -63,10 +79,16 @@ export default component$(() => {
             >
               <Icon class="h-5 w-5" />
               {tab.path === "/parcels" && parcelCount.value > 0 && (
-                <span class="absolute -right-1 top-1 flex h-3 w-3" data-testid="parcel-notification-dot">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
-                </span>
+                <Ping
+                  class="absolute -right-1 top-1 flex h-3 w-3"
+                  data-testid="parcel-notification-dot"
+                />
+              )}
+              {tab.path === "/plan" && hasUrgentItems.value && (
+                <Ping
+                  class="absolute -right-1 top-1 flex h-3 w-3"
+                  data-testid="plan-notification-dot"
+                />
               )}
               {tab.label}
             </a>
