@@ -112,10 +112,16 @@ test.describe("Groceries Module", () => {
 
     // Toggle bought
     await item.click();
+    await expect(item).not.toBeVisible();
+
+    // To see it, select "Inne" category
+    await page.getByRole("button", { name: "Inne" }).click();
+    await expect(item).toBeVisible();
     await expect(item).toHaveClass(/line-through/);
 
     // Persist on refresh
     await page.reload();
+    await page.getByRole("button", { name: "Inne ✓" }).click();
     await expect(page.getByText("Apples", { exact: true })).toHaveClass(/line-through/);
 
     // Untoggle
@@ -189,8 +195,8 @@ test.describe("Groceries Module", () => {
       await page.getByRole("link", { name: "Zakupy" }).click();
 
       // Default "All" view shows both
-      await expect(page.getByText("Dairy", { exact: true })).toBeVisible();
-      await expect(page.getByText("Fruits", { exact: true })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Dairy" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Fruits" })).toBeVisible();
       await expect(page.getByText("Milk")).toBeVisible();
       await expect(page.getByText("Apple")).toBeVisible();
 
@@ -216,10 +222,8 @@ test.describe("Groceries Module", () => {
       const dairyPill = page.getByRole("button", { name: "Dairy ✓" });
       await expect(dairyPill).toHaveClass(/text-green-700/);
 
-      // Header in "All" view should NOT be marked (requested by user)
-      const dairyHeader = page.getByRole("heading", { name: "Dairy" });
-      await expect(dairyHeader).not.toContainText("✓");
-      await expect(dairyHeader).not.toHaveClass(/text-green-500/);
+      // Header in "All" view should be HIDDEN (requested by user to hide finished categories)
+      await expect(page.getByRole("heading", { name: "Dairy" })).not.toBeVisible();
     });
 
     test("visual cue for most recently bought item", async ({ page }) => {
@@ -243,17 +247,75 @@ test.describe("Groceries Module", () => {
 
       // Mark Apple as bought
       await apple.click();
+      // Category "Inne" should now be hidden in "All" view
+      await expect(apple).not.toBeVisible();
+
+      // Select "Inne" to see it again
+      await page.getByRole("button", { name: "Inne ✓" }).click();
       await expect(apple).toContainText("Ostatni");
       await expect(apple).toHaveClass(/ring-2 ring-blue-400/);
-      
+
       // Milk should no longer have the cue
       await expect(milk).not.toContainText("Ostatni");
       await expect(milk).not.toHaveClass(/ring-2 ring-blue-400/);
 
       // Untoggle Apple - cue should disappear or move?
-      // Our implementation: if untoggled and it was the last bought, it becomes null.
       await apple.click();
       await expect(apple).not.toContainText("Ostatni");
+    });
+
+    test("remove bought items", async ({ page }) => {
+      // Add two items
+      await page.getByTestId("add-item-btn").click();
+      await page.getByLabel("Nazwa *").fill("Bought Item");
+      await page.getByTestId("form-next-btn").click();
+      await page.getByLabel("Nazwa *").fill("Unbought Item");
+      await page.getByTestId("form-save-btn").click();
+
+      // Go to shopping and mark one as bought
+      await page.getByRole("link", { name: "Zakupy" }).click();
+      await page.getByText("Bought Item", { exact: true }).click();
+
+      // Go back to planning
+      await page.getByRole("link", { name: "Planowanie" }).click();
+
+      // Remove bought
+      await page.getByTestId("delete-bought-btn").click();
+      await page.getByTestId("delete-bought-btn").click(); // Confirm
+
+      await expect(page.getByText("Bought Item", { exact: true })).not.toBeVisible();
+      await expect(page.getByText("Unbought Item", { exact: true })).toBeVisible();
+    });
+
+    test("manual category completion in shopping", async ({ page }) => {
+      // Add item with category
+      await page.getByTestId("add-item-btn").click();
+      await page.getByLabel("Nazwa *").fill("Milk");
+      await page.getByLabel("Kategoria").fill("Dairy");
+      await page.getByTestId("form-save-btn").click();
+
+      // Go to shopping
+      await page.getByRole("link", { name: "Zakupy" }).click();
+
+      await expect(page.getByRole("heading", { name: "Dairy" })).toBeVisible();
+      await expect(page.getByText("Milk", { exact: true })).toBeVisible();
+
+      // Mark as finished
+      await page.getByTestId("finish-category-Dairy").click();
+
+      // Should disappear from "All" view (default)
+      await expect(page.getByRole("heading", { name: "Dairy" })).not.toBeVisible();
+      await expect(page.getByText("Milk", { exact: true })).not.toBeVisible();
+
+      // Select "Dairy" from filter to see it
+      await page.getByRole("button", { name: "Dairy ✓" }).click();
+      await expect(page.getByRole("heading", { name: "Dairy" })).toBeVisible();
+      await expect(page.getByText("Milk", { exact: true })).toBeVisible();
+      await expect(page.getByTestId("finish-category-Dairy")).toBeVisible();
+      await expect(page.getByTestId("finish-category-Dairy")).toContainText("Skończone");
+
+      // Pill should also show completion
+      await expect(page.getByRole("button", { name: "Dairy ✓" })).toBeVisible();
     });
   });
 });

@@ -1,5 +1,5 @@
 import type { RequestHandler } from "@builder.io/qwik-city";
-import { getGroceryItems, createGroceryItem, deleteAllGroceryItems } from "~/db/groceries";
+import { getGroceryItems, createGroceryItem, deleteAllGroceryItems, deleteBoughtGroceryItems } from "~/db/groceries";
 
 export const onGet: RequestHandler = async ({ json }) => {
   const items = getGroceryItems();
@@ -39,7 +39,8 @@ export const onPost: RequestHandler = async ({ json, parseBody }) => {
   json(201, { id });
 };
 
-export const onDelete: RequestHandler = async ({ json }) => {
-  const count = deleteAllGroceryItems();
+export const onDelete: RequestHandler = async ({ json, url }) => {
+  const boughtOnly = url.searchParams.get("bought") === "true";
+  const count = boughtOnly ? deleteBoughtGroceryItems() : deleteAllGroceryItems();
   json(200, { deleted: count });
 };

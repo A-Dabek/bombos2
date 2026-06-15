@@ -140,6 +140,21 @@ export default component$(() => {
     }
   });
 
+  const handleRemoveBought = $(async () => {
+    try {
+      const response = await fetch("/api/groceries?bought=true", {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        await fetchItems();
+        activeItemId.value = null;
+      }
+    } catch (error) {
+      console.error("Failed to delete bought groceries:", error);
+    }
+  });
+
   const handleAmountChange = $(async (itemId: number, newAmount: number) => {
     try {
       const response = await fetch(`/api/groceries/${itemId}`, {
@@ -174,6 +189,7 @@ export default component$(() => {
           onAmountChange$={handleAmountChange}
           onAddClick$={handleAddClick}
           onRemoveAll$={handleRemoveAll}
+          onRemoveBought$={handleRemoveBought}
         />
       </div>
 

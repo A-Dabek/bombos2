@@ -11,6 +11,10 @@ import {
   getSuggestedCategory,
   saveProductCategory,
   getAllCategories,
+  deleteBoughtGroceryItems,
+  getCompletedCategories,
+  setCategoryCompleted,
+  clearCompletedCategories,
 } from "./groceries.ts";
 import { test, expect } from "vitest";
 import Database from "better-sqlite3";
@@ -185,6 +189,59 @@ test("category suggestions and persistence", () => {
   const id = createGroceryItem("Bread", null, false, 1, "x", "Bakery", db);
   updateGroceryItem(id, "Bread", null, false, 1, "x", "Fresh Bakery", db);
   expect(getSuggestedCategory("bread", db)).toBe("Fresh Bakery");
+
+  db.close();
+});
+
+test("deleteBoughtGroceryItems removes only bought items", () => {
+  const db = new Database(":memory:");
+  runMigrations(db);
+  db.exec("DELETE FROM groceries_items");
+
+  createGroceryItem("Bought", null, false, 1, "x", null, db);
+  createGroceryItem("Unbought", null, false, 1, "x", null, db);
+
+  const itemsBefore = getGroceryItems(db);
+  setGroceryItemBought(itemsBefore[0].id, true, db);
+
+  const count = deleteBoughtGroceryItems(db);
+  expect(count).toBe(1);
+
+  const itemsAfter = getGroceryItems(db);
+  expect(itemsAfter).toHaveLength(1);
+  expect(itemsAfter[0].name).toBe("Unbought");
+
+  db.close();
+});
+
+test("completed categories management", () => {
+  const db = new Database(":memory:");
+  runMigrations(db);
+
+  setCategoryCompleted("Fruits", true, db);
+  setCategoryCompleted("Vegetables", true, db);
+  expect(getCompletedCategories(db)).toContain("Fruits");
+  expect(getCompletedCategories(db)).toContain("Vegetables");
+
+  setCategoryCompleted("Fruits", false, db);
+  expect(getCompletedCategories(db)).not.toContain("Fruits");
+  expect(getCompletedCategories(db)).toContain("Vegetables");
+
+  clearCompletedCategories(db);
+  expect(getCompletedCategories(db)).toHaveLength(0);
+
+  // Integration with delete
+  setCategoryCompleted("Bakery", true, db);
+  createGroceryItem("Bread", null, false, 1, "x", "Bakery", db);
+  const items = getGroceryItems(db);
+  setGroceryItemBought(items[items.length - 1].id, true, db); // Use the last added item
+
+  deleteBoughtGroceryItems(db);
+  expect(getCompletedCategories(db)).toHaveLength(0);
+
+  setCategoryCompleted("Bakery", true, db);
+  deleteAllGroceryItems(db);
+  expect(getCompletedCategories(db)).toHaveLength(0);
 
   db.close();
 });

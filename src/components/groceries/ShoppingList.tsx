@@ -6,6 +6,7 @@ import ShoppingCategoryGroup from "./ShoppingCategoryGroup";
 
 export default component$(() => {
   const items = useSignal<GroceryItem[]>([]);
+  const manuallyCompletedCategories = useSignal<string[]>([]);
   const isLoading = useSignal(true);
   const selectedCategory = useSignal("All");
   const lastBoughtId = useSignal<number | null>(null);
@@ -13,9 +14,16 @@ export default component$(() => {
   const fetchItems = $(async () => {
     isLoading.value = true;
     try {
-      const response = await fetch("/api/groceries");
-      if (response.ok) {
-        items.value = await response.json();
+      const [resp, compResp] = await Promise.all([
+        fetch("/api/groceries"),
+        fetch("/api/groceries/completed-categories"),
+      ]);
+
+      if (resp.ok) {
+        items.value = await resp.json();
+      }
+      if (compResp.ok) {
+        manuallyCompletedCategories.value = await compResp.json();
       }
     } catch (error) {
       console.error("Failed to fetch groceries:", error);
@@ -53,6 +61,32 @@ export default component$(() => {
     }
   });
 
+  const handleToggleCategoryCompleted = $(async (category: string) => {
+    const isCompleted = manuallyCompletedCategories.value.includes(category);
+    try {
+      const response = await fetch("/api/groceries/completed-categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category, completed: !isCompleted }),
+      });
+
+      if (response.ok) {
+        if (isCompleted) {
+          manuallyCompletedCategories.value = manuallyCompletedCategories.value.filter(
+            (c) => c !== category,
+          );
+        } else {
+          manuallyCompletedCategories.value = [
+            ...manuallyCompletedCategories.value,
+            category,
+          ];
+        }
+      }
+    } catch (error) {
+      console.error("Failed to toggle category completed status:", error);
+    }
+  });
+
   const allCategories = [
     "All",
     ...new Set(items.value.map((i) => i.category || "Inne")),
@@ -80,21 +114,24 @@ export default component$(() => {
     {} as Record<string, GroceryItem[]>,
   );
 
-  const displayCategories =
-    selectedCategory.value === "All"
-      ? Object.keys(groupedItems).sort((a, b) => {
-          if (a === "Inne") return 1;
-          if (b === "Inne") return -1;
-          return a.localeCompare(b);
-        })
-      : [selectedCategory.value].filter((c) => groupedItems[c]);
-
   const completedCategories = allCategories.filter((cat) => {
     if (items.value.length === 0) return false;
     if (cat === "All") return items.value.every((i) => i.bought);
+    if (manuallyCompletedCategories.value.includes(cat)) return true;
     const catItems = items.value.filter((i) => (i.category || "Inne") === cat);
     return catItems.length > 0 && catItems.every((i) => i.bought);
   });
+
+  const activeCategories =
+    selectedCategory.value === "All"
+      ? Object.keys(groupedItems)
+          .filter((cat) => !completedCategories.includes(cat))
+          .sort((a, b) => {
+            if (a === "Inne") return 1;
+            if (b === "Inne") return -1;
+            return a.localeCompare(b);
+          })
+      : [selectedCategory.value].filter((c) => groupedItems[c]);
 
   return (
     <div class="p-4">
@@ -118,19 +155,24 @@ export default component$(() => {
               />
 
               <div class="space-y-6">
-                {displayCategories.map((category) => (
+                {activeCategories.map((category) => (
                   <ShoppingCategoryGroup
                     key={category}
                     category={category}
                     items={groupedItems[category] || []}
-                    showHeading={selectedCategory.value === "All"}
+                    showHeading={true}
                     lastBoughtId={lastBoughtId.value}
+                    isCompleted={completedCategories.includes(category)}
+                    isManuallyCompleted={manuallyCompletedCategories.value.includes(
+                      category,
+                    )}
                     onToggle$={handleToggleBought}
+                    onToggleCategoryCompleted$={handleToggleCategoryCompleted}
                   />
                 ))}
-                {displayCategories.length === 0 && (
+                {activeCategories.length === 0 && (
                   <p class="text-center text-gray-500 py-8">
-                    Brak brakujących produktów w tej kategorii
+                    Wszystkie kategorie są skończone
                   </p>
                 )}
               </div>

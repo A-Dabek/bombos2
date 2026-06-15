@@ -130,7 +130,48 @@ export function deleteGroceryItem(id: number, db?: Database.Database): boolean {
 export function deleteAllGroceryItems(db?: Database.Database): number {
   const dbConn = db ?? getDb();
   const result = dbConn.prepare("DELETE FROM groceries_items").run();
+  clearCompletedCategories(dbConn);
   return result.changes;
+}
+
+export function deleteBoughtGroceryItems(db?: Database.Database): number {
+  const dbConn = db ?? getDb();
+  const result = dbConn.prepare("DELETE FROM groceries_items WHERE bought = 1").run();
+  clearCompletedCategories(dbConn);
+  return result.changes;
+}
+
+export function getCompletedCategories(db?: Database.Database): string[] {
+  const dbConn = db ?? getDb();
+  const rows = dbConn
+    .prepare("SELECT category FROM groceries_completed_categories")
+    .raw(true)
+    .all() as string[][];
+  return rows.map((row) => row[0]);
+}
+
+export function setCategoryCompleted(
+  category: string,
+  completed: boolean,
+  db?: Database.Database,
+): void {
+  const dbConn = db ?? getDb();
+  if (completed) {
+    dbConn
+      .prepare(
+        "INSERT OR IGNORE INTO groceries_completed_categories (category) VALUES (?)",
+      )
+      .run(category);
+  } else {
+    dbConn
+      .prepare("DELETE FROM groceries_completed_categories WHERE category = ?")
+      .run(category);
+  }
+}
+
+export function clearCompletedCategories(db?: Database.Database): void {
+  const dbConn = db ?? getDb();
+  dbConn.prepare("DELETE FROM groceries_completed_categories").run();
 }
 
 export function normalizeProductName(name: string): string {

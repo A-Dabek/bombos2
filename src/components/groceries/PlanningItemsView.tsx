@@ -15,6 +15,7 @@ interface PlanningItemsViewProps {
   onAmountChange$: PropFunction<(itemId: number, newAmount: number) => void>;
   onAddClick$: PropFunction<() => void>;
   onRemoveAll$: PropFunction<() => void>;
+  onRemoveBought$: PropFunction<() => void>;
 }
 
 export default component$(
@@ -28,6 +29,7 @@ export default component$(
     onAmountChange$,
     onAddClick$,
     onRemoveAll$,
+    onRemoveBought$,
   }: PlanningItemsViewProps) => {
     const groupedItems = items.reduce(
       (acc, item) => {
@@ -94,12 +96,21 @@ export default component$(
                 <span>Dodaj nową</span>
               </button>
               <DoubleConfirmButton
+                onConfirm$={onRemoveBought$}
+                disabled={!items.some((i) => i.bought)}
+                text="Usuń kupione"
+                data-testid="delete-bought-btn"
+                class={`px-3 py-2 rounded ${
+                  !items.some((i) => i.bought) ? "bg-gray-200 text-gray-400" : "bg-orange-500 text-white hover:bg-orange-600"
+                }`}
+              />
+              <DoubleConfirmButton
                 onConfirm$={onRemoveAll$}
                 disabled={items.length === 0}
                 text="Usuń wszystkie"
                 data-testid="delete-all-btn"
                 class={`px-3 py-2 rounded ${
-                  items.length === 0 ? "bg-gray-200 text-gray-400" : ""
+                  items.length === 0 ? "bg-gray-200 text-gray-400" : "bg-red-500 text-white hover:bg-red-600"
                 }`}
               />
             </div>
