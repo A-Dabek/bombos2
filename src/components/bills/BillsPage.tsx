@@ -1,14 +1,16 @@
-import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
+import { component$, useVisibleTask$, useSignal, $, useContext } from "@builder.io/qwik";
 import type { BillsTransactionGroup } from "~/db/bills";
 import BillsTransactionForm from "~/components/bills/BillsTransactionForm";
 import TransactionGroup from "~/components/transactions/TransactionGroup";
 import AdminButton from "~/components/shared/AdminButton";
 import Loader from "~/components/shared/Loader";
+import { RefreshContext } from "~/constants/refresh";
 
 export default component$(() => {
   const groups = useSignal<BillsTransactionGroup[]>([]);
   const loading = useSignal(false);
   const error = useSignal<string | null>(null);
+  const refreshSignal = useContext(RefreshContext);
 
   const loadData = $(async () => {
     loading.value = true;
@@ -24,7 +26,8 @@ export default component$(() => {
     }
   });
 
-  useVisibleTask$(async () => {
+  useVisibleTask$(async ({ track }) => {
+    track(() => refreshSignal.value);
     await loadData();
   });
 

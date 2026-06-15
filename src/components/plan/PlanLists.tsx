@@ -1,10 +1,11 @@
-import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
+import { component$, useSignal, useVisibleTask$, $, useContext } from "@builder.io/qwik";
 import Loader from "~/components/shared/Loader";
 import Ping from "~/components/shared/Ping";
 import { HiChevronDownOutline } from "@qwikest/icons/heroicons";
 import type { PlanList, PlanItem } from "~/db/plan";
 import AdminButton from "~/components/shared/AdminButton";
 import PlanAccordionList from "./PlanAccordionList";
+import { RefreshContext } from "~/constants/refresh";
 
 export default component$(() => {
   const lists = useSignal<PlanList[]>([]);
@@ -21,6 +22,7 @@ export default component$(() => {
 
   // Item interaction state
   const activeItemId = useSignal<number | null>(null);
+  const refreshSignal = useContext(RefreshContext);
 
   const fetchLists = $(async () => {
     try {
@@ -33,9 +35,14 @@ export default component$(() => {
     }
   });
 
-  // Load lists on mount
-  useVisibleTask$(async () => {
-    await fetchLists();
+  // Load lists on mount and refresh
+  useVisibleTask$(async ({ track }) => {
+    track(() => refreshSignal.value);
+    if (expandedListId.value !== null) {
+      await refreshItems(expandedListId.value);
+    } else {
+      await fetchLists();
+    }
     isLoaded.value = true;
   });
 

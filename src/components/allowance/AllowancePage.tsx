@@ -1,8 +1,9 @@
-import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
+import { component$, useVisibleTask$, useSignal, $, useContext } from "@builder.io/qwik";
 import type { AllowanceConfig } from "~/db/allowance";
 import AdminButton from "~/components/shared/AdminButton";
 import TransactionForm from "../transactions/TransactionForm";
 import AllowanceTransactionGroup from "./AllowanceTransactionGroup";
+import { RefreshContext } from "~/constants/refresh";
 
 export default component$(() => {
   const config = useSignal<AllowanceConfig | null>(null);
@@ -13,6 +14,7 @@ export default component$(() => {
   const loading = useSignal(false);
   const groups = useSignal<any[]>([]);
   const lastTransactionId = useSignal<number | null>(null);
+  const refreshSignal = useContext(RefreshContext);
 
   const loadData = $(async () => {
     try {
@@ -36,7 +38,8 @@ export default component$(() => {
     }
   });
 
-  useVisibleTask$(async () => {
+  useVisibleTask$(async ({ track }) => {
+    track(() => refreshSignal.value);
     await loadData();
   });
 

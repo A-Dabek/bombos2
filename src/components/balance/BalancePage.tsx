@@ -1,9 +1,10 @@
-import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
+import { component$, useVisibleTask$, useSignal, $, useContext } from "@builder.io/qwik";
 import type { BalanceTransactionGroup } from "~/db/balance";
 import TransactionForm from "~/components/transactions/TransactionForm";
 import TransactionGroup from "~/components/transactions/TransactionGroup";
 import AdminButton from "~/components/shared/AdminButton";
 import Loader from "~/components/shared/Loader";
+import { RefreshContext } from "~/constants/refresh";
 
 export default component$(() => {
   const groups = useSignal<BalanceTransactionGroup[]>([]);
@@ -11,6 +12,7 @@ export default component$(() => {
   const error = useSignal<string | null>(null);
   const description = useSignal("");
   const amount = useSignal("");
+  const refreshSignal = useContext(RefreshContext);
 
   const loadData = $(async () => {
     loading.value = true;
@@ -26,7 +28,8 @@ export default component$(() => {
     }
   });
 
-  useVisibleTask$(async () => {
+  useVisibleTask$(async ({ track }) => {
+    track(() => refreshSignal.value);
     await loadData();
   });
 
