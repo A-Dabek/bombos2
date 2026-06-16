@@ -1,8 +1,9 @@
-import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
+import { component$, useSignal, useVisibleTask$, $, useContext } from "@builder.io/qwik";
 import Loader from "~/components/shared/Loader";
 import type { GroceryItem } from "~/db/groceries";
 import CategoryFilter from "./CategoryFilter";
 import ShoppingCategoryGroup from "./ShoppingCategoryGroup";
+import { RefreshContext } from "~/constants/refresh";
 
 export default component$(() => {
   const items = useSignal<GroceryItem[]>([]);
@@ -10,6 +11,7 @@ export default component$(() => {
   const isLoading = useSignal(true);
   const selectedCategory = useSignal("All");
   const lastBoughtId = useSignal<number | null>(null);
+  const refreshSignal = useContext(RefreshContext);
 
   const fetchItems = $(async () => {
     isLoading.value = true;
@@ -32,7 +34,8 @@ export default component$(() => {
     }
   });
 
-  useVisibleTask$(() => {
+  useVisibleTask$(({ track }) => {
+    track(() => refreshSignal.value);
     fetchItems();
   });
 

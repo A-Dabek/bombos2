@@ -1,7 +1,8 @@
-import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
+import { component$, useSignal, useVisibleTask$, $, useContext } from "@builder.io/qwik";
 import type { GroceryItem } from "~/db/groceries";
 import PlanningFormView from "./PlanningFormView";
 import PlanningItemsView from "./PlanningItemsView";
+import { RefreshContext } from "~/constants/refresh";
 
 export default component$(() => {
   const items = useSignal<GroceryItem[]>([]);
@@ -9,6 +10,7 @@ export default component$(() => {
   const formMode = useSignal<"none" | "add" | "edit">("none");
   const activeItemId = useSignal<number | null>(null);
   const editingItem = useSignal<GroceryItem | null>(null);
+  const refreshSignal = useContext(RefreshContext);
 
   const fetchItems = $(async () => {
     isLoading.value = true;
@@ -24,7 +26,8 @@ export default component$(() => {
     }
   });
 
-  useVisibleTask$(() => {
+  useVisibleTask$(({ track }) => {
+    track(() => refreshSignal.value);
     fetchItems();
   });
 

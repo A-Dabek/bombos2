@@ -1,8 +1,9 @@
-import { component$, Slot, useSignal, useVisibleTask$ } from "@builder.io/qwik";
+import { component$, Slot, useSignal, useVisibleTask$, useContextProvider, $ } from "@builder.io/qwik";
 import { useLocation } from "@builder.io/qwik-city";
 import { streamParcelCount } from "../utils/parcel-count-stream";
 import { streamPlanUrgent } from "../utils/plan-urgent-stream";
 import Ping from "~/components/shared/Ping";
+import { RefreshContext } from "~/constants/refresh";
 import {
   HiCubeOutline,
   HiFireOutline,
@@ -23,36 +24,69 @@ export default component$(() => {
   const loc = useLocation();
   const parcelCount = useSignal(0);
   const hasUrgentItems = useSignal(false);
+  const refreshSignal = useSignal(0);
+
+  useContextProvider(RefreshContext, refreshSignal);
+
+  const triggerRefresh = $(() => {
+    refreshSignal.value++;
+  });
 
   useVisibleTask$(async ({ cleanup }) => {
-    const pStream = await streamParcelCount();
-    const uStream = await streamPlanUrgent();
+    let active = true;
 
     const iterateParcels = async () => {
-      try {
-        for await (const count of pStream) {
-          parcelCount.value = count;
+      while (active) {
+        try {
+          const pStream = await streamParcelCount();
+          for await (const count of pStream) {
+            if (!active) break;
+            parcelCount.value = count;
+          }
+        } catch (error) {
+          if (active) {
+            console.error("Parcel stream error, retrying...", error);
+          }
         }
-      } catch (error) {
-        console.error("Parcel stream error:", error);
+        if (active) {
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+        }
       }
     };
 
     const iterateUrgent = async () => {
-      try {
-        for await (const hasUrgent of uStream) {
-          hasUrgentItems.value = hasUrgent;
+      while (active) {
+        try {
+          const uStream = await streamPlanUrgent();
+          for await (const hasUrgent of uStream) {
+            if (!active) break;
+            hasUrgentItems.value = hasUrgent;
+          }
+        } catch (error) {
+          if (active) {
+            console.error("Urgent stream error, retrying...", error);
+          }
         }
-      } catch (error) {
-        console.error("Urgent stream error:", error);
+        if (active) {
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+        }
       }
     };
 
     iterateParcels();
     iterateUrgent();
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        triggerRefresh();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     cleanup(() => {
-      // Stream cleanup happens automatically when component unmounts
+      active = false;
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     });
   });
 

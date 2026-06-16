@@ -1,4 +1,4 @@
-import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
+import { component$, useSignal, useVisibleTask$, $, useContext } from "@builder.io/qwik";
 import Loader from "~/components/shared/Loader";
 import AdminButton from "~/components/shared/AdminButton";
 import ParcelSubNav from "./ParcelSubNav";
@@ -6,6 +6,7 @@ import ParcelList from "./ParcelList";
 import UploadButton from "./UploadButton";
 import ParcelLightbox from "./ParcelLightbox";
 import type { Parcel } from "./types";
+import { RefreshContext } from "~/constants/refresh";
 
 interface Props {
   type: "incoming" | "outgoing";
@@ -19,6 +20,7 @@ export default component$<Props>(({ type, title }) => {
   const isLoading = useSignal(true);
   const isCompleting = useSignal(false);
   const noteTimeout = useSignal<ReturnType<typeof setTimeout> | null>(null);
+  const refreshSignal = useContext(RefreshContext);
 
   const fetchParcels = $(async () => {
     const res = await fetch(`/api/parcels/${type}`);
@@ -73,7 +75,8 @@ export default component$<Props>(({ type, title }) => {
     }, 300);
   });
 
-  useVisibleTask$(() => {
+  useVisibleTask$(({ track }) => {
+    track(() => refreshSignal.value);
     fetchParcels();
   });
 
