@@ -30,14 +30,14 @@ test.describe("money module journeys", () => {
         await page.getByTestId("loader").waitFor({state: "hidden"});
         await page.waitForTimeout(500);
 
-        // 2. Add income
+        // 2. Add transaction with positive amount (should be negated)
         await page.getByTestId("transaction-desc-input").fill("Refund");
         await page.getByTestId("transaction-amount-input").fill("100");
         await Promise.all([
             page.waitForResponse(r => r.url().endsWith("/api/bills/transactions") && r.request().method() === "POST"),
             page.getByTestId("transaction-add-button").click(),
         ]);
-        await expect(page.getByText("+100")).toBeVisible();
+        await expect(page.getByText("-100")).toBeVisible();
 
         // 3. Add expense
         await page.getByTestId("transaction-desc-input").fill("Rent");

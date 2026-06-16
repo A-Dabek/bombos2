@@ -17,7 +17,7 @@ export default component$<AutomaticPaymentItemProps>(({ payment, isLoading, onDe
       <div>
         <span class="font-medium">{payment.name}</span>
         <span class="ml-2 text-sm text-gray-500">({payment.slug})</span>
-        <span class="ml-2 text-sm font-semibold">{payment.amount} PLN</span>
+        <span class="ml-2 text-sm font-semibold">{Math.abs(payment.amount)} PLN</span>
       </div>
       <DoubleConfirmButton
         onConfirm$={() => onDelete$(payment.id)}

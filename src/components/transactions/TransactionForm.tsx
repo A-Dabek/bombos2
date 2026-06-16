@@ -6,10 +6,11 @@ interface TransactionFormProps {
   amount: string;
   loading: boolean;
   onSubmit$: (description: string, amount: number) => void;
+  negateAmount?: boolean;
 }
 
 export default component$<TransactionFormProps>(
-  ({ description: descProp, amount: amountProp, loading, onSubmit$ }) => {
+  ({ description: descProp, amount: amountProp, loading, onSubmit$, negateAmount }) => {
     const description = useSignal(descProp);
     const amount = useSignal(amountProp);
 
@@ -24,7 +25,11 @@ export default component$<TransactionFormProps>(
     const handleSubmit = $(() => {
       const a = amount.value;
       if (loading || !description.value || !a || isNaN(parseFloat(a))) return;
-      onSubmit$(description.value, parseFloat(a));
+      let val = parseFloat(a);
+      if (negateAmount) {
+        val = -Math.abs(val);
+      }
+      onSubmit$(description.value, val);
     });
 
     return (
@@ -44,7 +49,7 @@ export default component$<TransactionFormProps>(
         <TextInput
           type="text"
           inputMode="decimal"
-          placeholder="Kwota (ujemna = wydatek)"
+          placeholder={negateAmount ? "Kwota" : "Kwota (ujemna = wydatek)"}
           data-testid="transaction-amount-input"
           class="px-2 py-1 text-sm"
           value={amount.value}

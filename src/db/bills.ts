@@ -57,15 +57,18 @@ export function addBillTransaction(
 ): number {
   const dbConn = db ?? getDb();
   
+  // Ensure amount is negative (expense)
+  const normalizedAmount = description === 'Period start' ? amount : -Math.abs(amount);
+  
   if (predefined_slug) {
     const result = dbConn.prepare(
       "INSERT INTO bills_transactions (description, amount, is_automatic, predefined_slug) VALUES (?, ?, ?, ?)"
-    ).run(description, amount, is_automatic ? 1 : 0, predefined_slug);
+    ).run(description, normalizedAmount, is_automatic ? 1 : 0, predefined_slug);
     return Number(result.lastInsertRowid);
   } else {
     const result = dbConn.prepare(
       "INSERT INTO bills_transactions (description, amount, is_automatic) VALUES (?, ?, ?)"
-    ).run(description, amount, is_automatic ? 1 : 0);
+    ).run(description, normalizedAmount, is_automatic ? 1 : 0);
     return Number(result.lastInsertRowid);
   }
 }
@@ -205,14 +208,14 @@ export interface BillsAutomaticPayment {
   id: number;
   name: string;
   slug: string;
-  amount: number;  // Absolute value (positive), stored as defined by user
+  amount: number;  // Negative value (expense)
   created_at: number;
 }
 
 export interface BillsAutomaticPaymentInput {
   name: string;
   slug: string;
-  amount: number;  // Absolute value (positive)
+  amount: number;  // Negative value (expense)
 }
 
 export function getBillsAutomaticPayments(
@@ -236,14 +239,12 @@ export function addBillsAutomaticPayment(
     throw new Error("Slug must be a single word (alphanumeric + underscores only)");
   }
   
-  // Validate amount is positive (absolute value)
-  if (input.amount <= 0) {
-    throw new Error("Amount must be a positive number");
-  }
+  // Ensure amount is negative (expense)
+  const normalizedAmount = -Math.abs(input.amount);
   
   const result = dbConn.prepare(
     "INSERT INTO bills_automatic_payments (name, slug, amount) VALUES (?, ?, ?)"
-  ).run(input.name, input.slug, input.amount);
+  ).run(input.name, input.slug, normalizedAmount);
   
   return Number(result.lastInsertRowid);
 }
@@ -290,11 +291,11 @@ export function createAutomaticPaymentTransactions(
   for (const payment of payments) {
     // Create transaction visible in list (is_automatic=0)
     // Description stores the "name" for UI display
-    // Amount is NEGATED because automatic payments are expenses
+    // Amount is already negative in bills_automatic_payments
     // predefined_slug links back to the automatic payment definition
     dbConn.prepare(
       "INSERT INTO bills_transactions (description, amount, is_automatic, predefined_slug) VALUES (?, ?, 0, ?)"
-    ).run(payment.name, -payment.amount, payment.slug);
+    ).run(payment.name, payment.amount, payment.slug);
     createdCount++;
   }
   

@@ -33,7 +33,8 @@ export default component$<BillsTransactionFormProps>(({ loading, onSubmit$ }) =>
   const handleSubmit = $(() => {
     const a = amount.value;
     if (loading || !description.value || !a || isNaN(parseFloat(a))) return;
-    onSubmit$(description.value, parseFloat(a), selectedPredefinedSlug.value || undefined);
+    const val = -Math.abs(parseFloat(a));
+    onSubmit$(description.value, val, selectedPredefinedSlug.value || undefined);
     // Clear form
     description.value = "";
     amount.value = "";
@@ -87,7 +88,7 @@ export default component$<BillsTransactionFormProps>(({ loading, onSubmit$ }) =>
         <TextInput
           type="text"
           inputMode="decimal"
-          placeholder="Kwota (ujemna = wydatek)"
+          placeholder="Kwota"
           data-testid="transaction-amount-input"
           class="px-2 py-1 text-sm"
           value={amount.value}

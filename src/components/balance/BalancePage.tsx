@@ -70,6 +70,7 @@ export default component$(() => {
         amount={amount.value}
         loading={loading.value}
         onSubmit$={handleAdd}
+        negateAmount
       />
 
       {groups.value.length > 0 && (

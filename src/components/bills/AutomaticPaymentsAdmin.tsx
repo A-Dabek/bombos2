@@ -45,8 +45,8 @@ export default component$(() => {
     }
     
     const amount = Number(newPaymentAmount.value);
-    if (!newPaymentName.value.trim() || !slugVal || isNaN(amount) || amount <= 0) {
-      paymentsError.value = "Wymagana nazwa, slug i dodatnia kwota";
+    if (!newPaymentName.value.trim() || !slugVal || isNaN(amount) || amount === 0) {
+      paymentsError.value = "Wymagana nazwa, slug i kwota";
       return;
     }
 

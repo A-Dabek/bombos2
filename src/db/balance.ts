@@ -54,9 +54,13 @@ export function addBalanceTransaction(
   db?: Database.Database,
 ): number {
   const dbConn = db ?? getDb();
+  
+  // Ensure amount is negative (expense)
+  const normalizedAmount = description === 'Period start' ? amount : -Math.abs(amount);
+
   const result = dbConn.prepare(
     "INSERT INTO balance_transactions (description, amount, is_automatic) VALUES (?, ?, ?)",
-  ).run(description, amount, is_automatic ? 1 : 0);
+  ).run(description, normalizedAmount, is_automatic ? 1 : 0);
   return Number(result.lastInsertRowid);
 }
 

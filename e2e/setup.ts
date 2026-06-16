@@ -89,7 +89,8 @@ export function addBillsPeriodStartMarker(created_at?: number) {
 export function addBillTransactionSql(description: string, amount: number, is_automatic: boolean = false, created_at?: number) {
   const db = new Database(DB_PATH);
   const timestamp = created_at ?? Math.floor(Date.now() / 1000);
-  db.prepare("INSERT INTO bills_transactions (description, amount, is_automatic, created_at) VALUES (?, ?, ?, ?)").run(description, amount, is_automatic ? 1 : 0, timestamp);
+  const normalizedAmount = description === 'Period start' ? amount : -Math.abs(amount);
+  db.prepare("INSERT INTO bills_transactions (description, amount, is_automatic, created_at) VALUES (?, ?, ?, ?)").run(description, normalizedAmount, is_automatic ? 1 : 0, timestamp);
   db.close();
 }
 
@@ -117,7 +118,8 @@ export function addBalancePeriodStartMarker(created_at?: number) {
 export function addBalanceTransactionSql(description: string, amount: number, is_automatic: boolean = false, created_at?: number) {
   const db = new Database(DB_PATH);
   const timestamp = created_at ?? Math.floor(Date.now() / 1000);
-  db.prepare("INSERT INTO balance_transactions (description, amount, is_automatic, created_at) VALUES (?, ?, ?, ?)").run(description, amount, is_automatic ? 1 : 0, timestamp);
+  const normalizedAmount = description === 'Period start' ? amount : -Math.abs(amount);
+  db.prepare("INSERT INTO balance_transactions (description, amount, is_automatic, created_at) VALUES (?, ?, ?, ?)").run(description, normalizedAmount, is_automatic ? 1 : 0, timestamp);
   db.close();
 }
 
@@ -180,7 +182,8 @@ export function clearBillsAutomaticPayments() {
 
 export function addBillsAutomaticPaymentSql(name: string, slug: string, amount: number) {
   const db = new Database(DB_PATH);
-  db.prepare("INSERT INTO bills_automatic_payments (name, slug, amount) VALUES (?, ?, ?)").run(name, slug, amount);
+  const normalizedAmount = -Math.abs(amount);
+  db.prepare("INSERT INTO bills_automatic_payments (name, slug, amount) VALUES (?, ?, ?)").run(name, slug, normalizedAmount);
   db.close();
 }
 

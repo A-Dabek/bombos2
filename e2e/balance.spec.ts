@@ -28,14 +28,14 @@ test.describe("money module journeys", () => {
         await page.getByTestId("loader").waitFor({state: "hidden"});
         await page.waitForTimeout(500); // Hydration safety
 
-        // 2. Add income
-        await page.getByTestId("transaction-desc-input").fill("Salary");
-        await page.getByTestId("transaction-amount-input").fill("5000");
+        // 2. Add transaction with positive amount (should be negated)
+        await page.getByTestId("transaction-desc-input").fill("Pocket money");
+        await page.getByTestId("transaction-amount-input").fill("50");
         await Promise.all([
             page.waitForResponse(r => r.url().endsWith("/api/balance/transactions") && r.request().method() === "POST"),
             page.getByTestId("transaction-add-button").click(),
         ]);
-        await expect(page.getByText("+5000")).toBeVisible();
+        await expect(page.getByText("-50")).toBeVisible();
 
         // 3. Add expense
         await page.getByTestId("transaction-desc-input").fill("Groceries");
