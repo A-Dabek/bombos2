@@ -6,6 +6,7 @@ import { RefreshContext } from "~/constants/refresh";
 
 export default component$(() => {
   const items = useSignal<GroceryItem[]>([]);
+  const manuallyCompletedCategories = useSignal<string[]>([]);
   const isLoading = useSignal(true);
   const formMode = useSignal<"none" | "add" | "edit">("none");
   const activeItemId = useSignal<number | null>(null);
@@ -15,9 +16,16 @@ export default component$(() => {
   const fetchItems = $(async () => {
     isLoading.value = true;
     try {
-      const response = await fetch("/api/groceries");
-      if (response.ok) {
-        items.value = await response.json();
+      const [resp, compResp] = await Promise.all([
+        fetch("/api/groceries"),
+        fetch("/api/groceries/completed-categories"),
+      ]);
+
+      if (resp.ok) {
+        items.value = await resp.json();
+      }
+      if (compResp.ok) {
+        manuallyCompletedCategories.value = await compResp.json();
       }
     } catch (error) {
       console.error("Failed to fetch groceries:", error);
@@ -184,6 +192,7 @@ export default component$(() => {
       >
         <PlanningItemsView
           items={items.value}
+          manuallyCompletedCategories={manuallyCompletedCategories.value}
           isLoading={isLoading.value}
           activeItemId={activeItemId.value}
           onItemClick$={handleItemClick}

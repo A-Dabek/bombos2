@@ -7,6 +7,7 @@ import DoubleConfirmButton from "../shared/DoubleConfirmButton";
 
 interface PlanningItemsViewProps {
   items: GroceryItem[];
+  manuallyCompletedCategories: string[];
   isLoading: boolean;
   activeItemId: number | null;
   onItemClick$: PropFunction<(itemId: number) => void>;
@@ -21,6 +22,7 @@ interface PlanningItemsViewProps {
 export default component$(
   ({
     items,
+    manuallyCompletedCategories,
     isLoading,
     activeItemId,
     onItemClick$,
@@ -42,6 +44,15 @@ export default component$(
     );
 
     const sortedCategories = Object.keys(groupedItems).sort((a, b) => {
+      const aDone =
+        manuallyCompletedCategories.includes(a) ||
+        (groupedItems[a].length > 0 && groupedItems[a].every((i) => i.bought));
+      const bDone =
+        manuallyCompletedCategories.includes(b) ||
+        (groupedItems[b].length > 0 && groupedItems[b].every((i) => i.bought));
+
+      if (aDone !== bDone) return aDone ? 1 : -1;
+
       if (a === "Inne") return 1;
       if (b === "Inne") return -1;
       return a.localeCompare(b);

@@ -112,16 +112,11 @@ test.describe("Groceries Module", () => {
 
     // Toggle bought
     await item.click();
-    await expect(item).not.toBeVisible();
-
-    // To see it, select "Inne" category
-    await page.getByRole("button", { name: "Inne" }).click();
     await expect(item).toBeVisible();
     await expect(item).toHaveClass(/line-through/);
 
     // Persist on refresh
     await page.reload();
-    await page.getByRole("button", { name: "Inne ✓" }).click();
     await expect(page.getByText("Apples", { exact: true })).toHaveClass(/line-through/);
 
     // Untoggle
@@ -222,8 +217,8 @@ test.describe("Groceries Module", () => {
       const dairyPill = page.getByRole("button", { name: "Dairy ✓" });
       await expect(dairyPill).toHaveClass(/text-green-700/);
 
-      // Header in "All" view should be HIDDEN (requested by user to hide finished categories)
-      await expect(page.getByRole("heading", { name: "Dairy" })).not.toBeVisible();
+      // Header in "All" view should be VISIBLE (now we show finished categories at the bottom)
+      await expect(page.getByRole("heading", { name: "Dairy" })).toBeVisible();
     });
 
     test("visual cue for most recently bought item", async ({ page }) => {
@@ -247,10 +242,10 @@ test.describe("Groceries Module", () => {
 
       // Mark Apple as bought
       await apple.click();
-      // Category "Inne" should now be hidden in "All" view
-      await expect(apple).not.toBeVisible();
+      // Category "Inne" should now be VISIBLE at the bottom in "All" view
+      await expect(apple).toBeVisible();
 
-      // Select "Inne" to see it again
+      // Select "Inne" to see it (it was already visible, but this tests filtering)
       await page.getByRole("button", { name: "Inne ✓" }).click();
       await expect(apple).toContainText("Ostatni");
       await expect(apple).toHaveClass(/ring-2 ring-blue-400/);
@@ -303,11 +298,11 @@ test.describe("Groceries Module", () => {
       // Mark as finished
       await page.getByTestId("finish-category-Dairy").click();
 
-      // Should disappear from "All" view (default)
-      await expect(page.getByRole("heading", { name: "Dairy" })).not.toBeVisible();
-      await expect(page.getByText("Milk", { exact: true })).not.toBeVisible();
+      // Should stay visible in "All" view but sorted last
+      await expect(page.getByRole("heading", { name: "Dairy" })).toBeVisible();
+      await expect(page.getByText("Milk", { exact: true })).toBeVisible();
 
-      // Select "Dairy" from filter to see it
+      // Select "Dairy" from filter
       await page.getByRole("button", { name: "Dairy ✓" }).click();
       await expect(page.getByRole("heading", { name: "Dairy" })).toBeVisible();
       await expect(page.getByText("Milk", { exact: true })).toBeVisible();

@@ -90,12 +90,24 @@ export default component$(() => {
     }
   });
 
-  const allCategories = [
-    "All",
-    ...new Set(items.value.map((i) => i.category || "Inne")),
-  ].sort((a, b) => {
+  const rawCategories = [...new Set(items.value.map((i) => i.category || "Inne"))];
+
+  const completedCategories = ["All", ...rawCategories].filter((cat) => {
+    if (items.value.length === 0) return false;
+    if (cat === "All") return items.value.every((i) => i.bought);
+    if (manuallyCompletedCategories.value.includes(cat)) return true;
+    const catItems = items.value.filter((i) => (i.category || "Inne") === cat);
+    return catItems.length > 0 && catItems.every((i) => i.bought);
+  });
+
+  const allCategories = ["All", ...rawCategories].sort((a, b) => {
     if (a === "All") return -1;
     if (b === "All") return 1;
+
+    const aDone = completedCategories.includes(a);
+    const bDone = completedCategories.includes(b);
+    if (aDone !== bDone) return aDone ? 1 : -1;
+
     if (a === "Inne") return 1;
     if (b === "Inne") return -1;
     return a.localeCompare(b);
@@ -117,23 +129,17 @@ export default component$(() => {
     {} as Record<string, GroceryItem[]>,
   );
 
-  const completedCategories = allCategories.filter((cat) => {
-    if (items.value.length === 0) return false;
-    if (cat === "All") return items.value.every((i) => i.bought);
-    if (manuallyCompletedCategories.value.includes(cat)) return true;
-    const catItems = items.value.filter((i) => (i.category || "Inne") === cat);
-    return catItems.length > 0 && catItems.every((i) => i.bought);
-  });
-
   const activeCategories =
     selectedCategory.value === "All"
-      ? Object.keys(groupedItems)
-          .filter((cat) => !completedCategories.includes(cat))
-          .sort((a, b) => {
-            if (a === "Inne") return 1;
-            if (b === "Inne") return -1;
-            return a.localeCompare(b);
-          })
+      ? Object.keys(groupedItems).sort((a, b) => {
+          const aDone = completedCategories.includes(a);
+          const bDone = completedCategories.includes(b);
+          if (aDone !== bDone) return aDone ? 1 : -1;
+
+          if (a === "Inne") return 1;
+          if (b === "Inne") return -1;
+          return a.localeCompare(b);
+        })
       : [selectedCategory.value].filter((c) => groupedItems[c]);
 
   return (
@@ -173,7 +179,7 @@ export default component$(() => {
                     onToggleCategoryCompleted$={handleToggleCategoryCompleted}
                   />
                 ))}
-                {activeCategories.length === 0 && (
+                {selectedCategory.value === "All" && activeCategories.length > 0 && activeCategories.every(cat => completedCategories.includes(cat)) && (
                   <p class="text-center text-gray-500 py-8">
                     Wszystkie kategorie są skończone
                   </p>
