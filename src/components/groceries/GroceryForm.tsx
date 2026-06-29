@@ -49,6 +49,7 @@ export default component$(
     const formAmount = useSignal<number | null>(initialAmount ?? null);
     const formUnit = useSignal(initialUnit);
     const formCategory = useSignal(initialCategory);
+    const lastAddedName = useSignal("");
     const allCategories = useSignal<string[]>([]);
 
     useVisibleTask$(async () => {
@@ -186,6 +187,13 @@ export default component$(
               class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
             />
           </div>
+
+          {lastAddedName.value && (
+            <div class="text-sm text-green-600 font-medium animate-pulse" data-testid="form-feedback">
+              Poprzednio dodano: {lastAddedName.value}
+            </div>
+          )}
+
           <div class="flex space-x-2">
             <button
               onClick$={onCancel$}
@@ -213,6 +221,7 @@ export default component$(
             {mode === "add" && onNext$ && (
               <button
                 onClick$={() => {
+                  lastAddedName.value = formName.value;
                   onNext$(
                     formName.value,
                     formDescription.value,
