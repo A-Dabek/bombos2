@@ -66,6 +66,29 @@ export default component$(
           </div>
         ) : (
           <>
+            <div class="mb-4">
+              {items.some((i) => i.bought) ? (
+                <DoubleConfirmButton
+                  onConfirm$={onRemoveBought$}
+                  text="Usuń kupione"
+                  data-testid="delete-bought-btn"
+                  class="w-full px-3 py-2 rounded bg-orange-500 text-white hover:bg-orange-600 text-sm font-medium"
+                />
+              ) : (
+                <DoubleConfirmButton
+                  onConfirm$={onRemoveAll$}
+                  disabled={items.length === 0}
+                  text="Usuń wszystkie"
+                  data-testid="delete-all-btn"
+                  class={`w-full px-3 py-2 rounded text-sm font-medium ${
+                    items.length === 0
+                      ? "bg-gray-100 text-gray-400"
+                      : "bg-red-500 text-white hover:bg-red-600"
+                  }`}
+                />
+              )}
+            </div>
+
             {items.length === 0 ? (
               <p class="text-lg text-gray-500" data-testid="empty-state">
                 Brak pozycji
@@ -97,33 +120,15 @@ export default component$(
               </div>
             )}
 
-            <div class="flex space-x-2 mt-4">
+            <div class="mt-4">
               <button
                 onClick$={onAddClick$}
                 data-testid="add-item-btn"
-                class="flex items-center px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                class="flex items-center px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 w-full justify-center"
               >
                 <HiPlusOutline class="w-5 h-5 mr-1" />
                 <span>Dodaj nową</span>
               </button>
-              <DoubleConfirmButton
-                onConfirm$={onRemoveBought$}
-                disabled={!items.some((i) => i.bought)}
-                text="Usuń kupione"
-                data-testid="delete-bought-btn"
-                class={`px-3 py-2 rounded ${
-                  !items.some((i) => i.bought) ? "bg-gray-200 text-gray-400" : "bg-orange-500 text-white hover:bg-orange-600"
-                }`}
-              />
-              <DoubleConfirmButton
-                onConfirm$={onRemoveAll$}
-                disabled={items.length === 0}
-                text="Usuń wszystkie"
-                data-testid="delete-all-btn"
-                class={`px-3 py-2 rounded ${
-                  items.length === 0 ? "bg-gray-200 text-gray-400" : "bg-red-500 text-white hover:bg-red-600"
-                }`}
-              />
             </div>
           </>
         )}
