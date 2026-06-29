@@ -10,6 +10,7 @@ export default component$(() => {
   const isLoading = useSignal(true);
   const formMode = useSignal<"none" | "add" | "edit">("none");
   const activeItemId = useSignal<number | null>(null);
+  const lastAddedId = useSignal<number | null>(null);
   const editingItem = useSignal<GroceryItem | null>(null);
   const refreshSignal = useContext(RefreshContext);
 
@@ -85,6 +86,10 @@ export default component$(() => {
         });
 
       if (response.ok) {
+        const savedItem = await response.json();
+        if (!isEdit) {
+          lastAddedId.value = savedItem.id;
+        }
         await fetchItems();
         formMode.value = "none";
         editingItem.value = null;
@@ -112,6 +117,8 @@ export default component$(() => {
         });
 
       if (response.ok) {
+        const savedItem = await response.json();
+        lastAddedId.value = savedItem.id;
         await fetchItems();
         // Keep form open for next item
         editingItem.value = null;
@@ -195,6 +202,7 @@ export default component$(() => {
           manuallyCompletedCategories={manuallyCompletedCategories.value}
           isLoading={isLoading.value}
           activeItemId={activeItemId.value}
+          lastAddedId={lastAddedId.value}
           onItemClick$={handleItemClick}
           onEditClick$={handleEditClick}
           onRemove$={handleRemove}

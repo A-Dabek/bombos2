@@ -6,6 +6,7 @@ import DoubleConfirmButton from "../shared/DoubleConfirmButton";
 interface GroceryItemRowProps {
   item: GroceryItem;
   isActive: boolean;
+  isLastAdded?: boolean;
   onItemClick$: (itemId: number) => void;
   onEditClick$: (item: GroceryItem) => void;
   onRemove$: (itemId: number) => void;
@@ -15,6 +16,7 @@ interface GroceryItemRowProps {
 export default component$(({
   item,
   isActive,
+  isLastAdded,
   onItemClick$,
   onEditClick$,
   onRemove$,
@@ -23,11 +25,16 @@ export default component$(({
   return (
     <li
       key={item.id}
-      class={`cursor-pointer ${
+      class={`cursor-pointer relative transition-all ${
         isActive ? "p-3 bg-blue-50" : "py-1 px-2 bg-white"
-      }`}
+      } ${isLastAdded ? "ring-2 ring-blue-400 border-blue-400 rounded z-10" : ""}`}
       onClick$={() => onItemClick$(item.id)}
     >
+      {isLastAdded && (
+        <span class="absolute -top-2 -right-1 bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded-full shadow-sm z-20">
+          Ostatni
+        </span>
+      )}
       <div class="flex items-start justify-between">
         <div class="flex-1">
           <div class="flex items-center justify-between">

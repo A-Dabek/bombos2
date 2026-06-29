@@ -10,6 +10,7 @@ interface PlanningItemsViewProps {
   manuallyCompletedCategories: string[];
   isLoading: boolean;
   activeItemId: number | null;
+  lastAddedId: number | null;
   onItemClick$: PropFunction<(itemId: number) => void>;
   onEditClick$: PropFunction<(item: GroceryItem) => void>;
   onRemove$: PropFunction<(itemId: number) => void>;
@@ -25,6 +26,7 @@ export default component$(
     manuallyCompletedCategories,
     isLoading,
     activeItemId,
+    lastAddedId,
     onItemClick$,
     onEditClick$,
     onRemove$,
@@ -107,6 +109,7 @@ export default component$(
                             key={item.id}
                             item={item}
                             isActive={activeItemId === item.id}
+                            isLastAdded={lastAddedId === item.id}
                             onItemClick$={onItemClick$}
                             onEditClick$={onEditClick$}
                             onRemove$={onRemove$}
