@@ -2,6 +2,7 @@ import { component$, Slot, useSignal, useVisibleTask$, useContextProvider, $ } f
 import { useLocation } from "@builder.io/qwik-city";
 import { streamParcelCount } from "../utils/parcel-count-stream";
 import { streamPlanUrgent } from "../utils/plan-urgent-stream";
+import { streamBillsUrgent } from "../utils/bills-urgent-stream";
 import Ping from "~/components/shared/Ping";
 import { RefreshContext } from "~/constants/refresh";
 import {
@@ -24,6 +25,7 @@ export default component$(() => {
   const loc = useLocation();
   const parcelCount = useSignal(0);
   const hasUrgentItems = useSignal(false);
+  const isBillsUrgent = useSignal(false);
   const refreshSignal = useSignal(0);
 
   useContextProvider(RefreshContext, refreshSignal);
@@ -73,8 +75,28 @@ export default component$(() => {
       }
     };
 
+    const iterateBills = async () => {
+      while (active) {
+        try {
+          const bStream = await streamBillsUrgent();
+          for await (const urgent of bStream) {
+            if (!active) break;
+            isBillsUrgent.value = urgent;
+          }
+        } catch (error) {
+          if (active) {
+            console.error("Bills stream error, retrying...", error);
+          }
+        }
+        if (active) {
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+        }
+      }
+    };
+
     iterateParcels();
     iterateUrgent();
+    iterateBills();
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
@@ -122,6 +144,12 @@ export default component$(() => {
                 <Ping
                   class="absolute -right-1 top-1 flex h-3 w-3"
                   data-testid="plan-notification-dot"
+                />
+              )}
+              {tab.path === "/money" && isBillsUrgent.value && (
+                <Ping
+                  class="absolute -right-1 top-1 flex h-3 w-3"
+                  data-testid="money-notification-dot"
                 />
               )}
               {tab.label}

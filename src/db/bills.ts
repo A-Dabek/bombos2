@@ -337,6 +337,25 @@ export function addBillsPredefinedPayment(
   return Number(result.lastInsertRowid);
 }
 
+export function isBillsUrgent(db?: Database.Database): boolean {
+  const dbConn = db ?? getDb();
+  const lastMarker = dbConn.prepare(
+    "SELECT created_at FROM bills_transactions WHERE is_automatic = 1 AND amount = 0 ORDER BY created_at DESC LIMIT 1"
+  ).get() as { created_at: number } | undefined;
+
+  if (!lastMarker) return false;
+
+  const result = dbConn.prepare(`
+    SELECT COUNT(*) as count 
+    FROM bills_transactions 
+    WHERE is_automatic = 0 
+    AND created_at >= ? 
+    AND (predefined_slug IS NULL OR predefined_slug NOT IN (SELECT slug FROM bills_automatic_payments))
+  `).get(lastMarker.created_at) as { count: number };
+
+  return result.count === 0;
+}
+
 export function deleteBillsPredefinedPayment(
   id: number,
   db?: Database.Database,

@@ -294,4 +294,37 @@ test.describe("money module journeys", () => {
     // Should see some transactions (period start + automatic payment)
     await expect(page.getByTestId("transaction-desc-input")).toBeVisible();
   });
+
+  test("Bills: Notification ping appears when period starts and disappears after manual payment", async ({page}) => {
+    // 1. Initially no ping
+    await page.goto("/");
+    await expect(page.getByTestId("money-notification-dot")).not.toBeVisible();
+
+    // 2. Add period start marker
+    addBillsPeriodStartMarker();
+
+    // 3. Verify ping on main nav (Finanse tab)
+    // Poll for visibility because of stream interval
+    await expect(page.getByTestId("money-notification-dot")).toBeVisible({ timeout: 10000 });
+
+    // 4. Go to Money sub-nav and verify ping on Rachunki tab
+    await page.goto("/money/balance");
+    await expect(page.getByTestId("sub-nav-tab-bills").getByTestId("tab-ping")).toBeVisible();
+
+    // 5. Add a manual payment
+    await page.goto("/money/bills");
+    await page.getByTestId("transaction-desc-input").fill("Manual Payment");
+    await page.getByTestId("transaction-amount-input").fill("50");
+    await Promise.all([
+        page.waitForResponse(r => r.url().endsWith("/api/bills/transactions") && r.request().method() === "POST"),
+        page.getByTestId("transaction-add-button").click(),
+    ]);
+
+    // 6. Verify ping disappears from sub-nav
+    await expect(page.getByTestId("sub-nav-tab-bills").getByTestId("tab-ping")).not.toBeVisible();
+
+    // 7. Verify ping disappears from main nav
+    await page.goto("/"); // Refresh/go to home to check main nav ping
+    await expect(page.getByTestId("money-notification-dot")).not.toBeVisible();
+  });
 });
