@@ -96,6 +96,99 @@ test.describe("Groceries Module", () => {
     await expect(page.getByTestId("empty-state")).toBeVisible();
   });
 
+  test("planning page - last added marker", async ({ page }) => {
+    // Add first item
+    await page.getByTestId("add-item-btn").click();
+    await page.getByLabel("Nazwa *").fill("Milk");
+    await page.getByTestId("form-save-btn").click();
+
+    const milkItem = page.locator("li", { hasText: "Milk" });
+    await expect(milkItem).toContainText("Ostatni");
+    await expect(milkItem).toHaveClass(/ring-2 ring-blue-400/);
+
+    // Add second item via 'Next'
+    await page.getByTestId("add-item-btn").click();
+    await page.getByLabel("Nazwa *").fill("Bread");
+    await page.getByTestId("form-next-btn").click();
+
+    const breadItem = page.locator("li", { hasText: "Bread" });
+    await expect(breadItem).toContainText("Ostatni");
+    await expect(breadItem).toHaveClass(/ring-2 ring-blue-400/);
+
+    // First item should no longer have the marker
+    await expect(milkItem).not.toContainText("Ostatni");
+    await expect(milkItem).not.toHaveClass(/ring-2 ring-blue-400/);
+    
+    // Close form
+    await page.getByTestId("form-cancel-btn").click();
+    
+    // Bread should still have the marker
+    await expect(breadItem).toContainText("Ostatni");
+  });
+
+  test("planning page - form feedback after clicking Next", async ({ page }) => {
+    await page.getByTestId("add-item-btn").click();
+    
+    // No feedback initially
+    await expect(page.getByTestId("form-feedback")).not.toBeVisible();
+
+    // Add first item via Next
+    await page.getByLabel("Nazwa *").fill("Milk");
+    await page.getByTestId("form-next-btn").click();
+
+    // Feedback should be visible
+    await expect(page.getByTestId("form-feedback")).toBeVisible();
+    await expect(page.getByTestId("form-feedback")).toContainText("Poprzednio dodano: Milk");
+
+    // Close and reopen form - feedback should be gone
+    await page.getByTestId("form-cancel-btn").click();
+    await page.getByTestId("add-item-btn").click();
+    await expect(page.getByTestId("form-feedback")).not.toBeVisible();
+  });
+
+  test("planning page - remove buttons layout and mutual exclusivity", async ({ page }) => {
+    // Empty state - remove all should be visible but disabled
+    await expect(page.getByTestId("delete-all-btn")).toBeVisible();
+    await expect(page.getByTestId("delete-all-btn")).toBeDisabled();
+    await expect(page.getByTestId("delete-bought-btn")).not.toBeVisible();
+
+    // Add one item (not bought)
+    await page.getByTestId("add-item-btn").click();
+    await page.getByLabel("Nazwa *").fill("Bread");
+    await page.getByTestId("form-save-btn").click();
+
+    // Still only remove all visible, but now enabled
+    await expect(page.getByTestId("delete-all-btn")).toBeVisible();
+    await expect(page.getByTestId("delete-all-btn")).toBeEnabled();
+    await expect(page.getByTestId("delete-bought-btn")).not.toBeVisible();
+
+    // Mark as bought (go to shopping and back)
+    await page.getByRole("link", { name: "Zakupy" }).click();
+    await page.getByText("Bread").click();
+    await page.getByRole("link", { name: "Planowanie" }).click();
+
+    // Now remove bought should be visible, and remove all should NOT be visible
+    await expect(page.getByTestId("delete-bought-btn")).toBeVisible();
+    await expect(page.getByTestId("delete-all-btn")).not.toBeVisible();
+
+    // Verify positions
+    const deleteBoughtBtn = page.getByTestId("delete-bought-btn");
+    const addItemBtn = page.getByTestId("add-item-btn");
+    const itemRow = page.getByText("Bread");
+
+    const deleteBoughtBox = await deleteBoughtBtn.boundingBox();
+    const addItemBox = await addItemBtn.boundingBox();
+    const itemBox = await itemRow.boundingBox();
+
+    expect(deleteBoughtBox!.y).toBeLessThan(itemBox!.y);
+    expect(itemBox!.y).toBeLessThan(addItemBox!.y);
+    
+    // Test removal
+    await deleteBoughtBtn.click();
+    await deleteBoughtBtn.click(); // Confirm
+    await expect(page.getByText("Bread")).not.toBeVisible();
+  });
+
   test("shopping page - toggle bought status", async ({ page }) => {
     // Add item in planning
     await page.getByTestId("add-item-btn").click();
@@ -259,28 +352,6 @@ test.describe("Groceries Module", () => {
       await expect(apple).not.toContainText("Ostatni");
     });
 
-    test("remove bought items", async ({ page }) => {
-      // Add two items
-      await page.getByTestId("add-item-btn").click();
-      await page.getByLabel("Nazwa *").fill("Bought Item");
-      await page.getByTestId("form-next-btn").click();
-      await page.getByLabel("Nazwa *").fill("Unbought Item");
-      await page.getByTestId("form-save-btn").click();
-
-      // Go to shopping and mark one as bought
-      await page.getByRole("link", { name: "Zakupy" }).click();
-      await page.getByText("Bought Item", { exact: true }).click();
-
-      // Go back to planning
-      await page.getByRole("link", { name: "Planowanie" }).click();
-
-      // Remove bought
-      await page.getByTestId("delete-bought-btn").click();
-      await page.getByTestId("delete-bought-btn").click(); // Confirm
-
-      await expect(page.getByText("Bought Item", { exact: true })).not.toBeVisible();
-      await expect(page.getByText("Unbought Item", { exact: true })).toBeVisible();
-    });
 
     test("manual category completion in shopping", async ({ page }) => {
       // Add item with category
