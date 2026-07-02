@@ -26,6 +26,7 @@ export default component$(() => {
   });
 
   const tabs: TabItem[] = [
+    { label: "Przepływy", path: "/money/flows", testId: "sub-nav-tab-flows" },
     { label: "Wydatki", path: "/money/balance", testId: "sub-nav-tab-balance" },
     { label: "Rachunki", path: "/money/bills", testId: "sub-nav-tab-bills", showPing: isBillsUrgent.value },
     { label: "Kieszonkowe", path: "/money/allowance", testId: "sub-nav-tab-allowance" },
