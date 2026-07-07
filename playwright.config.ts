@@ -16,6 +16,10 @@ export default defineConfig({
     command: "pnpm build && pnpm build.preview && pnpm preview",
     url: "http://localhost:4173",
     reuseExistingServer: true,
+    // Bypass the Google auth guard for e2e tests. See docs/adr-031-google-auth.md.
+    env: {
+      AUTH_DISABLED: "true",
+    },
   },
   projects: [
     {

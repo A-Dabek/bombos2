@@ -30,6 +30,22 @@ Inside your project, you'll see the following directory structure:
 
 - `public`: Any static assets, like images, can be placed in the public directory. Please see the [Vite public directory](https://vitejs.dev/guide/assets.html#the-public-directory) for more info.
 
+## Authentication (Google Sign-In + email allowlist)
+
+The app is gated by a Google Sign-In login page — only Gmail addresses listed
+in `ALLOWED_EMAILS` can sign in. See `docs/adr-031-google-auth.md` for the
+full design.
+
+Required env vars (copy `.env.example` → `.env`):
+
+- `GOOGLE_CLIENT_ID` — OAuth 2.0 Web Client ID from the Google Cloud Console.
+- `SESSION_SECRET` — random string, ≥ 16 chars (`openssl rand -hex 32`).
+- `ALLOWED_EMAILS` — comma-separated allowlist.
+
+For local development / tests without Google credentials set
+`AUTH_DISABLED=true` to bypass the guard. `playwright.config.ts` already sets
+this for the e2e preview server.
+
 ## Add Integrations and deployment
 
 Use the `pnpm qwik add` command to add additional integrations. Some examples of integrations includes: Cloudflare, Netlify or Express Server, and the [Static Site Generator (SSG)](https://qwik.dev/qwikcity/guides/static-site-generation/).

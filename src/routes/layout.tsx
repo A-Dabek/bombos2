@@ -35,6 +35,11 @@ export default component$(() => {
   });
 
   useVisibleTask$(async ({ cleanup }) => {
+    // Don't start background streams on the login page — the user is
+    // unauthenticated there and all /api/* calls would return 401.
+    if (typeof window !== "undefined" && window.location.pathname.startsWith("/login")) {
+      return;
+    }
     let active = true;
 
     const iterateParcels = async () => {
@@ -112,9 +117,11 @@ export default component$(() => {
     });
   });
 
+  const isLogin = loc.url.pathname.startsWith("/login");
+
   return (
     <>
-      <nav class="flex border-b border-gray-200">
+      {!isLogin && (<nav class="flex border-b border-gray-200">
         {TABS.map((tab) => {
           const pathname = loc.url.pathname.replace(/\/$/, "");
           const isActive =
@@ -156,7 +163,7 @@ export default component$(() => {
             </a>
           );
         })}
-      </nav>
+      </nav>)}
       <main>
         <Slot />
       </main>
