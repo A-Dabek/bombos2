@@ -176,6 +176,7 @@ export function clearAll() {
   db.prepare("DELETE FROM bills_automatic_payments").run();
   db.prepare("DELETE FROM groceries_items").run();
   db.prepare("DELETE FROM money_flows").run();
+  db.prepare("DELETE FROM settings").run();
   db.close();
 }
 
@@ -205,5 +206,21 @@ export function clearBillsPredefinedPayments() {
 export function addBillsPredefinedPaymentSql(name: string, slug: string) {
   const db = new Database(DB_PATH);
   db.prepare("INSERT INTO bills_predefined_payments (name, slug) VALUES (?, ?)").run(name, slug);
+  db.close();
+}
+
+// Settings helpers
+
+export function clearSettings() {
+  const db = new Database(DB_PATH);
+  db.prepare("DELETE FROM settings").run();
+  db.close();
+}
+
+export function setHiddenTabsSql(tabs: string[]) {
+  const db = new Database(DB_PATH);
+  db.prepare(
+    "INSERT INTO settings (key, value) VALUES ('hidden_tabs', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+  ).run(JSON.stringify(tabs));
   db.close();
 }

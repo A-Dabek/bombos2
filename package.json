@@ -9,7 +9,9 @@
     "build.server": "qwik check-client src dist && vite build -c adapters/fastify/vite.config.ts",
     "build.types": "tsc --incremental --noEmit",
     "preview": "vite preview",
-    "e2e": "pnpm exec playwright test",
+    "e2e": "pnpm e2e.base && pnpm e2e.settings",
+    "e2e.base": "pnpm exec playwright test --grep-invert @settings",
+    "e2e.settings": "pnpm exec playwright test --grep @settings",
     "serve": "node server/entry.fastify",
     "test.db": "vitest run src/db",
     "reset.db": "node scripts/reset-db.mjs"

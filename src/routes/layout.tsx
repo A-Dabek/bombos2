@@ -11,6 +11,7 @@ import {
   HiListBulletOutline,
   HiBanknotesOutline,
   HiShoppingCartOutline,
+  HiCog6ToothOutline,
 } from "@qwikest/icons/heroicons";
 
 const TABS = [
@@ -27,6 +28,7 @@ export default component$(() => {
   const hasUrgentItems = useSignal(false);
   const isBillsUrgent = useSignal(false);
   const refreshSignal = useSignal(0);
+  const hiddenTabs = useSignal<string[]>([]);
 
   useContextProvider(RefreshContext, refreshSignal);
 
@@ -103,6 +105,16 @@ export default component$(() => {
     iterateUrgent();
     iterateBills();
 
+    try {
+      const res = await fetch("/api/settings");
+      if (res.ok) {
+        const data = await res.json();
+        hiddenTabs.value = data.hiddenTabs ?? [];
+      }
+    } catch {
+      // ignore — show all tabs if settings unavailable
+    }
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         triggerRefresh();
@@ -118,52 +130,67 @@ export default component$(() => {
   });
 
   const isLogin = loc.url.pathname.startsWith("/login");
+  const isSettings = loc.url.pathname.startsWith("/settings");
 
   return (
     <>
-      {!isLogin && (<nav class="flex border-b border-gray-200">
-        {TABS.map((tab) => {
-          const pathname = loc.url.pathname.replace(/\/$/, "");
-          const isActive =
-            pathname === tab.path ||
-            (tab.path !== "/" && pathname.startsWith(tab.path + "/"));
-          const Icon = tab.Icon;
-          return (
-            <a
-              key={tab.path}
-              href={tab.path}
-              data-testid={tab.testId || `${tab.label.toLowerCase()}-nav-link`}
-              class={[
-                "relative flex flex-1 flex-col items-center py-2 text-center text-sm font-medium transition-colors",
-                isActive
-                  ? "border-b-2 border-blue-500 text-blue-600"
-                  : "text-gray-500 hover:text-gray-700",
-              ]}
-            >
-              <Icon class="h-5 w-5" />
-              {tab.path === "/parcels" && parcelCount.value > 0 && (
-                <Ping
-                  class="absolute -right-1 top-1 flex h-3 w-3"
-                  data-testid="parcel-notification-dot"
-                />
-              )}
-              {tab.path === "/plan" && hasUrgentItems.value && (
-                <Ping
-                  class="absolute -right-1 top-1 flex h-3 w-3"
-                  data-testid="plan-notification-dot"
-                />
-              )}
-              {tab.path === "/money" && isBillsUrgent.value && (
-                <Ping
-                  class="absolute -right-1 top-1 flex h-3 w-3"
-                  data-testid="money-notification-dot"
-                />
-              )}
-              {tab.label}
-            </a>
-          );
-        })}
-      </nav>)}
+      {!isLogin && (
+        <nav class="flex border-b border-gray-200">
+          {TABS.filter((tab) => !hiddenTabs.value.includes(tab.path)).map((tab) => {
+            const pathname = loc.url.pathname.replace(/\/$/, "");
+            const isActive =
+              pathname === tab.path ||
+              (tab.path !== "/" && pathname.startsWith(tab.path + "/"));
+            const Icon = tab.Icon;
+            return (
+              <a
+                key={tab.path}
+                href={tab.path}
+                data-testid={tab.testId || `${tab.label.toLowerCase()}-nav-link`}
+                class={[
+                  "relative flex flex-1 flex-col items-center py-2 text-center text-sm font-medium transition-colors",
+                  isActive
+                    ? "border-b-2 border-blue-500 text-blue-600"
+                    : "text-gray-500 hover:text-gray-700",
+                ]}
+              >
+                <Icon class="h-5 w-5" />
+                {tab.path === "/parcels" && parcelCount.value > 0 && (
+                  <Ping
+                    class="absolute -right-1 top-1 flex h-3 w-3"
+                    data-testid="parcel-notification-dot"
+                  />
+                )}
+                {tab.path === "/plan" && hasUrgentItems.value && (
+                  <Ping
+                    class="absolute -right-1 top-1 flex h-3 w-3"
+                    data-testid="plan-notification-dot"
+                  />
+                )}
+                {tab.path === "/money" && isBillsUrgent.value && (
+                  <Ping
+                    class="absolute -right-1 top-1 flex h-3 w-3"
+                    data-testid="money-notification-dot"
+                  />
+                )}
+                {tab.label}
+              </a>
+            );
+          })}
+          <a
+            href="/settings"
+            data-testid="settings-nav-link"
+            class={[
+              "relative flex flex-shrink-0 flex-col items-center px-3 py-2 text-center text-sm font-medium transition-colors",
+              isSettings
+                ? "border-b-2 border-blue-500 text-blue-600"
+                : "text-gray-500 hover:text-gray-700",
+            ]}
+          >
+            <HiCog6ToothOutline class="h-5 w-5" />
+          </a>
+        </nav>
+      )}
       <main>
         <Slot />
       </main>
