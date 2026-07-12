@@ -1,4 +1,5 @@
 import { component$, useVisibleTask$, useSignal, $, useContext } from "@builder.io/qwik";
+import { apiRequest, jsonPost } from "~/lib/api";
 import type { MoneyFlow } from "~/db/flows";
 import BackButton from "~/components/shared/BackButton";
 import Loader from "~/components/shared/Loader";
@@ -16,9 +17,7 @@ export default component$(() => {
   const loadData = $(async () => {
     loading.value = true;
     try {
-      const res = await fetch("/api/flows");
-      if (!res.ok) throw new Error("Failed to load money flows");
-      const data = await res.json();
+      const data = await apiRequest<{ flows: MoneyFlow[] }>("/api/flows");
       flows.value = data.flows ?? [];
     } catch (e: any) {
       error.value = e.message;
@@ -35,8 +34,7 @@ export default component$(() => {
   const handleDelete = $(async (id: number) => {
     loading.value = true;
     try {
-      const res = await fetch(`/api/flows/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete flow");
+      await apiRequest(`/api/flows/${id}`, { method: "DELETE" });
       await loadData();
     } catch (e: any) {
       error.value = e.message;
@@ -49,12 +47,7 @@ export default component$(() => {
     if (!editingFlow.value) return;
     loading.value = true;
     try {
-      const res = await fetch(`/api/flows/${editingFlow.value.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description: desc, amount: amt, dayOfMonth: day }),
-      });
-      if (!res.ok) throw new Error("Failed to update flow");
+      await apiRequest(`/api/flows/${editingFlow.value.id}`, { ...jsonPost({ description: desc, amount: amt, dayOfMonth: day }), method: "PUT" });
       await loadData();
       editingFlow.value = null;
     } catch (e: any) {

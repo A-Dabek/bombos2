@@ -1,4 +1,5 @@
 import { component$, useVisibleTask$, useSignal, $, useContext } from "@builder.io/qwik";
+import { apiRequest, jsonPost } from "~/lib/api";
 import type { BalanceTransactionGroup } from "~/db/balance";
 import TransactionForm from "~/components/transactions/TransactionForm";
 import TransactionGroup from "~/components/transactions/TransactionGroup";
@@ -17,9 +18,7 @@ export default component$(() => {
   const loadData = $(async () => {
     loading.value = true;
     try {
-      const res = await fetch("/api/balance/transactions");
-      if (!res.ok) throw new Error("Failed to load transactions");
-      const data = await res.json();
+      const data = await apiRequest<{ groups: BalanceTransactionGroup[] }>("/api/balance/transactions");
       groups.value = data.groups ?? [];
     } catch (e: any) {
       error.value = e.message;
@@ -38,15 +37,7 @@ export default component$(() => {
     loading.value = true;
     error.value = null;
     try {
-      const res = await fetch("/api/balance/transactions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description: desc, amount: amt }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to add transaction");
-      }
+      await apiRequest("/api/balance/transactions", jsonPost({ description: desc, amount: amt }));
       await loadData();
       description.value = "";
       amount.value = "";

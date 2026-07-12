@@ -1,4 +1,5 @@
 import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
+import { apiRequest, jsonPost } from "~/lib/api";
 import type { BillsAutomaticPayment } from "~/db/bills";
 import Loader from "~/components/shared/Loader";
 import TextInput from "~/components/shared/TextInput";
@@ -18,9 +19,7 @@ export default component$(() => {
     paymentsLoading.value = true;
     paymentsError.value = null;
     try {
-      const res = await fetch("/api/bills/automatic-payments");
-      if (!res.ok) throw new Error("Failed to load payments");
-      const data = await res.json();
+      const data = await apiRequest<{ payments: BillsAutomaticPayment[] }>("/api/bills/automatic-payments");
       payments.value = data.payments;
     } catch (e: any) {
       paymentsError.value = e.message;
@@ -55,28 +54,15 @@ export default component$(() => {
     paymentsSuccess.value = false;
 
     try {
-      const res = await fetch("/api/bills/automatic-payments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: newPaymentName.value.trim(),
-          slug: slugVal,
-          amount: amount,
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to add payment");
-      }
-
-      // Clear form
+      await apiRequest("/api/bills/automatic-payments", jsonPost({
+        name: newPaymentName.value.trim(),
+        slug: slugVal,
+        amount: amount,
+      }));
       newPaymentName.value = "";
       newPaymentSlug.value = "";
       newPaymentAmount.value = "";
       paymentsSuccess.value = true;
-
-      // Reload payments
       await loadPayments();
     } catch (e: any) {
       paymentsError.value = e.message;
@@ -92,16 +78,7 @@ export default component$(() => {
     paymentsError.value = null;
 
     try {
-      const res = await fetch(`/api/bills/automatic-payments/${paymentId}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to delete payment");
-      }
-
-      // Reload payments
+      await apiRequest(`/api/bills/automatic-payments/${paymentId}`, { method: "DELETE" });
       await loadPayments();
     } catch (e: any) {
       paymentsError.value = e.message;

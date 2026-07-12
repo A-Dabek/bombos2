@@ -1,4 +1,5 @@
 import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
+import { apiRequest, jsonPost } from "~/lib/api";
 import type { BalanceConfig } from "~/db/balance";
 import BackButton from "~/components/shared/BackButton";
 import Loader from "~/components/shared/Loader";
@@ -15,9 +16,7 @@ export default component$(() => {
   useVisibleTask$(async () => {
     loading.value = true;
     try {
-      const res = await fetch("/api/balance/config");
-      if (!res.ok) throw new Error("Failed to load config");
-      const data: BalanceConfig = await res.json();
+      const data = await apiRequest<BalanceConfig>("/api/balance/config");
       config.value = data;
       dayOfMonth.value = data.day_of_month.toString();
     } catch (e: any) {
@@ -34,20 +33,9 @@ export default component$(() => {
     success.value = false;
 
     try {
-      const res = await fetch("/api/balance/config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          day_of_month: Number(dayOfMonth.value),
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to update config");
-      }
-
-      const updated = await res.json();
+      const updated = await apiRequest<BalanceConfig>("/api/balance/config", jsonPost({
+        day_of_month: Number(dayOfMonth.value),
+      }));
       config.value = updated;
       dayOfMonth.value = updated.day_of_month.toString();
       success.value = true;

@@ -1,4 +1,5 @@
 import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
+import { apiRequest, jsonPost } from "~/lib/api";
 import type { BillsConfig } from "~/db/bills";
 import type { BillsPredefinedPayment } from "~/db/bills";
 import BackButton from "~/components/shared/BackButton";
@@ -31,20 +32,9 @@ export default component$(() => {
     success.value = false;
 
     try {
-      const res = await fetch("/api/bills/config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          day_of_month: Number(dayOfMonth.value),
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to update config");
-      }
-
-      const updated = await res.json();
+      const updated = await apiRequest<BillsConfig>("/api/bills/config", jsonPost({
+        day_of_month: Number(dayOfMonth.value),
+      }));
       config.value = updated;
       dayOfMonth.value = updated.day_of_month.toString();
       success.value = true;
@@ -59,9 +49,7 @@ export default component$(() => {
     predefinedLoading.value = true;
     predefinedError.value = null;
     try {
-      const res = await fetch("/api/bills/predefined-payments");
-      if (!res.ok) throw new Error("Failed to load predefined payments");
-      const data = await res.json();
+      const data = await apiRequest<{ payments: BillsPredefinedPayment[] }>("/api/bills/predefined-payments");
       predefinedPayments.value = data.payments;
     } catch (e: any) {
       predefinedError.value = e.message;
@@ -83,20 +71,10 @@ export default component$(() => {
 
     predefinedError.value = null;
     try {
-      const res = await fetch("/api/bills/predefined-payments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: newPredefinedName.value.trim(),
-          slug: slugVal,
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to add predefined payment");
-      }
-
+      await apiRequest("/api/bills/predefined-payments", jsonPost({
+        name: newPredefinedName.value.trim(),
+        slug: slugVal,
+      }));
       newPredefinedName.value = "";
       newPredefinedSlug.value = "";
       await loadPredefinedPayments();
@@ -107,15 +85,7 @@ export default component$(() => {
 
   const handleDeletePredefined = $(async (paymentId: number) => {
     try {
-      const res = await fetch(`/api/bills/predefined-payments/${paymentId}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to delete predefined payment");
-      }
-
+      await apiRequest(`/api/bills/predefined-payments/${paymentId}`, { method: "DELETE" });
       await loadPredefinedPayments();
     } catch (e: any) {
       predefinedError.value = e.message;
@@ -126,9 +96,7 @@ export default component$(() => {
   useVisibleTask$(async () => {
     loading.value = true;
     try {
-      const res = await fetch("/api/bills/config");
-      if (!res.ok) throw new Error("Failed to load config");
-      const data: BillsConfig = await res.json();
+      const data = await apiRequest<BillsConfig>("/api/bills/config");
       config.value = data;
       dayOfMonth.value = data.day_of_month.toString();
     } catch (e: any) {

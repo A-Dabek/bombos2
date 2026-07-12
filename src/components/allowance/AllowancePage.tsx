@@ -1,4 +1,5 @@
 import { component$, useVisibleTask$, useSignal, $, useContext } from "@builder.io/qwik";
+import { apiRequest, jsonPost } from "~/lib/api";
 import type { AllowanceConfig } from "~/db/allowance";
 import AdminButton from "~/components/shared/AdminButton";
 import TransactionForm from "../transactions/TransactionForm";
@@ -18,9 +19,7 @@ export default component$(() => {
 
   const loadData = $(async () => {
     try {
-      const res = await fetch("/api/allowance/config");
-      if (!res.ok) throw new Error("Failed to load config");
-      config.value = await res.json();
+      config.value = await apiRequest<AllowanceConfig>("/api/allowance/config");
     } catch (e: any) {
       error.value = e.message;
     }
@@ -48,15 +47,7 @@ export default component$(() => {
     loading.value = true;
     error.value = null;
     try {
-      const res = await fetch("/api/allowance/transactions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description: desc, amount: amt }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to add transaction");
-      }
+      await apiRequest("/api/allowance/transactions", jsonPost({ description: desc, amount: amt }));
       await loadData();
       description.value = "";
       amount.value = "";
@@ -70,13 +61,7 @@ export default component$(() => {
   const handleDelete = $(async (id: number) => {
     error.value = null;
     try {
-      const res = await fetch(`/api/allowance/transactions/${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to delete");
-      }
+      await apiRequest(`/api/allowance/transactions/${id}`, { method: "DELETE" });
       await loadData();
     } catch (e: any) {
       error.value = e.message;

@@ -1,4 +1,5 @@
 import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
+import { apiRequest, jsonPost } from "~/lib/api";
 import type { AllowanceConfig } from "~/db/allowance";
 import BackButton from "~/components/shared/BackButton";
 import DayOfMonthInput from "~/components/shared/DayOfMonthInput";
@@ -15,9 +16,7 @@ export default component$(() => {
 
   useVisibleTask$(async () => {
     try {
-      const res = await fetch("/api/allowance/config");
-      if (!res.ok) throw new Error("Failed to load config");
-      const data: AllowanceConfig = await res.json();
+      const data = await apiRequest<AllowanceConfig>("/api/allowance/config");
       config.value = data;
       dayOfMonth.value = data.day_of_month.toString();
       monthlyAmount.value = data.monthly_amount.toString();
@@ -33,21 +32,10 @@ export default component$(() => {
     success.value = false;
 
     try {
-      const res = await fetch("/api/allowance/config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          day_of_month: Number(dayOfMonth.value),
-          monthly_amount: Number(monthlyAmount.value),
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to update config");
-      }
-
-      const updated = await res.json();
+      const updated = await apiRequest<AllowanceConfig>("/api/allowance/config", jsonPost({
+        day_of_month: Number(dayOfMonth.value),
+        monthly_amount: Number(monthlyAmount.value),
+      }));
       config.value = updated;
       success.value = true;
     } catch (e: any) {
