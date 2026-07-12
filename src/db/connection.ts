@@ -22,3 +22,7 @@ export function openDb(path: string): Database.Database {
 export function resetDb(): void {
   dbInstance = null;
 }
+
+export function withDb<T>(db: Database.Database | undefined, fn: (db: Database.Database) => T): T {
+  return fn(db ?? getDb());
+}
