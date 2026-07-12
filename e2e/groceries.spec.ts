@@ -164,8 +164,16 @@ test.describe("Groceries Module", () => {
 
     // Mark as bought (go to shopping and back)
     await page.getByRole("link", { name: "Zakupy" }).click();
-    await page.getByText("Bread").click();
+    await expect(page).toHaveURL(/\/groceries\/shopping/);
+
+    const shoppingItem = page.getByTestId(/grocery-item-/).filter({ hasText: "Bread" });
+    await shoppingItem.click();
+
+    // Wait for bought status to be reflected in UI (ensures DB update finished)
+    await expect(shoppingItem.locator("span").first()).toHaveClass(/line-through/);
+
     await page.getByRole("link", { name: "Planowanie" }).click();
+    await expect(page).toHaveURL(/\/groceries\/planning/);
 
     // Now remove bought should be visible, and remove all should NOT be visible
     await expect(page.getByTestId("delete-bought-btn")).toBeVisible();
@@ -176,9 +184,18 @@ test.describe("Groceries Module", () => {
     const addItemBtn = page.getByTestId("add-item-btn");
     const itemRow = page.getByText("Bread");
 
+    // Ensure all elements are visible and stable before checking bounding boxes
+    await expect(deleteBoughtBtn).toBeVisible();
+    await expect(addItemBtn).toBeVisible();
+    await expect(itemRow).toBeVisible();
+
     const deleteBoughtBox = await deleteBoughtBtn.boundingBox();
     const addItemBox = await addItemBtn.boundingBox();
     const itemBox = await itemRow.boundingBox();
+
+    expect(deleteBoughtBox, "Delete bought button should have a bounding box").not.toBeNull();
+    expect(addItemBox, "Add item button should have a bounding box").not.toBeNull();
+    expect(itemBox, "Item row should have a bounding box").not.toBeNull();
 
     expect(deleteBoughtBox!.y).toBeLessThan(itemBox!.y);
     expect(itemBox!.y).toBeLessThan(addItemBox!.y);
