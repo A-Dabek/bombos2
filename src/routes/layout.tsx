@@ -1,10 +1,11 @@
 import { component$, Slot, useSignal, useVisibleTask$, useContextProvider, $ } from "@builder.io/qwik";
-import { useLocation } from "@builder.io/qwik-city";
+import { useLocation, routeLoader$, Link } from "@builder.io/qwik-city";
 import { streamParcelCount } from "../utils/parcel-count-stream";
 import { streamPlanUrgent } from "../utils/plan-urgent-stream";
 import { streamBillsUrgent } from "../utils/bills-urgent-stream";
 import Ping from "~/components/shared/Ping";
 import { RefreshContext } from "~/constants/refresh";
+import { getHiddenTabs } from "~/db/settings";
 import {
   HiCubeOutline,
   HiFireOutline,
@@ -22,13 +23,17 @@ const TABS = [
   { label: "Spożywcze", path: "/groceries", Icon: HiShoppingCartOutline, testId: "groceries-nav-link" },
 ];
 
+export const useSettings = routeLoader$(() => {
+  return getHiddenTabs();
+});
+
 export default component$(() => {
   const loc = useLocation();
+  const settings = useSettings();
   const parcelCount = useSignal(0);
   const hasUrgentItems = useSignal(false);
   const isBillsUrgent = useSignal(false);
   const refreshSignal = useSignal(0);
-  const hiddenTabs = useSignal<string[]>([]);
 
   useContextProvider(RefreshContext, refreshSignal);
 
@@ -105,16 +110,6 @@ export default component$(() => {
     iterateUrgent();
     iterateBills();
 
-    try {
-      const res = await fetch("/api/settings");
-      if (res.ok) {
-        const data = await res.json();
-        hiddenTabs.value = data.hiddenTabs ?? [];
-      }
-    } catch {
-      // ignore — show all tabs if settings unavailable
-    }
-
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         triggerRefresh();
@@ -136,14 +131,14 @@ export default component$(() => {
     <>
       {!isLogin && (
         <nav class="flex border-b border-gray-200">
-          {TABS.filter((tab) => !hiddenTabs.value.includes(tab.path)).map((tab) => {
+          {TABS.filter((tab) => !settings.value.includes(tab.path)).map((tab) => {
             const pathname = loc.url.pathname.replace(/\/$/, "");
             const isActive =
               pathname === tab.path ||
               (tab.path !== "/" && pathname.startsWith(tab.path + "/"));
             const Icon = tab.Icon;
             return (
-              <a
+              <Link
                 key={tab.path}
                 href={tab.path}
                 data-testid={tab.testId || `${tab.label.toLowerCase()}-nav-link`}
@@ -174,10 +169,10 @@ export default component$(() => {
                   />
                 )}
                 {tab.label}
-              </a>
+              </Link>
             );
           })}
-          <a
+          <Link
             href="/settings"
             data-testid="settings-nav-link"
             class={[
@@ -188,7 +183,7 @@ export default component$(() => {
             ]}
           >
             <HiCog6ToothOutline class="h-5 w-5" />
-          </a>
+          </Link>
         </nav>
       )}
       <main>

@@ -1,5 +1,6 @@
-import { component$, useVisibleTask$, useSignal, $ } from "@builder.io/qwik";
-import Loader from "~/components/shared/Loader";
+import { component$, useSignal, $ } from "@builder.io/qwik";
+import { Link } from "@builder.io/qwik-city";
+import { useSettings } from "~/routes/layout";
 
 const ALL_TABS = [
   { path: "/parcels", label: "Paczki" },
@@ -10,23 +11,10 @@ const ALL_TABS = [
 ];
 
 export default component$(() => {
-  const hiddenTabs = useSignal<string[]>([]);
-  const loading = useSignal(true);
+  const settings = useSettings();
+  const hiddenTabs = useSignal<string[]>(settings.value);
   const saving = useSignal(false);
   const error = useSignal<string | null>(null);
-
-  useVisibleTask$(async () => {
-    try {
-      const res = await fetch("/api/settings");
-      if (!res.ok) throw new Error("Failed to load settings");
-      const data = await res.json();
-      hiddenTabs.value = data.hiddenTabs ?? [];
-    } catch (e: any) {
-      error.value = e.message;
-    } finally {
-      loading.value = false;
-    }
-  });
 
   const toggleTab = $(async (path: string) => {
     const current = hiddenTabs.value;
@@ -71,69 +59,61 @@ export default component$(() => {
         </p>
       )}
 
-      {loading.value ? (
-        <div class="flex justify-center py-8">
-          <Loader />
-        </div>
-      ) : (
-        <>
-          <section class="mb-8">
-            <h2 class="mb-3 text-sm font-medium uppercase tracking-wide text-gray-500">
-              Widoczność zakładek
-            </h2>
-            <ul class="divide-y divide-gray-100 rounded-lg border border-gray-200">
-              {ALL_TABS.map((tab) => {
-                const isHidden = hiddenTabs.value.includes(tab.path);
-                return (
-                  <li key={tab.path} class="flex items-center px-4 py-3">
-                    <span class="flex-1 text-sm text-gray-800">{tab.label}</span>
-                    {isHidden && (
-                      <a
-                        href={tab.path}
-                        class="mr-3 text-xs text-blue-500 underline"
-                        data-testid={`visit-tab-${tab.path.replace("/", "")}`}
-                      >
-                        Odwiedź
-                      </a>
-                    )}
-                    <button
-                      onClick$={() => toggleTab(tab.path)}
-                      disabled={saving.value}
-                      data-testid={`toggle-tab-${tab.path.replace("/", "")}`}
-                      class={[
-                        "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none disabled:opacity-50",
-                        isHidden ? "bg-gray-200" : "bg-blue-500",
-                      ]}
-                      aria-pressed={!isHidden}
-                      aria-label={`${isHidden ? "Pokaż" : "Ukryj"} ${tab.label}`}
-                    >
-                      <span
-                        class={[
-                          "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200",
-                          isHidden ? "translate-x-0" : "translate-x-5",
-                        ]}
-                      />
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
+      <section class="mb-8">
+        <h2 class="mb-3 text-sm font-medium uppercase tracking-wide text-gray-500">
+          Widoczność zakładek
+        </h2>
+        <ul class="divide-y divide-gray-100 rounded-lg border border-gray-200">
+          {ALL_TABS.map((tab) => {
+            const isHidden = hiddenTabs.value.includes(tab.path);
+            return (
+              <li key={tab.path} class="flex items-center px-4 py-3">
+                <span class="flex-1 text-sm text-gray-800">{tab.label}</span>
+                {isHidden && (
+                  <Link
+                    href={tab.path}
+                    class="mr-3 text-xs text-blue-500 underline"
+                    data-testid={`visit-tab-${tab.path.replace("/", "")}`}
+                  >
+                    Odwiedź
+                  </Link>
+                )}
+                <button
+                  onClick$={() => toggleTab(tab.path)}
+                  disabled={saving.value}
+                  data-testid={`toggle-tab-${tab.path.replace("/", "")}`}
+                  class={[
+                    "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none disabled:opacity-50",
+                    isHidden ? "bg-gray-200" : "bg-blue-500",
+                  ]}
+                  aria-pressed={!isHidden}
+                  aria-label={`${isHidden ? "Pokaż" : "Ukryj"} ${tab.label}`}
+                >
+                  <span
+                    class={[
+                      "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200",
+                      isHidden ? "translate-x-0" : "translate-x-5",
+                    ]}
+                  />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
 
-          <section>
-            <h2 class="mb-3 text-sm font-medium uppercase tracking-wide text-gray-500">
-              Konto
-            </h2>
-            <button
-              onClick$={handleLogout}
-              data-testid="logout-button"
-              class="w-full rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-left text-sm font-medium text-red-600 hover:bg-red-100"
-            >
-              Wyloguj się
-            </button>
-          </section>
-        </>
-      )}
+      <section>
+        <h2 class="mb-3 text-sm font-medium uppercase tracking-wide text-gray-500">
+          Konto
+        </h2>
+        <button
+          onClick$={handleLogout}
+          data-testid="logout-button"
+          class="w-full rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-left text-sm font-medium text-red-600 hover:bg-red-100"
+        >
+          Wyloguj się
+        </button>
+      </section>
     </div>
   );
 });
