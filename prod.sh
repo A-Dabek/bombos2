@@ -16,7 +16,7 @@ else
 fi
 
 # Important: This is required for CSRF protection
-export ORIGIN=https://termux.bombos.site
+export ORIGIN=https://termux.bombos.online
 
 # Set production mode
 export NODE_ENV=production
