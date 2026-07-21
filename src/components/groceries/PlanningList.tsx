@@ -3,6 +3,7 @@ import type { GroceryItem } from "~/db/groceries";
 import PlanningFormView from "./PlanningFormView";
 import PlanningItemsView from "./PlanningItemsView";
 import { RefreshContext } from "~/constants/refresh";
+import { normalizeProductName } from "~/utils/groceries";
 
 export default component$(() => {
   const items = useSignal<GroceryItem[]>([]);
@@ -12,14 +13,16 @@ export default component$(() => {
   const activeItemId = useSignal<number | null>(null);
   const lastAddedId = useSignal<number | null>(null);
   const editingItem = useSignal<GroceryItem | null>(null);
+  const suggestions = useSignal<{ name: string; buy_count: number; category: string | null }[]>([]);
   const refreshSignal = useContext(RefreshContext);
 
   const fetchItems = $(async () => {
     isLoading.value = true;
     try {
-      const [resp, compResp] = await Promise.all([
+      const [resp, compResp, suggResp] = await Promise.all([
         fetch("/api/groceries"),
         fetch("/api/groceries/completed-categories"),
+        fetch("/api/groceries/suggestions"),
       ]);
 
       if (resp.ok) {
@@ -27,6 +30,9 @@ export default component$(() => {
       }
       if (compResp.ok) {
         manuallyCompletedCategories.value = await compResp.json();
+      }
+      if (suggResp.ok) {
+        suggestions.value = await suggResp.json();
       }
     } catch (error) {
       console.error("Failed to fetch groceries:", error);
@@ -173,6 +179,22 @@ export default component$(() => {
     }
   });
 
+  const handleAddSuggestion = $(async (name: string, category: string | null) => {
+    try {
+      const response = await fetch("/api/groceries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, category, amount: 1, unit: "x" }),
+      });
+
+      if (response.ok) {
+        await fetchItems();
+      }
+    } catch (error) {
+      console.error("Failed to add suggestion:", error);
+    }
+  });
+
   const handleAmountChange = $(async (itemId: number, newAmount: number) => {
     try {
       const response = await fetch(`/api/groceries/${itemId}`, {
@@ -189,6 +211,15 @@ export default component$(() => {
     }
   });
 
+  const filteredSuggestions = suggestions.value
+    .filter(
+      (s) =>
+        !items.value.some(
+          (i) => normalizeProductName(i.name) === normalizeProductName(s.name),
+        ),
+    )
+    .slice(0, 10);
+
   return (
     <div class="relative overflow-hidden" style="min-height: 200px;">
       {/* Items View */}
@@ -200,6 +231,7 @@ export default component$(() => {
         <PlanningItemsView
           items={items.value}
           manuallyCompletedCategories={manuallyCompletedCategories.value}
+          suggestions={filteredSuggestions}
           isLoading={isLoading.value}
           activeItemId={activeItemId.value}
           lastAddedId={lastAddedId.value}
@@ -208,6 +240,7 @@ export default component$(() => {
           onRemove$={handleRemove}
           onAmountChange$={handleAmountChange}
           onAddClick$={handleAddClick}
+          onAddSuggestion$={handleAddSuggestion}
           onRemoveAll$={handleRemoveAll}
           onRemoveBought$={handleRemoveBought}
         />

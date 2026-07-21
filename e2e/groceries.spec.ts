@@ -170,7 +170,7 @@ test.describe("Groceries Module", () => {
     await shoppingItem.click();
 
     // Wait for bought status to be reflected in UI (ensures DB update finished)
-    await expect(shoppingItem.locator("span").first()).toHaveClass(/line-through/);
+    await expect(shoppingItem.getByText("Bread")).toHaveClass(/line-through/);
 
     await page.getByRole("link", { name: "Planowanie" }).click();
     await expect(page).toHaveURL(/\/groceries\/planning/);
@@ -203,7 +203,7 @@ test.describe("Groceries Module", () => {
     // Test removal
     await deleteBoughtBtn.click();
     await deleteBoughtBtn.click(); // Confirm
-    await expect(page.getByText("Bread")).not.toBeVisible();
+    await expect(page.getByTestId(/grocery-item-/).filter({ hasText: "Bread" })).not.toBeVisible();
   });
 
   test("shopping page - toggle bought status", async ({ page }) => {
@@ -400,5 +400,34 @@ test.describe("Groceries Module", () => {
       // Pill should also show completion
       await expect(page.getByRole("button", { name: "Dairy ✓" })).toBeVisible();
     });
+  });
+  test("suggestions appear after removing bought items", async ({ page }) => {
+    // Add an item
+    await page.getByTestId("add-item-btn").click();
+    await page.getByLabel("Nazwa *").fill("Milk");
+    await page.getByTestId("form-save-btn").click();
+
+    // Mark as bought
+    await page.getByRole("link", { name: "Zakupy" }).click();
+    const shoppingItem = page.getByTestId(/grocery-item-/).filter({ hasText: "Milk" }).filter({ has: page.locator(".text-lg") });
+    await shoppingItem.click();
+    await expect(shoppingItem).toHaveClass(/bg-gray-50/);
+    await page.getByRole("link", { name: "Planowanie" }).click();
+
+    // Clear bought
+    await page.getByTestId("delete-bought-btn").click();
+    await page.getByTestId("delete-bought-btn").click(); // Confirm
+
+    // Suggestion should appear
+    await expect(page.getByText("Sugestie")).toBeVisible();
+    const suggestionBtn = page.getByRole("button", { name: "+ Milk" });
+    await expect(suggestionBtn).toBeVisible();
+
+    // Clicking suggestion adds it back
+    await suggestionBtn.click();
+    await expect(page.getByTestId(/grocery-item-/).filter({ hasText: "Milk" })).toBeVisible();
+
+    // Suggestion should disappear (filtered out)
+    await expect(suggestionBtn).not.toBeVisible();
   });
 });

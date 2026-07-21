@@ -25,6 +25,7 @@ export default component$(({
   return (
     <li
       key={item.id}
+      data-testid={`grocery-item-${item.id}`}
       class={`cursor-pointer relative transition-all ${
         isActive ? "p-3 bg-blue-50" : "py-1 px-2 bg-white"
       } ${isLastAdded ? "ring-2 ring-blue-400 border-blue-400 rounded z-10" : ""}`}

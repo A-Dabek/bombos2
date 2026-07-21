@@ -8,6 +8,7 @@ import DoubleConfirmButton from "../shared/DoubleConfirmButton";
 interface PlanningItemsViewProps {
   items: GroceryItem[];
   manuallyCompletedCategories: string[];
+  suggestions: { name: string; category: string | null }[];
   isLoading: boolean;
   activeItemId: number | null;
   lastAddedId: number | null;
@@ -16,6 +17,7 @@ interface PlanningItemsViewProps {
   onRemove$: PropFunction<(itemId: number) => void>;
   onAmountChange$: PropFunction<(itemId: number, newAmount: number) => void>;
   onAddClick$: PropFunction<() => void>;
+  onAddSuggestion$: PropFunction<(name: string, category: string | null) => void>;
   onRemoveAll$: PropFunction<() => void>;
   onRemoveBought$: PropFunction<() => void>;
 }
@@ -24,6 +26,7 @@ export default component$(
   ({
     items,
     manuallyCompletedCategories,
+    suggestions,
     isLoading,
     activeItemId,
     lastAddedId,
@@ -32,6 +35,7 @@ export default component$(
     onRemove$,
     onAmountChange$,
     onAddClick$,
+    onAddSuggestion$,
     onRemoveAll$,
     onRemoveBought$,
   }: PlanningItemsViewProps) => {
@@ -133,6 +137,27 @@ export default component$(
                 <span>Dodaj nową</span>
               </button>
             </div>
+
+            {suggestions.length > 0 && (
+              <div class="mt-6">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                  Sugestie
+                </h3>
+                <div class="flex flex-wrap gap-2">
+                  {suggestions.map((suggestion) => (
+                    <button
+                      key={suggestion.name}
+                      onClick$={() =>
+                        onAddSuggestion$(suggestion.name, suggestion.category)
+                      }
+                      class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-blue-100 hover:text-blue-700 transition-colors border border-gray-200"
+                    >
+                      + {suggestion.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

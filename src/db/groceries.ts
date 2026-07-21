@@ -1,5 +1,7 @@
 import Database from "better-sqlite3";
 import { getDb } from "./connection.ts";
+import { normalizeProductName } from "../utils/groceries.ts";
+export { normalizeProductName };
 
 export interface GroceryItem {
   id: number;
@@ -123,6 +125,10 @@ export function updateGroceryItemAmount(
 
 export function deleteGroceryItem(id: number, db?: Database.Database): boolean {
   const dbConn = db ?? getDb();
+  const item = getGroceryItemById(id, dbConn);
+  if (item && item.bought) {
+    incrementGroceryItemCount(item.name, dbConn);
+  }
   const result = dbConn.prepare("DELETE FROM groceries_items WHERE id = ?").run(id);
   return result.changes > 0;
 }
@@ -136,6 +142,12 @@ export function deleteAllGroceryItems(db?: Database.Database): number {
 
 export function deleteBoughtGroceryItems(db?: Database.Database): number {
   const dbConn = db ?? getDb();
+  const boughtItems = dbConn
+    .prepare("SELECT name FROM groceries_items WHERE bought = 1")
+    .all() as { name: string }[];
+  for (const item of boughtItems) {
+    incrementGroceryItemCount(item.name, dbConn);
+  }
   const result = dbConn.prepare("DELETE FROM groceries_items WHERE bought = 1").run();
   clearCompletedCategories(dbConn);
   return result.changes;
@@ -174,9 +186,6 @@ export function clearCompletedCategories(db?: Database.Database): void {
   dbConn.prepare("DELETE FROM groceries_completed_categories").run();
 }
 
-export function normalizeProductName(name: string): string {
-  return name.toLowerCase().replace(/\s+/g, "");
-}
 
 export function getSuggestedCategory(
   name: string,
@@ -215,4 +224,38 @@ export function getAllCategories(db?: Database.Database): string[] {
     .raw(true)
     .all() as string[][];
   return rows.map((row) => row[0]);
+}
+
+export function incrementGroceryItemCount(
+  name: string,
+  db?: Database.Database,
+): void {
+  const dbConn = db ?? getDb();
+  const normalized = normalizeProductName(name);
+  dbConn
+    .prepare(
+      `
+    INSERT INTO groceries_product_counts (name, normalized_name, buy_count)
+    VALUES (?, ?, 1)
+    ON CONFLICT(normalized_name) DO UPDATE SET buy_count = buy_count + 1
+  `,
+    )
+    .run(name, normalized);
+}
+
+export function getTopGrocerySuggestions(
+  limit: number = 10,
+  db?: Database.Database,
+): { name: string; buy_count: number; category: string | null }[] {
+  const dbConn = db ?? getDb();
+  const rows = dbConn
+    .prepare(
+      "SELECT name, buy_count FROM groceries_product_counts ORDER BY buy_count DESC LIMIT ?",
+    )
+    .all(limit) as { name: string; buy_count: number }[];
+
+  return rows.map((row) => ({
+    ...row,
+    category: getSuggestedCategory(row.name, dbConn),
+  }));
 }
