@@ -1,0 +1,5 @@
+# Knowledge Bundle Log
+
+## 2026-08-04
+* **Initialization**: Established OKF v0.2 knowledge base bundle for bombos2 and documented simplified profile in `SIMPLIFICATIONS.md`.
+* **Creation**: Initialized database layer knowledge base including connection architecture, migrations runner, database schemas, and data access modules under `db/`.
