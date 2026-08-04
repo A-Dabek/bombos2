@@ -24,7 +24,7 @@ When writing or updating documentation in this repository, always align with the
 2. **Repository Simplifications Profile ([`/knowledge/SIMPLIFICATIONS.md`](/knowledge/SIMPLIFICATIONS.md))**:
    - The active profile tailored for this repository (single-developer, streamlined knowledge base).
    - Documents exact simplifications vs. full OKF v0.2 spec (e.g. required frontmatter fields, simplified trust/author context, local migration sources).
-   - Defines the standardized frontmatter template and concept taxonomy (`SQLite Schema`, `Data Access Module`, `Database Architecture`, `Attested Computation`, `Specification Profile`).
+   - Defines the standardized frontmatter template and concept taxonomy (`SQLite Schema`, `Data Access Module`, `Database Architecture`, `Attested Computation`, `UI Architecture`, `UI Component`, `Feature Module`, `Specification Profile`).
 
 ---
 
@@ -44,7 +44,7 @@ Every concept file MUST be a Markdown document containing a YAML frontmatter hea
 
 ```markdown
 ---
-type: <SQLite Schema | Data Access Module | System Architecture | Attested Computation | API Endpoint>
+type: <SQLite Schema | Data Access Module | Database Architecture | Attested Computation | UI Architecture | UI Component | Feature Module | Specification Profile>
 title: <Clear Display Title>
 description: <One-line summary of the concept>
 resource: </relative/path/to/source/file>
@@ -99,7 +99,7 @@ status: <draft | stable | deprecated>
 1. **Identify the Target Resource**:
    - Locate the source code file or artifact (e.g., `/src/db/allowance.ts`, `/src/db/migrations/010_allowance.sql`).
 2. **Determine Concept Scope & Type**:
-   - Consult [`/knowledge/SIMPLIFICATIONS.md`](/knowledge/SIMPLIFICATIONS.md) for the active concept taxonomy (e.g., `SQLite Schema`, `Data Access Module`, `Database Architecture`, `Attested Computation`, `Specification Profile`).
+   - Consult [`/knowledge/SIMPLIFICATIONS.md`](/knowledge/SIMPLIFICATIONS.md) for the active concept taxonomy (e.g., `SQLite Schema`, `Data Access Module`, `Database Architecture`, `Attested Computation`, `UI Architecture`, `UI Component`, `Feature Module`, `Specification Profile`).
    - Refer to [`/knowledge/SPEC.md`](/knowledge/SPEC.md) if advanced OKF concepts or full specification details are required.
 3. **Extract Minimal API / Schema Contracts**:
    - For database schemas: List tables, column names, data types, defaults, and constraints in a table.

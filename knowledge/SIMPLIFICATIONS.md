@@ -32,7 +32,7 @@ This repository adopts the **Open Knowledge Format (OKF) v0.2** specification (`
 | **Trust & Verification** | Multi-human `verified` list, credibility signals, `usage_count`, `usage_window` | Omitted or simplified. Single author trust context assumed (`human:asan` or `agent:junie`). |
 | **Attested Computations** | Full `executor` and `attester` script runners | Simplified inline SQL / function contracts under `# Computation` without external attester runners unless needed. |
 | **Source Provenance** | Detailed external URI sources with usage windows | `sources` field points to local migration files (`/src/db/migrations/NNN_*.sql`) or source files. |
-| **Concept Types** | Unregistered, open string values | Standardized domain types: `Specification Profile`, `Database Architecture`, `SQLite Schema`, `Data Access Module`, `Attested Computation`. |
+| **Concept Types** | Unregistered, open string values | Standardized domain types: `Specification Profile`, `Database Architecture`, `SQLite Schema`, `Data Access Module`, `Attested Computation`, `UI Architecture`, `UI Component`, `Feature Module`. |
 
 ---
 
@@ -40,7 +40,7 @@ This repository adopts the **Open Knowledge Format (OKF) v0.2** specification (`
 
 ```yaml
 ---
-type: <SQLite Schema | Data Access Module | Database Architecture | Attested Computation>
+type: <SQLite Schema | Data Access Module | Database Architecture | Attested Computation | UI Architecture | UI Component | Feature Module>
 title: <Display Title>
 description: <One-line summary>
 resource: </path/to/source/file>
@@ -59,3 +59,6 @@ status: stable
 - **`SQLite Schema`**: Table definitions, columns, data types, constraints, and relationships.
 - **`Data Access Module`**: TypeScript modules in `src/db/` exposing functions for CRUD operations.
 - **`Attested Computation`**: Business logic calculations, period rollover calculations, and SQL aggregates.
+- **`UI Architecture`**: Qwik City routing, client-side fetching patterns (`useVisibleTask$`), and UI component design patterns.
+- **`UI Component`**: Qwik UI components and user interaction views in `src/components/` and route pages.
+- **`Feature Module`**: High-level domain features (`Parcels`, `Groceries`, `Meals`, `Money & Flows`, `Allowance`, `Bills`, `Plan`, `Balance`, `Settings`).

@@ -76,6 +76,8 @@ Reference-centric documentation acts as an indexed map of the codebase. Followin
 | **Overview of module structure** | `knowledge/index.md` | Read system breakdown and navigate to domain folder. |
 | **Finding table schema / columns** | `knowledge/db/index.md` | Navigate to `schemas/<entity>.md` to inspect column types & constraints. |
 | **Finding exported DB functions** | `knowledge/db/index.md` | Navigate to `modules/<entity>.md` to inspect function signatures & descriptions. |
+| **Finding UI component specs** | `knowledge/ui/index.md` | Navigate to `components/<entity>.md` to inspect component props and usage. |
+| **Finding feature modules** | `knowledge/features/index.md` | Navigate to `modules/<entity>.md` to inspect high-level features. |
 | **Understanding system behavior** | `knowledge/db/architecture.md` | Read architecture or migration concepts for system lifecycle rules. |
 | **Auditing recent doc updates** | `knowledge/log.md` | Check update history for chronological changes. |
 
