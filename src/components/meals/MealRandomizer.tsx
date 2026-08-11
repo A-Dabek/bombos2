@@ -77,23 +77,23 @@ export default component$<MealRandomizerProps>((props) => {
       {!isLoaded.value ? (
         <Loader />
       ) : meals.value.length === 0 ? (
-        <p class="text-lg text-gray-500">Brak dań</p>
+        <p class="text-lg text-gray-500 dark:text-gray-400">Brak dań</p>
       ) : (
         <>
           <button
             key={clickKey.value}
             data-testid="meal-roll-button"
             onClick$={handleClick}
-            class="flex flex-col items-center justify-center w-32 h-32 rounded-full bg-blue-50 hover:bg-blue-100 transition-colors animate-[scaleUpDown_0.2s_ease-out]"
+            class="flex flex-col items-center justify-center w-32 h-32 rounded-full bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors animate-[scaleUpDown_0.2s_ease-out]"
           >
-            <HiSparklesSolid class="w-16 h-16 text-blue-600" />
-            <span class="text-xs text-blue-600 font-medium">Losuj</span>
+            <HiSparklesSolid class="w-16 h-16 text-blue-600 dark:text-blue-400" />
+            <span class="text-xs text-blue-600 dark:text-blue-400 font-medium">Losuj</span>
           </button>
 
           {currentMeal && (
             <p
               key={currentMeal.id}
-              class="mt-6 text-2xl font-semibold text-gray-800 animate-[fadeIn_0.3s_ease-out]"
+              class="mt-6 text-2xl font-semibold text-gray-800 dark:text-gray-100 animate-[fadeIn_0.3s_ease-out]"
             >
               {currentMeal.name}
             </p>
@@ -102,7 +102,7 @@ export default component$<MealRandomizerProps>((props) => {
           {isExhausted.value && (
             <p
               key="picky-eater"
-              class="mt-6 text-lg text-gray-600 italic animate-[fadeIn_0.3s_ease-out]"
+              class="mt-6 text-lg text-gray-600 dark:text-gray-400 italic animate-[fadeIn_0.3s_ease-out]"
             >
               Aleś wybredna!
             </p>

@@ -9,7 +9,7 @@ export default component$(() => {
   return (
     <div class="p-4">
       <BackButton href="/money/bills" />
-      <h1 class="text-xl font-semibold">Zarządzanie rachunkami</h1>
+      <h1 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Zarządzanie rachunkami</h1>
 
       <DayOfMonthConfigSection
         configEndpoint="/api/bills/config"
@@ -19,8 +19,8 @@ export default component$(() => {
 
       <AutomaticPaymentsAdmin />
 
-      <div class="mt-8 border-t pt-6">
-        <h2 class="mb-4 text-lg font-semibold">Rozpoczęcie okresu</h2>
+      <div class="mt-8 border-t border-gray-200 dark:border-gray-800 pt-6">
+        <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Rozpoczęcie okresu</h2>
         <PeriodStartButton
           apiEndpoint="/api/bills/admin/run-period-start"
           buttonText="Wykonaj rozpoczęcie okresu"

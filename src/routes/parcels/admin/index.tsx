@@ -29,11 +29,11 @@ export default component$(() => {
   return (
     <div class="p-4">
       <BackButton href="/parcels" />
-      <h1 class="text-xl font-semibold">Zarządzanie paczkami</h1>
+      <h1 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Zarządzanie paczkami</h1>
 
-      {error.value && <p class="mt-2 text-red-600">{error.value}</p>}
+      {error.value && <p class="mt-2 text-red-600 dark:text-red-400">{error.value}</p>}
       {success.value && (
-        <p class="mt-2 text-green-600">
+        <p class="mt-2 text-green-600 dark:text-green-400">
           Sprzątanie zakończone. Usunięto {deletedCount.value} paczek.
         </p>
       )}

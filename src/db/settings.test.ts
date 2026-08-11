@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import Database from "better-sqlite3";
 import { runMigrations } from "./migrations.ts";
-import { getHiddenTabs, setHiddenTabs } from "./settings.ts";
+import { getHiddenTabs, setHiddenTabs, getTheme, setTheme } from "./settings.ts";
 
 describe("settings db - per-account hidden tabs", () => {
   let db: Database.Database;
@@ -33,5 +33,27 @@ describe("settings db - per-account hidden tabs", () => {
     setHiddenTabs("newuser@example.com", ["/meals"], db);
     expect(getHiddenTabs("newuser@example.com", db)).toEqual(["/meals"]);
     expect(getHiddenTabs("default", db)).toEqual(["/groceries"]);
+  });
+
+  it("should store and retrieve theme per account", () => {
+    expect(getTheme("user1@example.com", db)).toBe("light");
+    expect(getTheme("user2@example.com", db)).toBe("light");
+
+    setTheme("user1@example.com", "dark", db);
+    setTheme("user2@example.com", "light", db);
+
+    expect(getTheme("user1@example.com", db)).toBe("dark");
+    expect(getTheme("user2@example.com", db)).toBe("light");
+  });
+
+  it("should fallback to default theme when user has no custom theme", () => {
+    setTheme("dark", db);
+    expect(getTheme("default", db)).toBe("dark");
+    expect(getTheme(undefined, db)).toBe("dark");
+    expect(getTheme("newuser@example.com", db)).toBe("dark");
+
+    setTheme("newuser@example.com", "light", db);
+    expect(getTheme("newuser@example.com", db)).toBe("light");
+    expect(getTheme("default", db)).toBe("dark");
   });
 });

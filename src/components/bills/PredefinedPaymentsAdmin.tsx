@@ -63,11 +63,11 @@ export default component$(() => {
   });
 
   return (
-    <div class="mt-8 border-t pt-6">
-      <h2 class="mb-4 text-lg font-semibold">Predefiniowane płatności</h2>
+    <div class="mt-8 border-t border-gray-200 dark:border-gray-800 pt-6">
+      <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Predefiniowane płatności</h2>
 
       {error.value && (
-        <p class="mb-2 text-red-600">{error.value}</p>
+        <p class="mb-2 text-red-600 dark:text-red-400">{error.value}</p>
       )}
 
       {loading.value ? (
@@ -80,10 +80,10 @@ export default component$(() => {
             <div
               key={payment.id}
               data-testid="predefined-item"
-              class="flex items-center justify-between rounded border p-2"
+              class="flex items-center justify-between rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-2"
             >
-              <span>
-                {payment.name} <span class="text-sm text-gray-500">({payment.slug})</span>
+              <span class="text-gray-900 dark:text-gray-100">
+                {payment.name} <span class="text-sm text-gray-500 dark:text-gray-400">({payment.slug})</span>
               </span>
               <DoubleConfirmButton
                 onConfirm$={() => handleDelete(payment.id)}
@@ -93,7 +93,7 @@ export default component$(() => {
             </div>
           ))}
           {payments.value.length === 0 && (
-            <p class="text-sm text-gray-500">Brak predefiniowanych płatności.</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Brak predefiniowanych płatności.</p>
           )}
         </div>
       )}

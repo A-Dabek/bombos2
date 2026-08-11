@@ -61,9 +61,9 @@ export default component$(() => {
   return (
     <div class="p-4">
       <BackButton href="/money/flows" />
-      <h1 class="text-xl font-bold text-gray-800 mb-4">Zarządzaj przepływami</h1>
+      <h1 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Zarządzaj przepływami</h1>
 
-      {error.value && <p class="mt-2 text-red-600">{error.value}</p>}
+      {error.value && <p class="mt-2 text-red-600 dark:text-red-400">{error.value}</p>}
 
       {loading.value && flows.value.length === 0 && (
         <div class="flex justify-center py-4">
@@ -72,8 +72,8 @@ export default component$(() => {
       )}
 
       {editingFlow.value ? (
-        <div class="mb-6 p-4 border rounded bg-gray-50">
-          <h2 class="text-lg font-semibold mb-2">Edytuj przepływ</h2>
+        <div class="mb-6 p-4 border rounded bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+          <h2 class="text-lg font-semibold mb-2 dark:text-gray-100">Edytuj przepływ</h2>
           <FlowsForm
             description={editingFlow.value?.description ?? ""}
             amount={editingFlow.value?.amount?.toString() ?? ""}
@@ -84,7 +84,7 @@ export default component$(() => {
           />
           <button
             onClick$={() => (editingFlow.value = null)}
-            class="mt-2 text-sm text-gray-500 underline"
+            class="mt-2 text-sm text-gray-500 dark:text-gray-400 underline"
           >
             Anuluj
           </button>
@@ -93,20 +93,20 @@ export default component$(() => {
 
       <div class="space-y-2">
         {flows.value.map((flow) => (
-          <div key={flow.id} class="flex items-center justify-between p-3 bg-white border rounded">
+          <div key={flow.id} class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded">
             <div class="flex-1">
               <div class="flex items-center">
-                <span class="w-6 font-mono text-gray-400 text-xs">{flow.day_of_month}.</span>
-                <span class="font-medium text-gray-800 ml-1">{flow.description}</span>
+                <span class="w-6 font-mono text-gray-400 dark:text-gray-500 text-xs">{flow.day_of_month}.</span>
+                <span class="font-medium text-gray-800 dark:text-gray-200 ml-1">{flow.description}</span>
               </div>
-              <div class={`text-sm ${flow.amount >= 0 ? "text-green-600" : "text-red-600"}`}>
+              <div class={`text-sm ${flow.amount >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
                 {flow.amount >= 0 ? "+" : ""}{flow.amount}
               </div>
             </div>
             <div class="flex space-x-2">
               <button
                 onClick$={() => (editingFlow.value = flow)}
-                class="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
+                class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
               >
                 Edytuj
               </button>

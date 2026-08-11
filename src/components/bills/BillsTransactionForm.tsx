@@ -59,7 +59,7 @@ export default component$<BillsTransactionFormProps>(({ loading, onSubmit$ }) =>
                 description.value = "";
               }
             }}
-            class="w-full px-2 py-1 text-sm border rounded"
+            class="w-full px-2 py-1 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded"
           >
             <option value="">Wybierz płatność (opcjonalnie)</option>
             {predefinedPayments.value.map(p => (

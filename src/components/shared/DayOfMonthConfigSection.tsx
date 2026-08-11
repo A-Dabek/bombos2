@@ -59,11 +59,11 @@ export default component$<Props>((props) => {
       )}
 
       {error.value && (
-        <p class="mt-2 text-red-600">{error.value}</p>
+        <p class="mt-2 text-red-600 dark:text-red-400">{error.value}</p>
       )}
 
       {success.value && (
-        <p data-testid="save-success" class="mt-2 text-green-600">Ustawienia zapisane!</p>
+        <p data-testid="save-success" class="mt-2 text-green-600 dark:text-green-400">Ustawienia zapisane!</p>
       )}
 
       <div class="mt-4 flex flex-col gap-3">

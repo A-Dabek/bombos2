@@ -51,7 +51,7 @@ export default component$(() => {
   return (
     <div class="p-4">
       <AdminButton href="/money/balance/admin" />
-      {error.value && <p class="mt-2 text-red-600">{error.value}</p>}
+      {error.value && <p class="mt-2 text-red-600 dark:text-red-400">{error.value}</p>}
 
       {loading.value && (
         <div class="flex justify-center py-4">

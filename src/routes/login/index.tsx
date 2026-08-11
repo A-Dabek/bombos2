@@ -121,17 +121,17 @@ export default component$(() => {
 
   return (
     <div class="flex min-h-screen flex-col items-center justify-center p-6">
-      <h1 class="mb-6 text-2xl font-semibold text-gray-800">Bombos</h1>
-      <p class="mb-6 text-sm text-gray-500">Zaloguj się, żeby kontynuować</p>
+      <h1 class="mb-6 text-2xl font-semibold text-gray-800 dark:text-gray-100">Bombos</h1>
+      <p class="mb-6 text-sm text-gray-500 dark:text-gray-400">Zaloguj się, żeby kontynuować</p>
 
       {cfg.value.authDisabled && (
-        <p class="mb-4 rounded bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
+        <p class="mb-4 rounded bg-yellow-50 dark:bg-yellow-950/50 px-3 py-2 text-sm text-yellow-800 dark:text-yellow-300">
           AUTH_DISABLED=true — logowanie nie jest wymagane.
         </p>
       )}
 
       {!cfg.value.clientId && (
-        <p class="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p class="mb-4 rounded bg-red-50 dark:bg-red-950/50 px-3 py-2 text-sm text-red-700 dark:text-red-300">
           Serwer nie ma skonfigurowanego GOOGLE_CLIENT_ID.
         </p>
       )}
@@ -139,10 +139,10 @@ export default component$(() => {
       <div id="g-signin-btn" data-testid="google-signin-btn" />
 
       {submitting.value && (
-        <p class="mt-4 text-sm text-gray-500">Weryfikuję…</p>
+        <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Weryfikuję…</p>
       )}
       {error.value && (
-        <p class="mt-4 max-w-sm text-center text-sm text-red-600" data-testid="login-error">
+        <p class="mt-4 max-w-sm text-center text-sm text-red-600 dark:text-red-400" data-testid="login-error">
           {error.value}
         </p>
       )}

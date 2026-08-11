@@ -22,8 +22,8 @@ export default component$<PeriodHeaderProps>(({ startTs, endTs }) => {
   }
 
   return (
-    <div data-testid="period-header" class="flex items-center gap-2 border-b border-gray-200 pb-1 mt-4">
-      <span class="text-sm font-semibold text-gray-700">{label}</span>
+    <div data-testid="period-header" class="flex items-center gap-2 border-b border-gray-200 dark:border-gray-800 pb-1 mt-4">
+      <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">{label}</span>
     </div>
   );
 });

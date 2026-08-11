@@ -188,27 +188,27 @@ export default component$(() => {
           <Loader />
         </div>
       ) : lists.value.length === 0 ? (
-        <p class="text-lg text-gray-500 px-4">Brak list</p>
+        <p class="text-lg text-gray-500 dark:text-gray-400 px-4">Brak list</p>
       ) : (
         <div class="starting:opacity-0 opacity-100 transition-opacity duration-300">
-          <ul class="divide-y divide-gray-200">
+          <ul class="divide-y divide-gray-200 dark:divide-gray-800">
             {lists.value.map((list) => {
               const isExpanded = expandedListId.value === list.id;
               const cachedData = listItemsCache.value.get(list.id);
               const isLoading = loadingListId.value === list.id;
 
               return (
-                <li key={list.id} class="border-b border-gray-200">
+                <li key={list.id} class="border-b border-gray-200 dark:border-gray-800">
                   <button
                     onClick$={() => handleListClick(list.id)}
-                    class="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 text-left"
+                    class="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/50 text-left"
                   >
-                    <span class="text-lg text-gray-800 font-medium flex items-center">
+                    <span class="text-lg text-gray-800 dark:text-gray-200 font-medium flex items-center">
                       {list.title}
                       {list.hasUrgent && <Ping class="relative ml-2 inline-flex h-2 w-2" data-testid="plan-list-urgent-dot" />}
                     </span>
                     <HiChevronDownOutline
-                      class={`w-5 h-5 text-gray-500 transition-transform duration-300 ${
+                      class={`w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform duration-300 ${
                         isExpanded ? "rotate-180" : ""
                       }`}
                     />

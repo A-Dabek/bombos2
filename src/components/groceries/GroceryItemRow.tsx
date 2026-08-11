@@ -27,7 +27,7 @@ export default component$(({
       key={item.id}
       data-testid={`grocery-item-${item.id}`}
       class={`cursor-pointer relative transition-all ${
-        isActive ? "p-3 bg-blue-50" : "py-1 px-2 bg-white"
+        isActive ? "p-3 bg-blue-50 dark:bg-blue-950/40" : "py-1 px-2 bg-white dark:bg-gray-800"
       } ${isLastAdded ? "ring-2 ring-blue-400 border-blue-400 rounded z-10" : ""}`}
       onClick$={() => onItemClick$(item.id)}
     >
@@ -40,20 +40,20 @@ export default component$(({
         <div class="flex-1">
           <div class="flex items-center justify-between">
             <span
-              class={`text-gray-800 font-medium ${
-                item.urgent ? "text-red-600 font-bold underline" : ""
+              class={`text-gray-800 dark:text-gray-200 font-medium ${
+                item.urgent ? "text-red-600 dark:text-red-400 font-bold underline" : ""
               }`}
             >
               {item.name}
             </span>
             {!(item.amount === 1 && item.unit === "x") && (
-              <span class="text-sm font-semibold text-blue-600 ml-2 bg-blue-100 px-1 rounded min-w-[3rem] text-center">
+              <span class="text-sm font-semibold text-blue-600 dark:text-blue-400 ml-2 bg-blue-100 dark:bg-blue-950 px-1 rounded min-w-[3rem] text-center">
                 {item.amount}{item.unit}
               </span>
             )}
           </div>
           {item.description && (
-            <p class="text-sm text-gray-600 mt-1">{item.description}</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{item.description}</p>
           )}
         </div>
         {isActive && (
@@ -61,13 +61,13 @@ export default component$(({
             class="flex items-center space-x-1 ml-2"
             onClick$={(e) => e.stopPropagation()}
           >
-            <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-white mr-2">
+            <div class="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800 mr-2">
               <button
                 onClick$={() =>
                   onAmountChange$(item.id, Math.max(0, item.amount - 1))
                 }
                 data-testid="decrease-amount-btn"
-                class="p-1 text-gray-500 hover:bg-gray-100 border-r border-gray-200"
+                class="p-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 border-r border-gray-200 dark:border-gray-700"
                 aria-label="Zmniejsz ilość"
               >
                 <HiMinusOutline class="w-4 h-4" />
@@ -75,7 +75,7 @@ export default component$(({
               <button
                 onClick$={() => onAmountChange$(item.id, item.amount + 1)}
                 data-testid="increase-amount-btn"
-                class="p-1 text-gray-500 hover:bg-gray-100"
+                class="p-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                 aria-label="Zwiększ ilość"
               >
                 <HiPlusOutline class="w-4 h-4" />

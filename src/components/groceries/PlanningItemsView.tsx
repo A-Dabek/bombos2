@@ -88,7 +88,7 @@ export default component$(
                   data-testid="delete-all-btn"
                   class={`w-full px-3 py-2 rounded text-sm font-medium ${
                     items.length === 0
-                      ? "bg-gray-100 text-gray-400"
+                      ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500"
                       : "bg-red-500 text-white hover:bg-red-600"
                   }`}
                 />
@@ -96,7 +96,7 @@ export default component$(
             </div>
 
             {items.length === 0 ? (
-              <p class="text-lg text-gray-500" data-testid="empty-state">
+              <p class="text-lg text-gray-500 dark:text-gray-400" data-testid="empty-state">
                 Brak pozycji
               </p>
             ) : (
@@ -104,7 +104,7 @@ export default component$(
                 <div class="space-y-6">
                   {sortedCategories.map((category) => (
                     <div key={category} class="space-y-2">
-                      <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 pb-1">
+                      <h3 class="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800 pb-1">
                         {category}
                       </h3>
                       <ul class="space-y-2">
@@ -140,7 +140,7 @@ export default component$(
 
             {suggestions.length > 0 && (
               <div class="mt-6">
-                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
                   Sugestie
                 </h3>
                 <div class="flex flex-wrap gap-2">
@@ -150,7 +150,7 @@ export default component$(
                       onClick$={() =>
                         onAddSuggestion$(suggestion.name, suggestion.category)
                       }
-                      class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-blue-100 hover:text-blue-700 transition-colors border border-gray-200"
+                      class="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm hover:bg-blue-100 dark:hover:bg-blue-950 hover:text-blue-700 dark:hover:text-blue-400 transition-colors border border-gray-200 dark:border-gray-700"
                     >
                       + {suggestion.name}
                     </button>

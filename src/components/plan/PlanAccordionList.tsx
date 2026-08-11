@@ -61,7 +61,7 @@ export default component$(
               ) : (
                 <>
                   {items.length === 0 ? (
-                    <p class="text-lg text-gray-500">Brak pozycji</p>
+                    <p class="text-lg text-gray-500 dark:text-gray-400">Brak pozycji</p>
                   ) : (
                     <div class="starting:opacity-0 opacity-100 transition-opacity duration-300">
                       <ul class="space-y-2">
@@ -92,7 +92,7 @@ export default component$(
                       onConfirm$={onRemoveAll$}
                       disabled={items.length === 0}
                       text="Usuń wszystkie"
-                      class={`px-3 py-2 rounded ${items.length === 0 ? "bg-gray-200 text-gray-400" : ""}`}
+                      class={`px-3 py-2 rounded ${items.length === 0 ? "bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-500" : ""}`}
                     />
                   </div>
                 </>
@@ -104,7 +104,7 @@ export default component$(
           <div
             class={`${
               formMode !== "none" ? "relative" : "absolute"
-            } top-0 left-0 w-full transition-transform duration-300 ease-in-out bg-white ${
+            } top-0 left-0 w-full transition-transform duration-300 ease-in-out bg-white dark:bg-gray-900 ${
               formMode !== "none" ? "translate-x-0" : "translate-x-full"
             }`}
             style={formMode !== "none" ? "min-height: 200px;" : ""}

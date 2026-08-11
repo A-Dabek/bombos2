@@ -17,7 +17,7 @@ export default component$(({ tabs }: SubNavProps) => {
   const loc = useLocation();
 
   return (
-    <nav class="flex border-b border-gray-200 bg-white animate-[fadeIn_0.3s_ease-out]">
+    <nav class="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 animate-[fadeIn_0.3s_ease-out]">
       {tabs.map((tab) => {
         const isActive = loc.url.pathname.replace(/\/$/, "").startsWith(tab.path);
         return (
@@ -28,8 +28,8 @@ export default component$(({ tabs }: SubNavProps) => {
             class={[
               "relative flex-1 py-2 text-center text-sm font-medium transition-colors",
               isActive
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-500 hover:text-gray-700",
+                ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
+                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
             ]}
           >
             {tab.label}

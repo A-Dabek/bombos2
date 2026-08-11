@@ -89,10 +89,10 @@ export default component$(() => {
 
   return (
     <>
-      <hr class="my-6" />
+      <hr class="my-6 border-gray-200 dark:border-gray-800" />
       
-      <h2 class="text-lg font-semibold" data-testid="automatic-payments-heading">Płatności automatyczne</h2>
-      <p class="mt-1 text-sm text-gray-600">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100" data-testid="automatic-payments-heading">Płatności automatyczne</h2>
+      <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
         Te płatności zostaną automatycznie dodane przy rozpoczęciu nowego okresu rozliczeniowego.
       </p>
 
@@ -103,11 +103,11 @@ export default component$(() => {
       )}
 
       {paymentsError.value && (
-        <p class="mt-2 text-red-600">{paymentsError.value}</p>
+        <p class="mt-2 text-red-600 dark:text-red-400">{paymentsError.value}</p>
       )}
 
       {paymentsSuccess.value && (
-        <p class="mt-2 text-green-600">Płatność dodana!</p>
+        <p class="mt-2 text-green-600 dark:text-green-400">Płatność dodana!</p>
       )}
 
       {/* Payments List */}
@@ -147,7 +147,7 @@ export default component$(() => {
           value={newPaymentSlug.value}
           onInput$={(e) => (newPaymentSlug.value = (e.target as HTMLInputElement).value)}
         />
-        <p class="mt-1 text-xs text-gray-500">
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
           Pojedyncze słowo, tylko litery/cyfry/podkreślenia
         </p>
 

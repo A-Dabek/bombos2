@@ -151,7 +151,7 @@ export default component$(() => {
       ) : (
         <>
           {items.value.length === 0 ? (
-            <p class="text-lg text-gray-500" data-testid="empty-state">
+            <p class="text-lg text-gray-500 dark:text-gray-400" data-testid="empty-state">
               Brak pozycji
             </p>
           ) : (
@@ -180,7 +180,7 @@ export default component$(() => {
                   />
                 ))}
                 {selectedCategory.value === "All" && activeCategories.length > 0 && activeCategories.every(cat => completedCategories.includes(cat)) && (
-                  <p class="text-center text-gray-500 py-8">
+                  <p class="text-center text-gray-500 dark:text-gray-400 py-8">
                     Wszystkie kategorie są skończone
                   </p>
                 )}

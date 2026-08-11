@@ -17,7 +17,7 @@ export default (props: TransactionGroupProps) => {
   return (
     <div>
       <PeriodHeader startTs={props.periodStartTs} endTs={props.periodEndTs} />
-      <div class="divide-y divide-gray-100">
+      <div class="divide-y divide-gray-100 dark:divide-gray-800">
         {props.transactions.map((tx) => (
           <TransactionLine
             key={tx.id}

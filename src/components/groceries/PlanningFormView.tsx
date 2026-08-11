@@ -36,7 +36,7 @@ export default component$(
       <div
         class={`${
           formMode !== "none" ? "relative" : "absolute"
-        } top-0 left-0 w-full transition-transform duration-300 ease-in-out bg-white ${
+        } top-0 left-0 w-full transition-transform duration-300 ease-in-out bg-white dark:bg-gray-900 ${
           formMode !== "none" ? "translate-x-0" : "translate-x-full"
         }`}
         style={formMode !== "none" ? "min-height: 200px;" : ""}

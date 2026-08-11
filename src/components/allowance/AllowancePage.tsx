@@ -78,13 +78,13 @@ export default component$(() => {
 
   return (
     <div class="p-4">
-      {error.value && <p class="mt-2 text-red-600">{error.value}</p>}
+      {error.value && <p class="mt-2 text-red-600 dark:text-red-400">{error.value}</p>}
 
       <div class="mt-4 mb-4 flex items-start gap-1">
         {/* Balance - big */}
         <span
           data-testid="allowance-balance"
-          class={`text-4xl font-bold ${balance.value >= 0 ? "text-green-600" : "text-red-600"}`}
+          class={`text-4xl font-bold ${balance.value >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
         >
           {Math.abs(balance.value)}
         </span>
@@ -93,7 +93,7 @@ export default component$(() => {
         {config.value && (
           <span
             data-testid="allowance-monthly-income"
-            class="text-sm text-gray-800 self-start mt-1"
+            class="text-sm text-gray-800 dark:text-gray-200 self-start mt-1"
           >
             +{config.value.monthly_amount}
           </span>

@@ -30,9 +30,9 @@ export default component$(
   }: ShoppingCategoryGroupProps) => {
     return (
       <div class="space-y-2">
-        <div class="flex items-center justify-between border-b border-gray-100 pb-1">
+        <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-1">
           {showHeading && (
-            <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
               {category}
             </h3>
           )}
@@ -41,10 +41,10 @@ export default component$(
             data-testid={`finish-category-${category}`}
             class={`flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-colors ${
               isManuallyCompleted
-                ? "bg-green-100 text-green-700"
+                ? "bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300"
                 : isCompleted
-                  ? "bg-gray-100 text-gray-500 opacity-50 cursor-not-allowed"
-                  : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+                  ? "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 opacity-50 cursor-not-allowed"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700"
             }`}
             disabled={isCompleted && !isManuallyCompleted}
             title={isManuallyCompleted ? "Oznacz jako niedokończone" : "Oznacz kategorię jako skończoną"}

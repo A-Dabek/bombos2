@@ -5,7 +5,7 @@ import { streamPlanUrgent } from "../utils/plan-urgent-stream";
 import { streamBillsUrgent } from "../utils/bills-urgent-stream";
 import Ping from "~/components/shared/Ping";
 import { RefreshContext } from "~/constants/refresh";
-import { getHiddenTabs } from "~/db/settings";
+import { getHiddenTabs, getTheme } from "~/db/settings";
 import {
   HiCubeOutline,
   HiFireOutline,
@@ -25,7 +25,10 @@ const TABS = [
 
 export const useSettings = routeLoader$(({ sharedMap }) => {
   const email = (sharedMap.get("userEmail") as string) ?? "default";
-  return getHiddenTabs(email);
+  return {
+    hiddenTabs: getHiddenTabs(email),
+    theme: getTheme(email),
+  };
 });
 
 export default component$(() => {
@@ -128,11 +131,20 @@ export default component$(() => {
   const isLogin = loc.url.pathname.startsWith("/login");
   const isSettings = loc.url.pathname.startsWith("/settings");
 
+  const hiddenTabs = settings.value.hiddenTabs;
+  const theme = settings.value.theme;
+
   return (
-    <>
+    <div
+      id="app-root"
+      class={[
+        "min-h-screen transition-colors",
+        theme === "dark" ? "dark bg-gray-900 text-gray-100" : "bg-white text-gray-900",
+      ]}
+    >
       {!isLogin && (
-        <nav class="flex border-b border-gray-200">
-          {TABS.filter((tab) => !settings.value.includes(tab.path)).map((tab) => {
+        <nav class="flex border-b border-gray-200 dark:border-gray-800">
+          {TABS.filter((tab) => !hiddenTabs.includes(tab.path)).map((tab) => {
             const pathname = loc.url.pathname.replace(/\/$/, "");
             const isActive =
               pathname === tab.path ||
@@ -146,8 +158,8 @@ export default component$(() => {
                 class={[
                   "relative flex flex-1 flex-col items-center py-2 text-center text-sm font-medium transition-colors",
                   isActive
-                    ? "border-b-2 border-blue-500 text-blue-600"
-                    : "text-gray-500 hover:text-gray-700",
+                    ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
+                    : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
                 ]}
               >
                 <Icon class="h-5 w-5" />
@@ -179,8 +191,8 @@ export default component$(() => {
             class={[
               "relative flex flex-shrink-0 flex-col items-center px-3 py-2 text-center text-sm font-medium transition-colors",
               isSettings
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-500 hover:text-gray-700",
+                ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
+                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
             ]}
           >
             <HiCog6ToothOutline class="h-5 w-5" />
@@ -190,6 +202,6 @@ export default component$(() => {
       <main>
         <Slot />
       </main>
-    </>
+    </div>
   );
 });

@@ -9,18 +9,18 @@ interface AllowanceTransactionLineProps {
 export default component$<AllowanceTransactionLineProps>(({ tx, isLast, onDelete$ }) => {
   return (
     <div class="flex items-center py-2 text-sm">
-      <span class="flex-1 text-gray-800">{tx.description}</span>
+      <span class="flex-1 text-gray-800 dark:text-gray-200">{tx.description}</span>
       <span
         class={
           tx.type === "expense"
-            ? "text-red-600"
-            : "text-green-600"
+            ? "text-red-600 dark:text-red-400"
+            : "text-green-600 dark:text-green-400"
         }
       >
         {tx.type === "expense" ? "-" : "+"}
         {tx.amount}
       </span>
-      <span class="ml-4 text-gray-500">
+      <span class="ml-4 text-gray-500 dark:text-gray-400">
         ({tx.balance_after >= 0 ? "+" : ""}
         {tx.balance_after})
       </span>

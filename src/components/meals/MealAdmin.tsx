@@ -81,7 +81,7 @@ export default component$<MealAdminProps>((props) => {
       </div>
 
       {meals.value.length === 0 ? (
-        <p class="text-lg text-gray-500">Brak dań</p>
+        <p class="text-lg text-gray-500 dark:text-gray-400">Brak dań</p>
       ) : (
         <ul>
           {meals.value.map((meal) => (

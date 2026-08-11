@@ -12,12 +12,12 @@ export default component$<AutomaticPaymentItemProps>(({ payment, isLoading, onDe
   return (
     <li 
       data-testid="payment-item"
-      class="flex items-center justify-between rounded bg-gray-50 p-2"
+      class="flex items-center justify-between rounded bg-gray-50 dark:bg-gray-800 p-2 border border-gray-100 dark:border-gray-700"
     >
       <div>
-        <span class="font-medium">{payment.name}</span>
-        <span class="ml-2 text-sm text-gray-500">({payment.slug})</span>
-        <span class="ml-2 text-sm font-semibold">{Math.abs(payment.amount)} PLN</span>
+        <span class="font-medium text-gray-900 dark:text-gray-100">{payment.name}</span>
+        <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">({payment.slug})</span>
+        <span class="ml-2 text-sm font-semibold text-gray-900 dark:text-gray-100">{Math.abs(payment.amount)} PLN</span>
       </div>
       <DoubleConfirmButton
         onConfirm$={() => onDelete$(payment.id)}

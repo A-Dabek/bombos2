@@ -13,7 +13,7 @@ export default (props: AllowanceTransactionGroupProps) => {
   return (
     <div>
       <PeriodHeader startTs={props.periodStartTs} />
-      <div class="divide-y divide-gray-100">
+      <div class="divide-y divide-gray-100 dark:divide-gray-800">
         {props.transactions.map((tx: any) => (
           <AllowanceTransactionLine
             key={tx.id}

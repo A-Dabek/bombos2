@@ -22,19 +22,19 @@ export default component$(({
     <li
       key={item.id}
       class={`cursor-pointer ${
-        isActive ? "p-3 bg-blue-50" : "py-1 px-2 bg-white"
+        isActive ? "p-3 bg-blue-50 dark:bg-blue-950/40" : "py-1 px-2 bg-white dark:bg-gray-800"
       }`}
       onClick$={() => onItemClick$(item.id)}
     >
       <div class="flex items-start justify-between">
         <div class="flex-1">
           <div class="flex items-center">
-            <span class={`text-gray-800 font-medium ${item.urgent ? "text-red-600 font-bold underline" : ""}`}>
+            <span class={`text-gray-800 dark:text-gray-200 font-medium ${item.urgent ? "text-red-600 dark:text-red-400 font-bold underline" : ""}`}>
               {item.name}
             </span>
           </div>
           {item.description && (
-            <p class="text-sm text-gray-600 mt-1">{item.description}</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{item.description}</p>
           )}
         </div>
         {isActive && (

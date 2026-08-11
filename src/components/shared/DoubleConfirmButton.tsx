@@ -44,8 +44,8 @@ export default component$<DoubleConfirmButtonProps>((props) => {
       class={[
         "flex items-center transition-all duration-200",
         isConfirming.value 
-          ? "text-green-500"
-          : "text-red-500 hover:text-red-700",
+          ? "text-green-500 dark:text-green-400"
+          : "text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300",
         props.class,
       ]}
       data-testid={props["data-testid"] || "delete-btn"}

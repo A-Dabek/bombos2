@@ -99,10 +99,10 @@ export default component$(
 
     return (
       <div
-        class="p-4 bg-white min-h-full"
+        class="p-4 bg-white dark:bg-gray-900 min-h-full"
         data-testid={mode === "add" ? "edit-form-add" : "edit-form-edit"}
       >
-        <h2 class="text-xl font-bold text-gray-800 mb-4">
+        <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
           {mode === "add" ? "Dodaj pozycję" : "Edytuj pozycję"}
         </h2>
         <div class="space-y-4">
@@ -142,7 +142,7 @@ export default component$(
               />
             </div>
             <div class="flex-1">
-              <label class="block text-sm font-medium text-gray-700 mb-1">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Jednostka
               </label>
               <select
@@ -150,7 +150,7 @@ export default component$(
                 onChange$={(e) =>
                   (formUnit.value = (e.target as HTMLSelectElement).value)
                 }
-                class="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                class="w-full p-2 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="x">x</option>
                 <option value="g">g</option>
@@ -198,7 +198,7 @@ export default component$(
             <button
               onClick$={onCancel$}
               data-testid="form-cancel-btn"
-              class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              class="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600"
             >
               Anuluj
             </button>

@@ -63,4 +63,37 @@ test.describe("Settings journeys @settings", () => {
     await expect(page.getByTestId("visit-tab-meals")).toBeVisible();
     await expect(page.getByTestId("visit-tab-money")).toBeVisible();
   });
-})
+
+  test("Settings: toggle dark theme and persist across reloads and pages", async ({ page }) => {
+    // 1. Open settings page — app-root does not have dark class initially
+    await page.goto("/settings");
+    await page.getByTestId("settings-title").waitFor({ state: "visible" });
+    const appRoot = page.locator("#app-root");
+    await expect(appRoot).not.toHaveClass(/dark/);
+
+    // 2. Click dark theme toggle
+    await page.getByTestId("toggle-dark-theme").click();
+
+    // 3. Root layout immediately gets .dark class
+    await expect(appRoot).toHaveClass(/dark/);
+
+    // 4. Navigate to another page (/parcels) and verify dark class is retained
+    await page.getByTestId("parcels-nav-link").click();
+    await expect(page).toHaveURL(/\/parcels/);
+    await expect(appRoot).toHaveClass(/dark/);
+
+    // 5. Reload page and verify theme persistence (SSR)
+    await page.reload();
+    await expect(appRoot).toHaveClass(/dark/);
+
+    // 6. Go back to settings and toggle dark mode off
+    await page.goto("/settings");
+    await expect(appRoot).toHaveClass(/dark/);
+    await page.getByTestId("toggle-dark-theme").click();
+    await expect(appRoot).not.toHaveClass(/dark/);
+
+    // 7. Reload and verify light theme persisted
+    await page.reload();
+    await expect(appRoot).not.toHaveClass(/dark/);
+  });
+});

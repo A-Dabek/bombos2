@@ -56,14 +56,14 @@ export default component$(() => {
   return (
     <div class="p-4">
       <BackButton href="/money/allowance" />
-      <h1 class="text-xl font-semibold">Zarządzanie kieszonkowym</h1>
+      <h1 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Zarządzanie kieszonkowym</h1>
 
       {error.value && (
-        <p class="mt-2 text-red-600">{error.value}</p>
+        <p class="mt-2 text-red-600 dark:text-red-400">{error.value}</p>
       )}
 
       {success.value && (
-        <p data-testid="save-success" class="mt-2 text-green-600">Ustawienia zapisane!</p>
+        <p data-testid="save-success" class="mt-2 text-green-600 dark:text-green-400">Ustawienia zapisane!</p>
       )}
 
       <div class="mt-4 flex flex-col gap-3">
@@ -92,9 +92,9 @@ export default component$(() => {
         </button>
       </div>
 
-      <hr class="my-6 border-gray-200" />
+      <hr class="my-6 border-gray-200 dark:border-gray-800" />
 
-      <h2 class="text-lg font-semibold">Ręczne sprawdzenie</h2>
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Ręczne sprawdzenie</h2>
       
       <div class="mt-4">
         <PeriodStartButton

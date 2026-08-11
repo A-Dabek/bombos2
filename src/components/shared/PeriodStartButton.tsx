@@ -56,11 +56,11 @@ export default component$<PeriodStartButtonProps>((props) => {
   return (
     <div>
       {error.value && (
-        <p class="mb-2 text-red-600">{error.value}</p>
+        <p class="mb-2 text-red-600 dark:text-red-400">{error.value}</p>
       )}
       
       {success.value && result.value && (
-        <p data-testid={`${testId}-success`} class="mb-2 text-green-600">{result.value}</p>
+        <p data-testid={`${testId}-success`} class="mb-2 text-green-600 dark:text-green-400">{result.value}</p>
       )}
       
       <DoubleConfirmButton

@@ -66,7 +66,7 @@ export default component$(() => {
   return (
     <div class="p-4">
       <AdminButton href="/money/flows/admin" />
-      {error.value && <p class="mt-2 text-red-600">{error.value}</p>}
+      {error.value && <p class="mt-2 text-red-600 dark:text-red-400">{error.value}</p>}
 
       {loading.value && flows.value.length === 0 && (
         <div class="flex justify-center py-4">
@@ -83,18 +83,18 @@ export default component$(() => {
       />
 
       {flows.value.length > 0 && (
-        <div class="mt-6 border-t border-gray-100">
-          <ul class="divide-y divide-gray-100">
+        <div class="mt-6 border-t border-gray-100 dark:border-gray-800">
+          <ul class="divide-y divide-gray-100 dark:divide-gray-800">
             {flows.value.map((flow) => (
               <li key={flow.id} class="flex items-center py-3 text-sm">
-                <span class="w-8 font-mono text-gray-400">{flow.day_of_month}.</span>
-                <span class="flex-1 text-gray-800 ml-2">{flow.description}</span>
-                <span class={flow.amount >= 0 ? "text-green-600" : "text-red-600"} title="Kwota">
+                <span class="w-8 font-mono text-gray-400 dark:text-gray-500">{flow.day_of_month}.</span>
+                <span class="flex-1 text-gray-800 dark:text-gray-200 ml-2">{flow.description}</span>
+                <span class={flow.amount >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"} title="Kwota">
                   {flow.amount >= 0 ? "+" : ""}{flow.amount}
                 </span>
                 <DoubleConfirmButton
                   onConfirm$={() => handleDelete(flow.id)}
-                  class="ml-4 p-1 text-gray-400 hover:text-red-600"
+                  class="ml-4 p-1 text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400"
                 />
               </li>
             ))}

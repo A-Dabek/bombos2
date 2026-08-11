@@ -13,7 +13,7 @@ export default component$<TextInputProps>((props) => {
   return (
     <div class={["flex flex-col", containerClass]}>
       {label && (
-        <label for={id} class="block text-sm font-medium text-gray-700 mb-1">
+        <label for={id} class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           {label}
         </label>
       )}
@@ -22,7 +22,7 @@ export default component$<TextInputProps>((props) => {
         id={id}
         type={type}
         class={[
-          "border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed",
+          "border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 dark:disabled:bg-gray-900 disabled:cursor-not-allowed",
           className,
         ]}
       />

@@ -46,10 +46,10 @@ export default component$(
 
     return (
       <div
-        class="p-4 bg-white min-h-full"
+        class="p-4 bg-white dark:bg-gray-900 min-h-full"
         data-testid={mode === "add" ? "edit-form-add" : "edit-form-edit"}
       >
-        <h2 class="text-xl font-bold text-gray-800 mb-4">
+        <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
           {mode === "add" ? "Dodaj pozycję" : "Edytuj pozycję"}
         </h2>
         <div class="space-y-4">
@@ -87,7 +87,7 @@ export default component$(
             <button
               onClick$={onCancel$}
               data-testid="form-cancel-btn"
-              class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              class="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600"
             >
               Anuluj
             </button>
