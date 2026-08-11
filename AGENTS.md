@@ -39,3 +39,10 @@
 
 ## Decision Records
 ADRs are stored in `docs/adr-NNN-*.md`.
+
+## Knowledge Base & Agent Skills
+- **Knowledge Base**: `/knowledge/` contains structured OKF (Open Knowledge Format) documentation for DB schemas, UI components, system architecture, and features.
+- **Knowledge Skills**:
+  - `read-docs`: Use when navigating, searching, or reading documentation/knowledge base files in `/knowledge/` to build context efficiently without context bloat.
+  - `write-docs`: Use when creating or updating knowledge base documents in `/knowledge/` to ensure adherence to OKF v0.2 (`/knowledge/SPEC.md`) and repository profile (`/knowledge/SIMPLIFICATIONS.md`).
+  - **Note**: Agents must actively pick up and read these skills whenever interacting with `/knowledge/` documentation.
