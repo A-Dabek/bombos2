@@ -14,7 +14,7 @@ export default component$(({ item, isLastBought, onToggle$ }: ShoppingListItemPr
         item.bought ? "bg-gray-100 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700" : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
       } ${isLastBought ? "ring-2 ring-blue-400 border-blue-400" : ""}`}
       onClick$={() => onToggle$(item)}
-      data-testid={`grocery-item-${item.id}`}
+      data-testid={`shopping-item-${item.id}`}
     >
       <div class="flex items-center justify-between">
         <span

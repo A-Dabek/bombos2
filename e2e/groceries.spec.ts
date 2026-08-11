@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { clearGroceries } from "./setup";
 
-test.describe("Groceries Module", () => {
+test.describe("Groceries Module @groceries", () => {
   test.beforeEach(async ({ page }) => {
     // Clear database before each test
     clearGroceries();
@@ -166,7 +166,7 @@ test.describe("Groceries Module", () => {
     await page.getByRole("link", { name: "Zakupy" }).click();
     await expect(page).toHaveURL(/\/groceries\/shopping/);
 
-    const shoppingItem = page.getByTestId(/grocery-item-/).filter({ hasText: "Bread" });
+    const shoppingItem = page.getByTestId(/shopping-item-/).filter({ hasText: "Bread" });
     await shoppingItem.click();
 
     // Wait for bought status to be reflected in UI (ensures DB update finished)
@@ -309,7 +309,7 @@ test.describe("Groceries Module", () => {
       await page.getByRole("button", { name: "Dairy" }).click();
       
       // Find Milk in Dairy view
-      const milkInShopping = page.getByTestId(/grocery-item-/).filter({ hasText: "Milk" });
+      const milkInShopping = page.getByTestId(/shopping-item-/).filter({ hasText: "Milk" });
       await expect(milkInShopping).toBeVisible();
 
       // Mark Milk as bought
@@ -342,8 +342,8 @@ test.describe("Groceries Module", () => {
       // Go to shopping
       await page.getByRole("link", { name: "Zakupy" }).click();
 
-      const milk = page.getByTestId(/grocery-item-/).filter({ hasText: "Milk" });
-      const apple = page.getByTestId(/grocery-item-/).filter({ hasText: "Apple" });
+      const milk = page.getByTestId(/shopping-item-/).filter({ hasText: "Milk" });
+      const apple = page.getByTestId(/shopping-item-/).filter({ hasText: "Apple" });
 
       // Mark Milk as bought
       await milk.click();
@@ -409,9 +409,9 @@ test.describe("Groceries Module", () => {
 
     // Mark as bought
     await page.getByRole("link", { name: "Zakupy" }).click();
-    const shoppingItem = page.getByTestId(/grocery-item-/).filter({ hasText: "Milk" }).filter({ has: page.locator(".text-lg") });
+    const shoppingItem = page.getByTestId(/shopping-item-/).filter({ hasText: "Milk" }).filter({ has: page.locator(".text-lg") });
     await shoppingItem.click();
-    await expect(shoppingItem).toHaveClass(/bg-gray-50/);
+    await expect(shoppingItem).toHaveClass(/bg-gray-100/);
     await page.getByRole("link", { name: "Planowanie" }).click();
 
     // Clear bought
