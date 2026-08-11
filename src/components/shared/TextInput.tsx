@@ -3,6 +3,7 @@ import { component$, type QwikIntrinsicElements, useId } from "@builder.io/qwik"
 export type TextInputProps = QwikIntrinsicElements["input"] & {
   label?: string;
   containerClass?: string;
+  list?: string;
 };
 
 export default component$<TextInputProps>((props) => {

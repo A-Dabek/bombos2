@@ -44,10 +44,11 @@ export default component$(() => {
   });
 
   const handleUpdate = $(async (desc: string, amt: number, day: number) => {
-    if (!editingFlow.value) return;
+    const flow = editingFlow.value;
+    if (!flow) return;
     loading.value = true;
     try {
-      await apiRequest(`/api/flows/${editingFlow.value.id}`, { ...jsonPost({ description: desc, amount: amt, dayOfMonth: day }), method: "PUT" });
+      await apiRequest(`/api/flows/${flow.id}`, { ...jsonPost({ description: desc, amount: amt, dayOfMonth: day }), method: "PUT" });
       await loadData();
       editingFlow.value = null;
     } catch (e: any) {
@@ -74,9 +75,9 @@ export default component$(() => {
         <div class="mb-6 p-4 border rounded bg-gray-50">
           <h2 class="text-lg font-semibold mb-2">Edytuj przepływ</h2>
           <FlowsForm
-            description={editingFlow.value.description}
-            amount={editingFlow.value.amount.toString()}
-            dayOfMonth={editingFlow.value.day_of_month.toString()}
+            description={editingFlow.value?.description ?? ""}
+            amount={editingFlow.value?.amount?.toString() ?? ""}
+            dayOfMonth={editingFlow.value?.day_of_month?.toString() ?? ""}
             loading={loading.value}
             submitLabel="Zaktualizuj"
             onSubmit$={handleUpdate}
