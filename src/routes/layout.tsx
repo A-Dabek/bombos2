@@ -23,8 +23,9 @@ const TABS = [
   { label: "Spożywcze", path: "/groceries", Icon: HiShoppingCartOutline, testId: "groceries-nav-link" },
 ];
 
-export const useSettings = routeLoader$(() => {
-  return getHiddenTabs();
+export const useSettings = routeLoader$(({ sharedMap }) => {
+  const email = (sharedMap.get("userEmail") as string) ?? "default";
+  return getHiddenTabs(email);
 });
 
 export default component$(() => {

@@ -1,12 +1,14 @@
 import { RequestHandler } from "@builder.io/qwik-city";
 import { getHiddenTabs, setHiddenTabs } from "~/db/settings";
 
-export const onGet: RequestHandler = async ({ json }) => {
-  const hiddenTabs = getHiddenTabs();
+export const onGet: RequestHandler = async ({ json, sharedMap }) => {
+  const email = (sharedMap.get("userEmail") as string) ?? "default";
+  const hiddenTabs = getHiddenTabs(email);
   json(200, { hiddenTabs });
 };
 
-export const onPost: RequestHandler = async ({ parseBody, json, error }) => {
+export const onPost: RequestHandler = async ({ parseBody, json, error, sharedMap }) => {
+  const email = (sharedMap.get("userEmail") as string) ?? "default";
   const body = await parseBody();
   const hiddenTabs = (body as any)?.hiddenTabs;
 
@@ -14,6 +16,6 @@ export const onPost: RequestHandler = async ({ parseBody, json, error }) => {
     throw error(400, "hiddenTabs must be an array of strings");
   }
 
-  setHiddenTabs(hiddenTabs);
+  setHiddenTabs(email, hiddenTabs);
   json(200, { hiddenTabs });
 };
