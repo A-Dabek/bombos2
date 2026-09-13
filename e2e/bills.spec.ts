@@ -273,6 +273,7 @@ test.describe("money module journeys", () => {
         // 1. Admin: Add predefined payments
         await page.goto("/money/bills/admin");
         await page.getByTestId("loader").waitFor({state: "hidden"});
+        await page.waitForTimeout(500); // Hydration safety
 
         // Add "Electricity"
         await page.getByTestId("predefined-name-input").fill("Electricity");
@@ -410,7 +411,7 @@ test.describe("money module journeys", () => {
     ]);
 
     // 6. Verify ping disappears from sub-nav
-    await expect(page.getByTestId("sub-nav-tab-bills").getByTestId("tab-ping")).not.toBeVisible();
+    await expect(page.getByTestId("sub-nav-tab-bills").getByTestId("tab-ping")).not.toBeVisible({ timeout: 8000 });
 
     // 7. Verify ping disappears from main nav
     await page.goto("/"); // Refresh/go to home to check main nav ping

@@ -23,6 +23,8 @@ export default defineConfig({
     // Bypass the Google auth guard for e2e tests. See docs/adr-031-google-auth.md.
     env: {
       AUTH_DISABLED: "true",
+      // Poll bills urgency faster so e2e tests don't wait a full production interval.
+      BILLS_URGENT_INTERVAL_MS: "1000",
     },
   },
   projects: [

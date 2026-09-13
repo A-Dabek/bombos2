@@ -2,7 +2,8 @@ import { server$ } from '@builder.io/qwik-city';
 import { isBillsUrgent } from '../db/bills';
 
 export const streamBillsUrgent = server$(async function* () {
-  const CHECK_INTERVAL = 5000; // 5 seconds is enough for bills
+  // 5 seconds is enough for production; e2e overrides this to keep tests fast.
+  const CHECK_INTERVAL = Number(process.env.BILLS_URGENT_INTERVAL_MS ?? 5000);
 
   try {
     while (!this.signal.aborted) {
