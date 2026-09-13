@@ -10,7 +10,7 @@
 
 - Migrations SHALL be treated as possibly-seeding data: `runMigrations(":memory:")` MAY insert history rows (e.g. `022_import_historical_bills_transactions.sql` seeds 84 rows / 22 period starts). Unit tests MUST account for or explicitly clear seeded rows (`DELETE FROM bills_transactions`) before asserting exact counts.
 - Repo has NO ESLint script or dependency. MUST NOT run `npx eslint` (auto-installs eslint@10, crashes with `ERR_MODULE_NOT_FOUND '@eslint/js'`). Static checks are `pnpm build.types` (tsc) and `pnpm exec qwik check-client src dist`.
-- If E2E runs take too long, limit the number of workers: `pnpm exec playwright test --workers=N` (e.g. `--workers=2`).
+- E2E: use skill `playwright-e2e` for serving the current build, command timeouts, failure triage, and flake classification.
 
 ## Naming
 
