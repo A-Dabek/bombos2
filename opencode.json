@@ -1,0 +1,14 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "intellij": {
+      "type": "remote",
+      "url": "http://127.0.0.1:64342/sse",
+      "enabled": true,
+      "timeout": 15000,
+      "headers": {
+        "IJ_MCP_SERVER_PROJECT_PATH": "//wsl.localhost/Ubuntu/home/dombeg/projects/bombos2"
+      }
+    }
+  }
+}

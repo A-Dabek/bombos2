@@ -1,48 +1,106 @@
-# bombos2 Specification
+# bombos2 Project Guidelines
 
 ## Project Overview
-- **Name**: bombos2
-- **Type**: Mobile Web App
-- **Stack**: Qwik City, Tailwind CSS, SQLite (better-sqlite3), Node, pnpm
 
-## References
-- Qwik Getting Started: https://qwik.dev/docs/getting-started/
-- **Note**: See `README.md` for Qwik project structure, commands, and development info
+Qwik City household management app. Polish-language UI. SQLite database (better-sqlite3). Tailwind CSS v4. Fastify production server. pnpm package manager.
 
-## Commands
-- `pnpm dev` — Start dev server
-- `pnpm build` — Production build
-- `pnpm build.types` — TypeScript check
-- `pnpm preview` — Preview production build
-- `pnpm e2e` — Run Playwright end-to-end tests
-- `pnpm test.db` — Run vitest database unit tests
+## Conventions
 
-## Architecture
-- **Database**: better-sqlite3 with migrations in `src/db/migrations/NNN_name.sql`
-- **API**: Qwik City route handlers (`onGet` / `onPost`)
-- **Pages**: Client-side data fetching via `useVisibleTask$`
-- **Styling**: Tailwind CSS utility classes
-- **Icons**: `@qwikest/icons/heroicons`
+### TypeScript
 
-## Key Patterns
-- DB functions accept an optional `db` parameter for test injection.
-- Parcel pages (`/parcels/incoming`, `/parcels/outgoing`) are nearly identical; changes usually apply to both.
-- **Critical Qwik gotcha**: Never put reactive conditional early returns in child components that emit events to parents. Always render a stable JSX tree in children; let the parent handle conditional rendering.
+- Strict mode. Target ES2020. Module ES2022.
+- Path alias: `~/` maps to `./src/` (tsconfig `paths`).
+- Qwik JSX: `"jsx": "react-jsx"`, `"jsxImportSource": "@builder.io/qwik"`.
+- ESLint flat config with `eslint-plugin-qwik`.
 
-## Existing Modules
-- **Parcels**: Upload images, grid view with lightbox, mark-as-complete, daily auto-cleanup, per-parcel notes (ADR-007).
-- **Meals / Money / Shopping**: Placeholder routes.
+### Qwik Patterns
 
-## Testing
-- **E2E**: Playwright tests in `e2e/`; use `e2e/fixtures/test-parcel.png` for upload tests.
-- **DB**: vitest tests in `src/db/*.test.ts`.
+- Route components: `src/routes/` (file-based routing).
+- API endpoints: `src/routes/api/` — use `onGet`, `onPost` handlers.
+- UI components: `src/components/<module>/`.
+- Reactive state: `useSignal$`, `useVisibleTask$`, `useTask$`.
+- **Critical**: Never put reactive conditional early returns in child components that emit events. Always render a stable JSX tree; let parents handle conditional rendering.
+- Server entries: `src/entry.ssr.tsx`, `src/entry.dev.tsx`, `src/entry.fastify.tsx`.
 
-## Decision Records
-ADRs are stored in `docs/adr-NNN-*.md`.
+### Database
 
-## Knowledge Base & Agent Skills
-- **Knowledge Base**: `/knowledge/` contains structured OKF (Open Knowledge Format) documentation for DB schemas, UI components, system architecture, and features.
-- **Knowledge Skills**:
-  - `read-docs`: Use when navigating, searching, or reading documentation/knowledge base files in `/knowledge/` to build context efficiently without context bloat.
-  - `write-docs`: Use when creating or updating knowledge base documents in `/knowledge/` to ensure adherence to OKF v0.2 (`/knowledge/SPEC.md`) and repository profile (`/knowledge/SIMPLIFICATIONS.md`).
-  - **Note**: Agents must actively pick up and read these skills whenever interacting with `/knowledge/` documentation.
+- SQLite via `better-sqlite3` at `./data/app.db`.
+- Connection singleton: `src/db/connection.ts` — `getDb()`, `openDb(path)`, `withDb(db, fn)`.
+- Migrations: `src/db/migrations/NNN_name.sql`. Runner auto-discovers, sorts, executes in transactions.
+- Data access modules: `src/db/<module>.ts` — one file per domain module.
+- Unit tests colocated: `src/db/<module>.test.ts`.
+- Test pattern: inject `new Database(":memory:")` via `withDb` — no filesystem side effects.
+
+### Styling
+
+- Tailwind CSS v4 (NOT v3 — different config approach).
+- `src/global.css` for global styles.
+- Dark mode via `dark:` classes + theme setting in DB.
+
+### Testing
+
+- **Unit tests**: Vitest (`pnpm test.db` runs `vitest run src/db`).
+- **E2E tests**: Playwright in `e2e/` (`pnpm e2e`).
+- E2E runs against built preview server on port 4173 with `AUTH_DISABLED=true`.
+
+### Deployment
+
+- Production targets Termux (Android) via `prod.sh`.
+- Fastify adapter for server rendering.
+
+## Knowledge Base Reference
+
+Read these files for deep context on any module:
+
+### Database Layer
+
+- [Architecture & connection](knowledge/db/architecture.md)
+- [Migration system](knowledge/db/migrations.md)
+- [Schema docs](knowledge/db/schemas/) — per-module table structures
+- [Data access modules](knowledge/db/modules/) — per-module DB functions
+
+### UI Layer
+
+- [UI architecture & Qwik patterns](knowledge/ui/architecture.md)
+- [Component docs](knowledge/ui/components/) — per-module component specs
+
+### Features
+
+- [Feature overview](knowledge/features/overview.md)
+- [Feature modules](knowledge/features/modules/) — per-module business logic
+
+### ADRs
+
+- [docs/](docs/) — 31 Architecture Decision Records covering all major design choices
+
+## File Structure Quick Reference
+
+```
+src/
+├── components/<module>/    # UI components (parcels, meals, plan, etc.)
+├── db/                     # SQLite connection, migrations, modules
+├── routes/api/<module>/    # REST API endpoints
+├── routes/<module>/        # Page routes
+├── utils/                  # Shared utilities
+├── constants/              # Refresh context, etc.
+├── plugins/                # Fastify-Qwik integration
+└── server/                 # Cron scheduler
+
+e2e/                        # Playwright E2E tests
+knowledge/                  # OKF v0.2 knowledge base
+docs/                       # ADRs
+```
+
+## Domain Modules
+
+| Module    | DB File              | Components Dir            | API Route              |
+|-----------|----------------------|---------------------------|------------------------|
+| Parcels   | `src/db/parcels.ts`  | `src/components/parcels/` | `src/routes/api/parcels/` |
+| Meals     | `src/db/meals.ts`    | `src/components/meals/`   | `src/routes/api/meals/`   |
+| Plan      | `src/db/plan.ts`     | `src/components/plan/`    | `src/routes/api/plan/`    |
+| Groceries | `src/db/groceries.ts`| `src/components/groceries/`| `src/routes/api/groceries/`|
+| Bills     | `src/db/bills.ts`    | `src/components/bills/`   | `src/routes/api/bills/`   |
+| Allowance | `src/db/allowance.ts`| `src/components/allowance/`| `src/routes/api/allowance/`|
+| Balance   | `src/db/balance.ts`  | `src/components/balance/` | `src/routes/api/balance/` |
+| Flows     | `src/db/flows.ts`    | `src/components/money/`   | `src/routes/api/flows/`   |
+| Settings  | `src/db/settings.ts` | `src/components/settings/`| `src/routes/api/settings/`|
