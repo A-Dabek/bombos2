@@ -5,12 +5,16 @@ export default defineConfig({
     ["list"],
     ["html", { outputFolder: "html-results", open: "never" }],
   ],
+  workers: 4,
   timeout: 10 * 1000, // don't increase it, it will never take longer
   testDir: "./e2e",
   retries: 2,
   use: {
     baseURL: "http://localhost:4173",
     trace: "on-first-retry",
+    launchOptions: {
+      args: ["--disable-gpu", "--no-sandbox", "--headless", "--disable-software-rasterizer", "--disable-dev-shm-usage"],
+    },
   },
   webServer: {
     command: "pnpm build && pnpm build.preview && pnpm preview",
