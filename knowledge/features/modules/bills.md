@@ -17,6 +17,7 @@ The Bills feature manages monthly bill tracking, automatic recurring payments, p
 1. **Bills Tracking**: Track bill amounts, due dates, and payment statuses.
 2. **Automatic Payments**: Manage automatic recurring bill execution rules.
 3. **Predefined Templates**: Utilize predefined billing templates for quick entry.
+4. **Automatic Aggregation (ADR-032)**: Automatic payments of a period are summed server-side into a single "Stałe opłaty" row shown last in the month; a "Rozwiń (N)" button below it lazily expands the individual automatic payments for that month only. Each month expands independently.
 
 ## Related Concepts
 

@@ -24,7 +24,8 @@ Module `/src/db/bills.ts` handles bill payment transactions, billing cycle perio
 | `updateBillsConfig(dayOfMonth, db?)` | `dayOfMonth: number, db?: Database` | `BillsConfig` | Updates reset day of month for bills cycle. |
 | `addBillTransaction(description, amount, options?, db?)` | `description: string, amount: number, options?, db?: Database` | `BillTransaction` | Records paid bill transaction with optional `isAutomatic` and `predefinedSlug`. |
 | `getBillTransactions(db?)` | `db?: Database` | `BillTransaction[]` | Fetches list of all bill transactions. |
-| `getBillTransactionsGroupedByPeriod(db?)` | `db?: Database` | `BillPeriodGroup[]` | Groups bill transactions into period cycles with totals. |
+| `getBillTransactionsGroupedByPeriod(db?)` | `db?: Database` | `BillPeriodGroup[]` | Groups bill transactions into period cycles; slug-matched automatic payments are folded into a single `automatic` summary per period. |
+| `getAutomaticPaymentsForPeriod(startTs, endTs, db?)` | `startTs: number, endTs: number, db?: Database` | `BillTransaction[]` | Fetches individual automatic payment transactions within a period (used by per-month expansion). |
 | `shouldAddBillsPeriodStart(now?, db?)` | `now?: Date, db?: Database` | `boolean` | Checks if bills period rollover is pending. |
 | `runBillsPeriodStart(now?, db?)` | `now?: Date, db?: Database` | `void` | Executes period start rollover and automatic recurring bill payments. |
 | `getBillsAutomaticPayments(db?)` | `db?: Database` | `BillsAutomaticPayment[]` | Lists configured automatic recurring monthly bill payments. |
@@ -34,6 +35,20 @@ Module `/src/db/bills.ts` handles bill payment transactions, billing cycle perio
 | `addBillsPredefinedPayment(name, db?)` | `name: string, db?: Database` | `BillsPredefinedPayment` | Adds new predefined bill template. |
 | `deleteBillsPredefinedPayment(id, db?)` | `id: number, db?: Database` | `boolean` | Removes predefined bill template. |
 | `isBillsUrgent(now?, db?)` | `now?: Date, db?: Database` | `boolean` | Calculates if unpaid bills exist near period start deadline. |
+
+## Automatic Payments Aggregation (ADR-032)
+
+`getBillTransactionsGroupedByPeriod` identifies automatic payments by
+`predefined_slug` membership in `bills_automatic_payments.slug` (the same
+rule used by `isBillsUrgent` and `shouldAddAutomaticPayments`). Such rows are
+excluded from `transactions` and summed into the period's `automatic` summary
+(`BillsAutomaticSummary { count, total }`, where `total` is negative). A period
+with no slug-matched rows yields `automatic: null`. The `is_automatic` flag is
+untouched and remains reserved for `'Period start'` markers (`amount = 0`).
+
+`getAutomaticPaymentsForPeriod(startTs, endTs)` returns the individual
+slug-matched rows for a period via `GET /api/bills/transactions/automatic`,
+ordered newest first.
 
 ## Urgency Logic (`isBillsUrgent`)
 

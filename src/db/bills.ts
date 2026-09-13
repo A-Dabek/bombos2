@@ -15,10 +15,16 @@ export interface BillsTransaction {
   created_at: number;
 }
 
+export interface BillsAutomaticSummary {
+  count: number;
+  total: number;  // negative sum
+}
+
 export interface BillsTransactionGroup {
   periodStartTs: number;       // start marker unix ts
   periodEndTs: number;         // end marker unix ts (same day next month)
-  transactions: BillsTransaction[];  // excludes is_automatic=1
+  transactions: BillsTransaction[];  // excludes is_automatic=1 and slug-matched auto payments
+  automatic: BillsAutomaticSummary | null;  // slug-matched auto payments folded into one summary
 }
 
 export function getBillsConfig(
@@ -153,6 +159,10 @@ export function getBillTransactionsGroupedByPeriod(
 ): BillsTransactionGroup[] {
   const dbConn = db ?? getDb();
 
+  const autoSlugs = new Set(
+    (dbConn.prepare("SELECT slug FROM bills_automatic_payments").all() as { slug: string }[]).map(r => r.slug),
+  );
+
   // Get ALL transactions ASC (oldest first) for proper grouping
   const transactions = dbConn.prepare(
     "SELECT id, description, amount, is_automatic, predefined_slug, created_at FROM bills_transactions ORDER BY created_at ASC, id ASC",
@@ -174,8 +184,25 @@ export function getBillTransactionsGroupedByPeriod(
         periodStartTs: tx.created_at,
         periodEndTs,
         transactions: [],  // period markers are NOT included in the list
+        automatic: null,
       };
       groups.push(currentGroup);
+    } else if (tx.predefined_slug && autoSlugs.has(tx.predefined_slug)) {
+      // Fold automatic payment into the period's summary
+      if (!currentGroup) {
+        currentGroup = {
+          periodStartTs: 0,
+          periodEndTs: 0,
+          transactions: [],
+          automatic: { count: 0, total: 0 },
+        };
+        groups.push(currentGroup);
+      }
+      if (!currentGroup.automatic) {
+        currentGroup.automatic = { count: 0, total: 0 };
+      }
+      currentGroup.automatic.count++;
+      currentGroup.automatic.total += tx.amount;
     } else if (currentGroup && !tx.is_automatic) {
       // Add to current group (only non-automatic transactions)
       currentGroup.transactions.push(tx);
@@ -185,6 +212,7 @@ export function getBillTransactionsGroupedByPeriod(
         periodStartTs: 0,
         periodEndTs: 0,
         transactions: [],
+        automatic: null,
       };
       groups.push(currentGroup);
       currentGroup.transactions.push(tx);
@@ -200,6 +228,21 @@ export function getBillTransactionsGroupedByPeriod(
   }
 
   return groups;
+}
+
+export function getAutomaticPaymentsForPeriod(
+  startTs: number,
+  endTs: number,
+  db?: Database.Database,
+): BillsTransaction[] {
+  const dbConn = db ?? getDb();
+  return dbConn.prepare(
+    `SELECT id, description, amount, is_automatic, predefined_slug, created_at
+     FROM bills_transactions
+     WHERE predefined_slug IN (SELECT slug FROM bills_automatic_payments)
+       AND created_at >= ? AND created_at < ?
+     ORDER BY created_at DESC, id DESC`,
+  ).all(startTs, endTs) as BillsTransaction[];
 }
 
 // ADR-023: Automatic Payments

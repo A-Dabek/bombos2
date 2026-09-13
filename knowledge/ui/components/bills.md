@@ -15,8 +15,10 @@ Bills UI components provide comprehensive billing management, automated payments
 ## Components
 
 | Component / File | Inputs / Props | Returns / Type | Description |
-|---|---|---|---|
+|---|---|---|---|---|
 | `BillsPage.tsx` | Bills state | JSX.Element | Main bills tracking and overview page. |
+| `BillsTransactionGroup.tsx` | `periodStartTs`, `periodEndTs`, `transactions`, `automatic` | JSX.Element | Bills-only wrapper composing the shared `TransactionGroup` plus the automatic payments section. |
+| `AutomaticPaymentsSection.tsx` | `summary`, `startTs`, `endTs` | JSX.Element | "Stałe opłaty" summary row with per-month expand/collapse; every expand refetches the period's automatic payments. |
 | `BillsAdmin.tsx` | Admin state | JSX.Element | Administration view for bills configuration. |
 | `AutomaticPaymentsAdmin.tsx` | Auto payments | JSX.Element | Management view for automatic recurring payments. |
 | `AutomaticPaymentItem.tsx` | Auto payment item | JSX.Element | Individual automatic payment row. |
@@ -28,6 +30,7 @@ Bills UI components provide comprehensive billing management, automated payments
 - Track monthly bills and payment statuses.
 - Configure automatic payments and predefined templates.
 - Record and manage bill transactions.
+- Per period, automatic payments render as one "Stałe opłaty" summary row that is always shown last, with a "Rozwiń (N)" button that lazily fetches and displays the individual rows for that month only (no client-side cache).
 
 ## Related Concepts
 

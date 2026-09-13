@@ -1,13 +1,13 @@
 import { component$, useVisibleTask$, useSignal, $, useContext } from "@builder.io/qwik";
-import type { BillsTransactionGroup } from "~/db/bills";
+import type { BillsTransactionGroup as BillsTransactionGroupData } from "~/db/bills";
 import BillsTransactionForm from "~/components/bills/BillsTransactionForm";
-import TransactionGroup from "~/components/transactions/TransactionGroup";
+import BillsTransactionGroup from "~/components/bills/BillsTransactionGroup";
 import AdminButton from "~/components/shared/AdminButton";
 import Loader from "~/components/shared/Loader";
 import { RefreshContext } from "~/constants/refresh";
 
 export default component$(() => {
-  const groups = useSignal<BillsTransactionGroup[]>([]);
+  const groups = useSignal<BillsTransactionGroupData[]>([]);
   const loading = useSignal(false);
   const error = useSignal<string | null>(null);
   const refreshSignal = useContext(RefreshContext);
@@ -75,11 +75,12 @@ export default component$(() => {
       {groups.value.length > 0 && (
         <div class="mt-6 space-y-4">
           {groups.value.map((group) => (
-            <TransactionGroup
+            <BillsTransactionGroup
               key={group.periodStartTs}
               periodStartTs={group.periodStartTs}
               periodEndTs={group.periodEndTs}
               transactions={group.transactions}
+              automatic={group.automatic}
             />
           ))}
         </div>

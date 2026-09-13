@@ -195,6 +195,16 @@ export function addBillsAutomaticPaymentSql(name: string, slug: string, amount: 
   db.close();
 }
 
+export function addBillAutoTransactionSql(description: string, slug: string, amount: number, created_at?: number) {
+  const db = new Database(DB_PATH);
+  const timestamp = created_at ?? Math.floor(Date.now() / 1000);
+  const normalizedAmount = -Math.abs(amount);
+  db.prepare(
+    "INSERT INTO bills_transactions (description, amount, is_automatic, predefined_slug, created_at) VALUES (?, ?, 0, ?, ?)"
+  ).run(description, normalizedAmount, slug, timestamp);
+  db.close();
+}
+
 // ADR-024: Predefined Payments helpers
 
 export function clearBillsPredefinedPayments() {

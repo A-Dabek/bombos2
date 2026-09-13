@@ -1,5 +1,5 @@
 import {expect, test} from "@playwright/test";
-import {addBillsPeriodStartMarker, clearBills, setupBillsConfig, clearBillsAutomaticPayments, addBillsAutomaticPaymentSql, clearBillsPredefinedPayments,} from "./setup.ts";
+import {addBillsPeriodStartMarker, clearBills, setupBillsConfig, clearBillsAutomaticPayments, addBillsAutomaticPaymentSql, clearBillsPredefinedPayments, addBillAutoTransactionSql, addBillTransactionSql,} from "./setup.ts";
 
 // Polish months in genitive case (for dates like "8 maja")
 const polishMonths = ["stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca", "lipca", "sierpnia", "września", "października", "listopada", "grudnia"];
@@ -84,6 +84,95 @@ test.describe("money module journeys", () => {
         await expect(page.getByText("-1200")).toBeVisible();
         await expect(page.getByText("Rent")).toBeVisible();
     });
+
+  test("Bills: Automatic payments aggregate into single Stałe opłaty summary and expand/collapse", async ({page}) => {
+    // 1. Seed: one period with automatic payments + one manual bill
+    const periodStart = Math.floor(Date.UTC(2026, 6, 1) / 1000);
+    addBillsPeriodStartMarker(periodStart);
+    addBillsAutomaticPaymentSql("Czynsz", "czynsz", 1200);
+    addBillsAutomaticPaymentSql("Internet", "internet", 80);
+    addBillAutoTransactionSql("Czynsz", "czynsz", 1200, periodStart + 3600);
+    addBillAutoTransactionSql("Internet", "internet", 80, periodStart + 7200);
+    addBillTransactionSql("Kwiatki", 50, false, periodStart + 10800);
+
+    let autoRequests = 0;
+    page.on("request", r => {
+      if (r.url().includes("/api/bills/transactions/automatic")) autoRequests++;
+    });
+
+    // 2. Land
+    await page.goto("/money/bills");
+    await page.getByTestId("loader").waitFor({state: "hidden"});
+    await page.waitForTimeout(500);
+
+    // 3. Exactly one summary row with the summed (negative) total
+    await expect(page.getByText("Stałe opłaty", {exact: true})).toHaveCount(1);
+    await expect(page.getByText("-1280")).toBeVisible();
+    await expect(page.getByText("Rozwiń (2)")).toBeVisible();
+
+    // Manual row visible; auto rows hidden until expanded
+    await expect(page.getByText("Kwiatki")).toBeVisible();
+    await expect(page.getByText("Czynsz")).not.toBeVisible();
+
+    // 4. Expand → refetch for this month → individual rows appear
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes("/api/bills/transactions/automatic") && r.request().method() === "GET"),
+      page.getByTestId("automatic-expand-btn").click(),
+    ]);
+    await expect(page.getByText("Czynsz")).toBeVisible();
+    await expect(page.getByText("-1200")).toBeVisible();
+    await expect(page.getByText("-80")).toBeVisible();
+    expect(autoRequests).toBeGreaterThanOrEqual(1);
+
+    // 5. Collapse clears them (no cache)
+    await page.getByTestId("automatic-collapse-btn").click();
+    await expect(page.getByText("Czynsz")).not.toBeVisible();
+    await expect(page.getByText("Stałe opłaty", {exact: true})).toHaveCount(1);
+
+    // 6. Re-expand refetches
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes("/api/bills/transactions/automatic") && r.request().method() === "GET"),
+      page.getByTestId("automatic-expand-btn").click(),
+    ]);
+    await expect(page.getByText("Czynsz")).toBeVisible();
+    expect(autoRequests).toBeGreaterThanOrEqual(2);
+  });
+
+  test("Bills: Automatic summaries are per-month and expand independently", async ({page}) => {
+    // 1. Seed two months with their own automatic payments
+    const julStart = Math.floor(Date.UTC(2026, 6, 1) / 1000);
+    const augStart = Math.floor(Date.UTC(2026, 7, 1) / 1000);
+    addBillsPeriodStartMarker(julStart);
+    addBillsPeriodStartMarker(augStart);
+    addBillsAutomaticPaymentSql("Czynsz", "czynsz", 1200);
+    addBillsAutomaticPaymentSql("Woda", "woda", 40);
+    addBillAutoTransactionSql("Czynsz", "czynsz", 1200, julStart + 3600);
+    addBillAutoTransactionSql("Czynsz", "czynsz", 1200, augStart + 3600);
+    addBillAutoTransactionSql("Woda", "woda", 40, augStart + 7200);
+
+    // 2. Land
+    await page.goto("/money/bills");
+    await page.getByTestId("loader").waitFor({state: "hidden"});
+    await page.waitForTimeout(500);
+
+    // 3. Two independent summaries (newest Aug first, then Jul)
+    await expect(page.getByText("Stałe opłaty", {exact: true})).toHaveCount(2);
+    await expect(page.getByText("-1240")).toBeVisible();
+    await expect(page.getByText("-1200")).toBeVisible();
+
+    // 4. Expand the newest (Aug) only
+    const expandBtns = page.getByTestId("automatic-expand-btn");
+    await expect(expandBtns).toHaveCount(2);
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes("/api/bills/transactions/automatic") && r.request().method() === "GET"),
+      expandBtns.first().click(),
+    ]);
+
+    // 5. Aug rows visible (Woda unique to Aug), Jul still collapsed ("Rozwiń (1)")
+    await expect(page.getByText("Woda")).toBeVisible();
+    await expect(page.getByTestId("automatic-collapse-btn")).toHaveCount(1);
+    await expect(page.getByText("Rozwiń (1)")).toBeVisible();
+  });
 
     test("Bills: Multiple periods create multiple groups", async ({page}) => {
         // 1. Add multiple period start markers (current timestamp — created_at matches real time)
