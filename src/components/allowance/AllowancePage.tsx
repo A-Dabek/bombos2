@@ -2,9 +2,12 @@ import { component$, useVisibleTask$, useSignal, $, useContext } from "@builder.
 import { apiRequest, jsonPost } from "~/lib/api";
 import type { AllowanceConfig } from "~/db/allowance";
 import AdminButton from "~/components/shared/AdminButton";
+import LoadMoreButton from "~/components/shared/LoadMoreButton";
 import TransactionForm from "../transactions/TransactionForm";
 import AllowanceTransactionGroup from "./AllowanceTransactionGroup";
 import { RefreshContext } from "~/constants/refresh";
+
+const PAGE_SIZE = 3;
 
 export default component$(() => {
   const config = useSignal<AllowanceConfig | null>(null);
@@ -13,8 +16,11 @@ export default component$(() => {
   const description = useSignal("");
   const amount = useSignal<string>("");
   const loading = useSignal(false);
+  const loadingMore = useSignal(false);
   const groups = useSignal<any[]>([]);
   const lastTransactionId = useSignal<number | null>(null);
+  const hasMore = useSignal(false);
+  const loadedCount = useSignal(PAGE_SIZE);
   const refreshSignal = useContext(RefreshContext);
 
   const loadData = $(async () => {
@@ -25,15 +31,35 @@ export default component$(() => {
     }
 
     try {
-      const res = await fetch("/api/allowance/transactions");
+      const res = await fetch(`/api/allowance/transactions?limit=${loadedCount.value}&offset=0`);
       if (res.ok) {
         const data = await res.json();
         balance.value = data.balance ?? 0;
         groups.value = data.groups ?? [];
         lastTransactionId.value = data.lastTransactionId ?? null;
+        hasMore.value = data.hasMore ?? false;
       }
     } catch {
       // Ignore
+    }
+  });
+
+  const loadMore = $(async () => {
+    if (loadingMore.value || !hasMore.value) return;
+    loadingMore.value = true;
+    error.value = null;
+    try {
+      const res = await fetch(`/api/allowance/transactions?limit=${PAGE_SIZE}&offset=${groups.value.length}`);
+      if (res.ok) {
+        const data = await res.json();
+        groups.value = [...groups.value, ...(data.groups ?? [])];
+        hasMore.value = data.hasMore ?? false;
+        loadedCount.value = groups.value.length;
+      }
+    } catch (e: any) {
+      error.value = e.message;
+    } finally {
+      loadingMore.value = false;
     }
   });
 
@@ -123,6 +149,10 @@ export default component$(() => {
             />
           ))}
         </div>
+      )}
+
+      {hasMore.value && (
+        <LoadMoreButton loading={loadingMore.value} onClick$={loadMore} />
       )}
     </div>
   );

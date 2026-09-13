@@ -114,6 +114,31 @@ test.describe("Money Allowance Module Journeys", () => {
     await expect(maySection.getByText("Lunch")).toBeVisible();
   });
 
+  test("Allowance: Load more reveals older periods three at a time", async ({ page }) => {
+    // 1. Seed 5 distinct monthly allowance periods
+    for (let m = 0; m < 5; m++) {
+      const ts = Math.floor(Date.UTC(2026, m, 15) / 1000);
+      addAllowanceTransactionSql("allowance", `Allowance ${m}`, 600, true, ts);
+    }
+
+    // 2. Land: only the 3 newest periods render
+    await page.goto("/money/allowance");
+    await page.getByTestId("loader").waitFor({ state: "hidden" });
+
+    const periodHeaders = page.getByTestId("period-header");
+    await expect(periodHeaders).toHaveCount(3);
+    const loadMoreBtn = page.getByTestId("load-more-btn");
+    await expect(loadMoreBtn).toBeVisible();
+
+    // 3. Load more appends the next page and hides the button
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes("/api/allowance/transactions?limit=3&offset=3")),
+      loadMoreBtn.click(),
+    ]);
+    await expect(periodHeaders).toHaveCount(5);
+    await expect(loadMoreBtn).not.toBeVisible();
+  });
+
 test("Run Allowance Check button adds allowance", async ({ page }) => {
     // 1. Set config to today's day so check runs
     const today = new Date().getDate();

@@ -5,12 +5,22 @@ import {
   getCurrentBalance,
   getLastTransactionId,
 } from "~/db/allowance";
+import { paginateGroups } from "~/db/pagination";
 
-export const onGet: RequestHandler = async ({ json }) => {
+export const onGet: RequestHandler = async ({ json, query }) => {
   const groups = getTransactionsGroupedByPeriod();
   const balance = getCurrentBalance();
   const lastTransactionId = getLastTransactionId();
-  json(200, { groups, balance, lastTransactionId });
+
+  if (query.has("limit")) {
+    const limit = Math.min(100, Math.max(1, Number(query.get("limit")) || 1));
+    const offset = Math.max(0, Number(query.get("offset")) || 0);
+    const page = paginateGroups(groups, limit, offset);
+    json(200, { groups: page.groups, hasMore: page.hasMore, balance, lastTransactionId });
+    return;
+  }
+
+  json(200, { groups, balance, lastTransactionId, hasMore: false });
 };
 
 export const onPost: RequestHandler = async ({ parseBody, json, error }) => {

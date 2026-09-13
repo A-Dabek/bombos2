@@ -5,11 +5,17 @@ import TransactionForm from "~/components/transactions/TransactionForm";
 import TransactionGroup from "~/components/transactions/TransactionGroup";
 import AdminButton from "~/components/shared/AdminButton";
 import Loader from "~/components/shared/Loader";
+import LoadMoreButton from "~/components/shared/LoadMoreButton";
 import { RefreshContext } from "~/constants/refresh";
+
+const PAGE_SIZE = 3;
 
 export default component$(() => {
   const groups = useSignal<BalanceTransactionGroup[]>([]);
   const loading = useSignal(false);
+  const loadingMore = useSignal(false);
+  const hasMore = useSignal(false);
+  const loadedCount = useSignal(PAGE_SIZE);
   const error = useSignal<string | null>(null);
   const description = useSignal("");
   const amount = useSignal("");
@@ -18,12 +24,33 @@ export default component$(() => {
   const loadData = $(async () => {
     loading.value = true;
     try {
-      const data = await apiRequest<{ groups: BalanceTransactionGroup[] }>("/api/balance/transactions");
+      const data = await apiRequest<{ groups: BalanceTransactionGroup[]; hasMore: boolean }>(
+        `/api/balance/transactions?limit=${loadedCount.value}&offset=0`,
+      );
       groups.value = data.groups ?? [];
+      hasMore.value = data.hasMore ?? false;
     } catch (e: any) {
       error.value = e.message;
     } finally {
       loading.value = false;
+    }
+  });
+
+  const loadMore = $(async () => {
+    if (loadingMore.value || !hasMore.value) return;
+    loadingMore.value = true;
+    error.value = null;
+    try {
+      const data = await apiRequest<{ groups: BalanceTransactionGroup[]; hasMore: boolean }>(
+        `/api/balance/transactions?limit=${PAGE_SIZE}&offset=${groups.value.length}`,
+      );
+      groups.value = [...groups.value, ...(data.groups ?? [])];
+      hasMore.value = data.hasMore ?? false;
+      loadedCount.value = groups.value.length;
+    } catch (e: any) {
+      error.value = e.message;
+    } finally {
+      loadingMore.value = false;
     }
   });
 
@@ -78,6 +105,10 @@ export default component$(() => {
             />
           ))}
         </div>
+      )}
+
+      {hasMore.value && (
+        <LoadMoreButton loading={loadingMore.value} onClick$={loadMore} />
       )}
     </div>
   );

@@ -50,6 +50,19 @@ untouched and remains reserved for `'Period start'` markers (`amount = 0`).
 slug-matched rows for a period via `GET /api/bills/transactions/automatic`,
 ordered newest first.
 
+## Period Pagination (ADR-033)
+
+`GET /api/bills/transactions` returns `{ groups, hasMore }`. Grouping still
+scans all rows; pagination slices the already-built groups (newest first) using
+`paginateGroups` from `/src/db/pagination.ts`.
+
+- No `limit` query param → all groups, `hasMore: false` (backward compatible).
+- `limit`/`offset` present → clamped (`limit` 1..100, `offset >= 0`). The
+  response contains at most `limit` groups; `hasMore` comes from a `limit + 1`
+  probe, so no extra count query is needed.
+- The UI (`BillsPage`) loads 3 period groups (`PAGE_SIZE`) initially and appends
+  the next 3 via the "Więcej" button.
+
 ## Urgency Logic (`isBillsUrgent`)
 
 Calculates whether unpaid bills require urgent attention. If current date is within deadline threshold (e.g. 3 days before `day_of_month`), and expected automatic/predefined payments remain unpaid for the active period, returns `true`.

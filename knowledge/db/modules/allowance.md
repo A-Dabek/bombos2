@@ -33,6 +33,22 @@ Module `/src/db/allowance.ts` provides data access functions for allowance confi
 
 The allowance period resets monthly on `day_of_month`. Transactions created on or after `day_of_month` belong to the upcoming period cycle. `runAllowance` checks if an automatic allowance transaction has already been posted for the current active period; if missing, it creates one.
 
+## Period Pagination (ADR-033)
+
+`GET /api/allowance/transactions` returns
+`{ groups, hasMore, balance, lastTransactionId }`. `balance` and
+`lastTransactionId` are global aggregates, computed independently of the page.
+Grouping still scans all rows; pagination slices the already-built groups
+(newest first) using `paginateGroups` from `/src/db/pagination.ts`.
+
+- No `limit` query param → all groups, `hasMore: false` (backward compatible).
+- `limit`/`offset` present → clamped (`limit` 1..100, `offset >= 0`). The
+  response contains at most `limit` groups; `hasMore` comes from a `limit + 1`
+  probe, so no extra count query is needed.
+- The UI (`AllowancePage`) loads 3 period groups (`PAGE_SIZE`) initially and
+  appends the next 3 via the "Więcej" button. Loading more does not
+  refetch the allowance config.
+
 ## Related Concepts
 
 * [Allowance Schemas](/knowledge/db/schemas/allowance.md)

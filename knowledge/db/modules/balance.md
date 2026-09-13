@@ -33,6 +33,19 @@ Module `/src/db/balance.ts` manages bank/account balance configuration, transact
 
 At the beginning of each billing period (on `day_of_month`), `runBalancePeriodStart` creates a period start transaction carrying over the ending balance of the previous period.
 
+## Period Pagination (ADR-033)
+
+`GET /api/balance/transactions` returns `{ groups, hasMore }`. Grouping still
+scans all rows; pagination slices the already-built groups (newest first) using
+`paginateGroups` from `/src/db/pagination.ts`.
+
+- No `limit` query param → all groups, `hasMore: false` (backward compatible).
+- `limit`/`offset` present → clamped (`limit` 1..100, `offset >= 0`). The
+  response contains at most `limit` groups; `hasMore` comes from a `limit + 1`
+  probe, so no extra count query is needed.
+- The UI (`BalancePage`) loads 3 period groups (`PAGE_SIZE`) initially and
+  appends the next 3 via the "Więcej" button.
+
 ## Related Concepts
 
 * [Balance Schemas](/knowledge/db/schemas/balance.md)
