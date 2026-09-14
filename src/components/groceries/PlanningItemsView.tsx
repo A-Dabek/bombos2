@@ -76,6 +76,7 @@ export default component$(
               {items.some((i) => i.bought) ? (
                 <DoubleConfirmButton
                   onConfirm$={onRemoveBought$}
+                  plain
                   text="Usuń kupione"
                   data-testid="delete-bought-btn"
                   class="w-full px-3 py-2 rounded bg-orange-500 text-white hover:bg-orange-600 text-sm font-medium"
@@ -83,6 +84,7 @@ export default component$(
               ) : (
                 <DoubleConfirmButton
                   onConfirm$={onRemoveAll$}
+                  plain
                   disabled={items.length === 0}
                   text="Usuń wszystkie"
                   data-testid="delete-all-btn"
@@ -104,7 +106,7 @@ export default component$(
                 <div class="space-y-6">
                   {sortedCategories.map((category) => (
                     <div key={category} class="space-y-2">
-                      <h3 class="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800 pb-1">
+                      <h3 class="text-sm font-bold text-gray-400 dark:text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800 pb-1">
                         {category}
                       </h3>
                       <ul class="space-y-2">
@@ -140,7 +142,7 @@ export default component$(
 
             {suggestions.length > 0 && (
               <div class="mt-6">
-                <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
+                <h3 class="text-xs font-bold text-gray-400 dark:text-gray-400 uppercase tracking-wider mb-2">
                   Sugestie
                 </h3>
                 <div class="flex flex-wrap gap-2">

@@ -41,6 +41,7 @@ export default component$(() => {
       <div class="mt-4">
         <DoubleConfirmButton
           onConfirm$={handleCleanup}
+          plain
           text="Sprzątnij gotowe paczki"
           class="px-3 py-1.5 text-sm rounded bg-red-500 text-white hover:bg-red-600 disabled:opacity-50"
           disabled={loading.value}

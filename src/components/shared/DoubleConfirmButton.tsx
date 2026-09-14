@@ -5,6 +5,12 @@ interface DoubleConfirmButtonProps {
   onConfirm$: PropFunction<() => void>;
   class?: string;
   text?: string;
+  /**
+   * When true, the default red/green text colors are omitted so the
+   * `class` prop fully controls the button's appearance (e.g. solid
+   * colored buttons with `text-white`).
+   */
+  plain?: boolean;
   "data-testid"?: string;
   disabled?: boolean;
 }
@@ -43,9 +49,10 @@ export default component$<DoubleConfirmButtonProps>((props) => {
       disabled={props.disabled}
       class={[
         "flex items-center transition-all duration-200",
-        isConfirming.value 
-          ? "text-green-500 dark:text-green-400"
-          : "text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300",
+        !props.plain &&
+          (isConfirming.value
+            ? "text-green-500 dark:text-green-400"
+            : "text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"),
         props.class,
       ]}
       data-testid={props["data-testid"] || "delete-btn"}

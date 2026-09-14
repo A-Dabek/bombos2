@@ -189,7 +189,7 @@ export default component$(
           </div>
 
           {lastAddedName.value && (
-            <div class="text-sm text-green-600 font-medium animate-pulse" data-testid="form-feedback">
+            <div class="text-sm text-green-600 dark:text-green-400 font-medium animate-pulse" data-testid="form-feedback">
               Poprzednio dodano: {lastAddedName.value}
             </div>
           )}

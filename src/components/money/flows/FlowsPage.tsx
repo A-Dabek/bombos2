@@ -94,6 +94,7 @@ export default component$(() => {
                 </span>
                 <DoubleConfirmButton
                   onConfirm$={() => handleDelete(flow.id)}
+                  plain
                   class="ml-4 p-1 text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400"
                 />
               </li>

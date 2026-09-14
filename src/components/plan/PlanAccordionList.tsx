@@ -90,6 +90,7 @@ export default component$(
                     </button>
                     <DoubleConfirmButton
                       onConfirm$={onRemoveAll$}
+                      plain={items.length === 0}
                       disabled={items.length === 0}
                       text="Usuń wszystkie"
                       class={`px-3 py-2 rounded ${items.length === 0 ? "bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-500" : ""}`}

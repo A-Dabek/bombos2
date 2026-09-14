@@ -2,6 +2,10 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+.dark {
+  color-scheme: dark;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

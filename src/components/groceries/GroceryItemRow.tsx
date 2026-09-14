@@ -84,7 +84,7 @@ export default component$(({
             <button
               onClick$={() => onEditClick$(item)}
               data-testid="edit-item-btn"
-              class="p-1 text-blue-500 hover:text-blue-700"
+              class="p-1 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
               aria-label="Edytuj"
             >
               <HiPencilOutline class="w-5 h-5" />

@@ -19,7 +19,7 @@ export default component$(({ item, isLastBought, onToggle$ }: ShoppingListItemPr
       <div class="flex items-center justify-between">
         <span
           class={`text-lg ${
-            item.bought ? "text-gray-400 dark:text-gray-500 line-through" : "text-gray-800 dark:text-gray-200"
+            item.bought ? "text-gray-400 dark:text-gray-400 line-through" : "text-gray-800 dark:text-gray-200"
           } ${item.urgent && !item.bought ? "text-red-600 dark:text-red-400 font-bold" : ""}`}
         >
           {item.name}
@@ -27,7 +27,7 @@ export default component$(({ item, isLastBought, onToggle$ }: ShoppingListItemPr
         {!(item.amount === 1 && item.unit === "x") && (
           <span
             class={`font-semibold ml-2 ${
-              item.bought ? "text-gray-300 dark:text-gray-600 line-through" : "text-blue-600 dark:text-blue-400"
+              item.bought ? "text-gray-300 dark:text-gray-500 line-through" : "text-blue-600 dark:text-blue-400"
             }`}
           >
             {item.amount}
@@ -38,7 +38,7 @@ export default component$(({ item, isLastBought, onToggle$ }: ShoppingListItemPr
       {item.description && (
         <p
           class={`text-sm mt-1 ${
-            item.bought ? "text-gray-300 dark:text-gray-600 line-through" : "text-gray-600 dark:text-gray-400"
+            item.bought ? "text-gray-300 dark:text-gray-500 line-through" : "text-gray-600 dark:text-gray-400"
           }`}
         >
           {item.description}
