@@ -16,11 +16,11 @@ import {
 } from "@qwikest/icons/heroicons";
 
 const TABS = [
-  { label: "Paczki", path: "/parcels", Icon: HiCubeOutline, testId: "parcels-nav-link" },
-  { label: "Posiłki", path: "/meals", Icon: HiFireOutline, testId: "meals-nav-link" },
+  { label: "Zakupy", path: "/groceries", Icon: HiShoppingCartOutline, testId: "groceries-nav-link" },
   { label: "Listy", path: "/plan", Icon: HiListBulletOutline, testId: "plan-nav-link" },
+  { label: "Posiłki", path: "/meals", Icon: HiFireOutline, testId: "meals-nav-link" },
   { label: "Finanse", path: "/money", Icon: HiBanknotesOutline, testId: "money-nav-link" },
-  { label: "Spożywcze", path: "/groceries", Icon: HiShoppingCartOutline, testId: "groceries-nav-link" },
+  { label: "Paczki", path: "/parcels", Icon: HiCubeOutline, testId: "parcels-nav-link" },
 ];
 
 export const useSettings = routeLoader$(({ sharedMap }) => {

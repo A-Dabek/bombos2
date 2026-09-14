@@ -9,7 +9,7 @@ test.describe("Groceries Module @groceries", () => {
   });
 
   test("top nav and redirection", async ({ page }) => {
-    await expect(page.getByRole("link", { name: "Spożywcze" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Zakupy" })).toBeVisible();
     await expect(page).toHaveURL(/\/groceries\/planning/);
   });
 

@@ -3,11 +3,11 @@ import { Link } from "@builder.io/qwik-city";
 import { useSettings } from "~/routes/layout";
 
 const ALL_TABS = [
-  { path: "/parcels", label: "Paczki" },
-  { path: "/meals", label: "Posiłki" },
+  { path: "/groceries", label: "Zakupy" },
   { path: "/plan", label: "Listy" },
+  { path: "/meals", label: "Posiłki" },
   { path: "/money", label: "Finanse" },
-  { path: "/groceries", label: "Spożywcze" },
+  { path: "/parcels", label: "Paczki" },
 ];
 
 export default component$(() => {
