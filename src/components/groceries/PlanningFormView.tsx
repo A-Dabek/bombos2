@@ -1,17 +1,21 @@
 import { component$, type PropFunction } from "@builder.io/qwik";
 import type { GroceryItem } from "~/db/groceries";
+import type { Aisle } from "~/db/shops";
 import GroceryForm from "./GroceryForm";
 
 interface PlanningFormViewProps {
   formMode: "none" | "add" | "edit";
   editingItem: GroceryItem | null;
+  aisles: Aisle[];
+  shopId: number | null;
   onSave$: PropFunction<(
     name: string,
     description: string,
     urgent: boolean,
     amount: number,
     unit: string,
-    category: string | null,
+    aisleId: number | null,
+    aisleManual: boolean,
   ) => void>;
   onNext$: PropFunction<(
     name: string,
@@ -19,7 +23,8 @@ interface PlanningFormViewProps {
     urgent: boolean,
     amount: number,
     unit: string,
-    category: string | null,
+    aisleId: number | null,
+    aisleManual: boolean,
   ) => void>;
   onCancel$: PropFunction<() => void>;
 }
@@ -28,6 +33,8 @@ export default component$(
   ({
     formMode,
     editingItem,
+    aisles,
+    shopId,
     onSave$,
     onNext$,
     onCancel$,
@@ -67,11 +74,13 @@ export default component$(
                 ? editingItem.unit
                 : "x"
             }
-            initialCategory={
+            initialAisleId={
               formMode === "edit" && editingItem
-                ? editingItem.category || ""
-                : ""
+                ? (editingItem.aisleId ?? null)
+                : null
             }
+            aisles={aisles}
+            shopId={shopId}
             onSave$={onSave$}
             onNext$={onNext$}
             onCancel$={onCancel$}

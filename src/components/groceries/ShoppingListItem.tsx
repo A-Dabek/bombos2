@@ -1,4 +1,4 @@
-import { component$, type PropFunction } from "@builder.io/qwik";
+import type { PropFunction } from "@builder.io/qwik";
 import type { GroceryItem } from "~/db/groceries";
 
 interface ShoppingListItemProps {
@@ -7,7 +7,11 @@ interface ShoppingListItemProps {
   onToggle$: PropFunction<(item: GroceryItem) => void>;
 }
 
-export default component$(({ item, isLastBought, onToggle$ }: ShoppingListItemProps) => {
+export default function ShoppingListItem({
+  item,
+  isLastBought,
+  onToggle$,
+}: ShoppingListItemProps) {
   return (
     <li
       class={`p-3 border rounded cursor-pointer transition-colors relative ${
@@ -51,4 +55,4 @@ export default component$(({ item, isLastBought, onToggle$ }: ShoppingListItemPr
       )}
     </li>
   );
-});
+}

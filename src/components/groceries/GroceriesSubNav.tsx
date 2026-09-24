@@ -3,6 +3,7 @@ import SubNav from "../shared/SubNav";
 
 export default component$(() => {
   const tabs = [
+    { label: "Sklepy", path: "/groceries/shops" },
     { label: "Planowanie", path: "/groceries/planning" },
     { label: "Zakupy", path: "/groceries/shopping" },
   ];

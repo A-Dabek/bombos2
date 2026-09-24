@@ -1,5 +1,9 @@
 # ADR-030: Groceries Categories
 
+> **Superseded by [ADR-034](adr-034-shop-scoped-groceries-aisles.md) (2026-09-24).**
+> The global free-text category model described here was retired in favour of
+> per-shop ordered aisles.
+
 ## Context
 The groceries module currently allows adding items with name, description, amount, and unit. Users want to organize these items into categories (e.g., "Fruits", "Dairy", "Meat") to make shopping easier by grouping items by shop aisles.
 

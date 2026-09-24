@@ -1,5 +1,35 @@
-import { test, expect } from "@playwright/test";
-import { clearGroceries } from "./setup";
+import { test, expect, type Page } from "@playwright/test";
+import { clearGroceries, seedAisle } from "./setup";
+
+async function fillAndSubmit(
+  page: Page,
+  name: string,
+  options: { aisleId?: number; next?: boolean } = {},
+) {
+  await page.getByLabel("Nazwa *").fill(name);
+  if (options.aisleId !== undefined) {
+    await page.getByTestId("aisle-select").selectOption(String(options.aisleId));
+  }
+  const button = options.next
+    ? page.getByTestId("form-next-btn")
+    : page.getByTestId("form-save-btn");
+  const responsePromise = page.waitForResponse(
+    (response) =>
+      new URL(response.url()).pathname === "/api/groceries" &&
+      response.request().method() === "POST",
+  );
+  await button.click();
+  await responsePromise;
+}
+
+async function addItem(
+  page: Page,
+  name: string,
+  options: { aisleId?: number; next?: boolean } = {},
+) {
+  await page.getByTestId("add-item-btn").click();
+  await fillAndSubmit(page, name, options);
+}
 
 test.describe("Groceries Module @groceries", () => {
   test.beforeEach(async ({ page }) => {
@@ -61,11 +91,11 @@ test.describe("Groceries Module @groceries", () => {
     await page.getByTestId("add-item-btn").click();
     await page.getByLabel("Nazwa *").fill("Apples");
     await page.getByLabel("Ilość").fill("1.5");
-    await page.locator("select").selectOption("kg");
+    await page.getByTestId("unit-select").selectOption("kg");
     await page.getByTestId("form-save-btn").click();
     await expect(page.getByText("1.5kg")).toBeVisible();
     await expect(page.getByText("Apples", { exact: true })).toBeVisible();
- 
+
     // Use +/- buttons
     await page.getByText("Milk", { exact: true }).click();
     await page.getByTestId("increase-amount-btn").click();
@@ -76,13 +106,8 @@ test.describe("Groceries Module @groceries", () => {
 
   test("planning page - remove all", async ({ page }) => {
     // Add two items
-    await page.getByTestId("add-item-btn").click();
-    await page.getByLabel("Nazwa *").fill("Item 1");
-    await page.getByTestId("form-save-btn").click();
-    
-    await page.getByTestId("add-item-btn").click();
-    await page.getByLabel("Nazwa *").fill("Item 2");
-    await page.getByTestId("form-save-btn").click();
+    await addItem(page, "Item 1");
+    await addItem(page, "Item 2");
 
     await expect(page.getByText("Item 1", { exact: true })).toBeVisible();
     await expect(page.getByText("Item 2", { exact: true })).toBeVisible();
@@ -118,17 +143,17 @@ test.describe("Groceries Module @groceries", () => {
     // First item should no longer have the marker
     await expect(milkItem).not.toContainText("Ostatni");
     await expect(milkItem).not.toHaveClass(/ring-2 ring-blue-400/);
-    
+
     // Close form
     await page.getByTestId("form-cancel-btn").click();
-    
+
     // Bread should still have the marker
     await expect(breadItem).toContainText("Ostatni");
   });
 
   test("planning page - form feedback after clicking Next", async ({ page }) => {
     await page.getByTestId("add-item-btn").click();
-    
+
     // No feedback initially
     await expect(page.getByTestId("form-feedback")).not.toBeVisible();
 
@@ -152,10 +177,10 @@ test.describe("Groceries Module @groceries", () => {
     await expect(page.getByTestId("delete-all-btn")).toBeDisabled();
     await expect(page.getByTestId("delete-bought-btn")).not.toBeVisible();
 
-    // Add one item (not bought)
-    await page.getByTestId("add-item-btn").click();
-    await page.getByLabel("Nazwa *").fill("Bread");
-    await page.getByTestId("form-save-btn").click();
+    // Add one item in an aisle so shopping toggles it directly
+    const aisleId = seedAisle("Nabiał");
+    await page.reload();
+    await addItem(page, "Bread", { aisleId });
 
     // Still only remove all visible, but now enabled
     await expect(page.getByTestId("delete-all-btn")).toBeVisible();
@@ -184,7 +209,6 @@ test.describe("Groceries Module @groceries", () => {
     const addItemBtn = page.getByTestId("add-item-btn");
     const itemRow = page.getByText("Bread");
 
-    // Ensure all elements are visible and stable before checking bounding boxes
     await expect(deleteBoughtBtn).toBeVisible();
     await expect(addItemBtn).toBeVisible();
     await expect(itemRow).toBeVisible();
@@ -199,7 +223,7 @@ test.describe("Groceries Module @groceries", () => {
 
     expect(deleteBoughtBox!.y).toBeLessThan(itemBox!.y);
     expect(itemBox!.y).toBeLessThan(addItemBox!.y);
-    
+
     // Test removal
     await deleteBoughtBtn.click();
     await deleteBoughtBtn.click(); // Confirm
@@ -207,10 +231,10 @@ test.describe("Groceries Module @groceries", () => {
   });
 
   test("shopping page - toggle bought status", async ({ page }) => {
-    // Add item in planning
-    await page.getByTestId("add-item-btn").click();
-    await page.getByLabel("Nazwa *").fill("Apples");
-    await page.getByTestId("form-save-btn").click();
+    // Add item in planning and place it in an aisle
+    const aisleId = seedAisle("Owoce");
+    await page.reload();
+    await addItem(page, "Apples", { aisleId });
 
     // Go to shopping
     await page.getByTestId("sub-nav-tab-zakupy").click();
@@ -234,67 +258,103 @@ test.describe("Groceries Module @groceries", () => {
     await expect(page.getByText("Apples", { exact: true })).not.toHaveClass(/line-through/);
   });
 
+  test("shopping page - prompts for aisle when buying unassigned item", async ({ page }) => {
+    await addItem(page, "Milk");
+    const aisleId = seedAisle("Nabiał");
+
+    await page.getByTestId("sub-nav-tab-zakupy").click();
+    const item = page.getByTestId(/shopping-item-/).filter({ hasText: "Milk" });
+    await item.click();
+
+    await expect(page.getByTestId("find-aisle-prompt")).toBeVisible();
+    await page.getByTestId(`find-aisle-${aisleId}`).click();
+
+    await expect(page.getByTestId("find-aisle-prompt")).not.toBeVisible();
+    await expect(page.getByRole("heading", { name: "Nabiał" })).toBeVisible();
+    await expect(item.getByText("Milk")).toHaveClass(/line-through/);
+  });
+
   test("sub-navigation tabs", async ({ page }) => {
     await expect(page.getByTestId("sub-nav-tab-planowanie")).toBeVisible();
     await expect(page.getByTestId("sub-nav-tab-zakupy")).toBeVisible();
+    await expect(page.getByTestId("sub-nav-tab-sklepy")).toBeVisible();
 
     await page.getByTestId("sub-nav-tab-zakupy").click();
     await expect(page).toHaveURL(/\/groceries\/shopping/);
+
+    await page.getByTestId("sub-nav-tab-sklepy").click();
+    await expect(page).toHaveURL(/\/groceries\/shops/);
 
     await page.getByTestId("sub-nav-tab-planowanie").click();
     await expect(page).toHaveURL(/\/groceries\/planning/);
   });
 
-  test.describe("Categories", () => {
-    test("can add item with category", async ({ page }) => {
-      await page.getByTestId("add-item-btn").click();
-      await page.getByLabel("Nazwa *").fill("Banana");
-      await page.getByLabel("Kategoria").fill("Fruits");
-      await page.getByTestId("form-save-btn").click();
+  test.describe("Aisles", () => {
+    test("can add item with aisle", async ({ page }) => {
+      const aisleId = seedAisle("Nabiał");
+      await page.reload();
 
-      await expect(page.getByText("Fruits", { exact: true })).toBeVisible();
+      await addItem(page, "Banana", { aisleId });
+
+      await expect(page.getByRole("heading", { name: "Nabiał" })).toBeVisible();
       await expect(page.getByText("Banana", { exact: true })).toBeVisible();
     });
 
-    test("auto-fills category for known products", async ({ page }) => {
-      // Add first item with category
-      await page.getByTestId("add-item-btn").click();
-      await page.getByLabel("Nazwa *").fill("Milk");
-      await page.getByLabel("Kategoria").fill("Dairy");
-      await page.getByTestId("form-save-btn").click();
+    test("auto-fills aisle for known products", async ({ page }) => {
+      const aisleId = seedAisle("Dairy");
+      await page.reload();
 
-      // Add second item with same name
+      // Add first item with aisle (manual pick is learned)
+      await addItem(page, "Milk", { aisleId });
+
+      // Add second item with same name - aisle should be auto-filled
       await page.getByTestId("add-item-btn").click();
       await page.getByLabel("Nazwa *").fill("Milk");
-      
-      // Wait for auto-fill
-      await expect(page.getByLabel("Kategoria")).toHaveValue("Dairy", { timeout: 10000 });
+      await expect(page.getByTestId("aisle-select")).toHaveValue(String(aisleId), {
+        timeout: 10000,
+      });
     });
 
-    test("groups items by category in planning", async ({ page }) => {
+    test("clears stale auto-suggestion when name changes", async ({ page }) => {
+      const aisleId = seedAisle("Dairy");
+      await page.reload();
+
+      await addItem(page, "Milk", { aisleId });
+
       await page.getByTestId("add-item-btn").click();
       await page.getByLabel("Nazwa *").fill("Milk");
-      await page.getByLabel("Kategoria").fill("Dairy");
-      await page.getByTestId("form-next-btn").click();
+      await expect(page.getByTestId("aisle-select")).toHaveValue(String(aisleId), {
+        timeout: 10000,
+      });
 
-      await page.getByLabel("Nazwa *").fill("Apple");
-      await page.getByLabel("Kategoria").fill("Fruits");
+      // Changing the name must clear the stale suggestion
+      await page.getByLabel("Nazwa *").fill("Bread");
+      await expect(page.getByTestId("aisle-select")).toHaveValue("");
       await page.getByTestId("form-save-btn").click();
 
-      await expect(page.getByText("Dairy", { exact: true })).toBeVisible();
-      await expect(page.getByText("Fruits", { exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Bez alejki" })).toBeVisible();
+      await expect(page.getByText("Bread", { exact: true })).toBeVisible();
     });
 
-    test("filters and groups by category in shopping", async ({ page }) => {
-      // Add items in planning
-      await page.getByTestId("add-item-btn").click();
-      await page.getByLabel("Nazwa *").fill("Milk");
-      await page.getByLabel("Kategoria").fill("Dairy");
-      await page.getByTestId("form-next-btn").click();
+    test("groups items by aisle in planning", async ({ page }) => {
+      const dairyId = seedAisle("Dairy");
+      const fruitsId = seedAisle("Fruits");
+      await page.reload();
 
-      await page.getByLabel("Nazwa *").fill("Apple");
-      await page.getByLabel("Kategoria").fill("Fruits");
-      await page.getByTestId("form-save-btn").click();
+      await addItem(page, "Milk", { aisleId: dairyId, next: true });
+      await fillAndSubmit(page, "Apple", { aisleId: fruitsId });
+
+      await expect(page.getByRole("heading", { name: "Dairy" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Fruits" })).toBeVisible();
+    });
+
+    test("filters and groups by aisle in shopping", async ({ page }) => {
+      const dairyId = seedAisle("Dairy");
+      const fruitsId = seedAisle("Fruits");
+      await page.reload();
+
+      await addItem(page, "Milk", { aisleId: dairyId, next: true });
+      await fillAndSubmit(page, "Apple", { aisleId: fruitsId });
 
       // Go to shopping
       await page.getByTestId("sub-nav-tab-zakupy").click();
@@ -307,19 +367,16 @@ test.describe("Groceries Module @groceries", () => {
 
       // Switch to Dairy
       await page.getByRole("button", { name: "Dairy" }).click();
-      
-      // Find Milk in Dairy view
+
       const milkInShopping = page.getByTestId(/shopping-item-/).filter({ hasText: "Milk" });
       await expect(milkInShopping).toBeVisible();
 
-      // Mark Milk as bought
+      // Mark Milk as bought (assigned, so no prompt)
       await milkInShopping.click();
 
-      // NEW BEHAVIOR: Milk should NOT disappear from Dairy view
       await expect(milkInShopping).toBeVisible();
       await expect(milkInShopping.locator("span").first()).toHaveClass(/line-through/);
 
-      // Category pill should be marked as completed (check checkmark first)
       await expect(page.getByRole("button", { name: "Dairy ✓" })).toBeVisible();
 
       // Switch to "All" view to see the Dairy pill color (not selected)
@@ -327,85 +384,66 @@ test.describe("Groceries Module @groceries", () => {
       const dairyPill = page.getByRole("button", { name: "Dairy ✓" });
       await expect(dairyPill).toHaveClass(/text-green-700/);
 
-      // Header in "All" view should be VISIBLE (now we show finished categories at the bottom)
       await expect(page.getByRole("heading", { name: "Dairy" })).toBeVisible();
     });
 
     test("visual cue for most recently bought item", async ({ page }) => {
-      // Add items in planning
-      await page.getByTestId("add-item-btn").click();
-      await page.getByLabel("Nazwa *").fill("Milk");
-      await page.getByTestId("form-next-btn").click();
-      await page.getByLabel("Nazwa *").fill("Apple");
-      await page.getByTestId("form-save-btn").click();
+      const aisleId = seedAisle("Nabiał");
+      await page.reload();
 
-      // Go to shopping
+      await addItem(page, "Milk", { aisleId, next: true });
+      await fillAndSubmit(page, "Apple", { aisleId });
+
       await page.getByTestId("sub-nav-tab-zakupy").click();
 
       const milk = page.getByTestId(/shopping-item-/).filter({ hasText: "Milk" });
       const apple = page.getByTestId(/shopping-item-/).filter({ hasText: "Apple" });
 
-      // Mark Milk as bought
       await milk.click();
       await expect(milk).toContainText("Ostatni");
       await expect(milk).toHaveClass(/ring-2 ring-blue-400/);
 
-      // Mark Apple as bought
       await apple.click();
-      // Category "Inne" should now be VISIBLE at the bottom in "All" view
       await expect(apple).toBeVisible();
 
-      // Select "Inne" to see it (it was already visible, but this tests filtering)
-      await page.getByRole("button", { name: "Inne ✓" }).click();
+      await page.getByRole("button", { name: "Nabiał ✓" }).click();
       await expect(apple).toContainText("Ostatni");
       await expect(apple).toHaveClass(/ring-2 ring-blue-400/);
 
-      // Milk should no longer have the cue
       await expect(milk).not.toContainText("Ostatni");
       await expect(milk).not.toHaveClass(/ring-2 ring-blue-400/);
 
-      // Untoggle Apple - cue should disappear or move?
       await apple.click();
       await expect(apple).not.toContainText("Ostatni");
     });
 
+    test("manual aisle completion in shopping", async ({ page }) => {
+      const aisleId = seedAisle("Dairy");
+      await page.reload();
 
-    test("manual category completion in shopping", async ({ page }) => {
-      // Add item with category
-      await page.getByTestId("add-item-btn").click();
-      await page.getByLabel("Nazwa *").fill("Milk");
-      await page.getByLabel("Kategoria").fill("Dairy");
-      await page.getByTestId("form-save-btn").click();
+      await addItem(page, "Milk", { aisleId });
 
-      // Go to shopping
       await page.getByTestId("sub-nav-tab-zakupy").click();
 
       await expect(page.getByRole("heading", { name: "Dairy" })).toBeVisible();
       await expect(page.getByText("Milk", { exact: true })).toBeVisible();
 
-      // Mark as finished
-      await page.getByTestId("finish-category-Dairy").click();
+      await page.getByTestId("finish-aisle-Dairy").click();
 
-      // Should stay visible in "All" view but sorted last
       await expect(page.getByRole("heading", { name: "Dairy" })).toBeVisible();
       await expect(page.getByText("Milk", { exact: true })).toBeVisible();
 
-      // Select "Dairy" from filter
       await page.getByRole("button", { name: "Dairy ✓" }).click();
       await expect(page.getByRole("heading", { name: "Dairy" })).toBeVisible();
-      await expect(page.getByText("Milk", { exact: true })).toBeVisible();
-      await expect(page.getByTestId("finish-category-Dairy")).toBeVisible();
-      await expect(page.getByTestId("finish-category-Dairy")).toContainText("Skończone");
-
-      // Pill should also show completion
-      await expect(page.getByRole("button", { name: "Dairy ✓" })).toBeVisible();
+      await expect(page.getByTestId("finish-aisle-Dairy")).toContainText("Skończone");
     });
   });
+
   test("suggestions appear after removing bought items", async ({ page }) => {
-    // Add an item
-    await page.getByTestId("add-item-btn").click();
-    await page.getByLabel("Nazwa *").fill("Milk");
-    await page.getByTestId("form-save-btn").click();
+    // Add an item and place it in an aisle
+    const aisleId = seedAisle("Nabiał");
+    await page.reload();
+    await addItem(page, "Milk", { aisleId });
 
     // Mark as bought
     await page.getByTestId("sub-nav-tab-zakupy").click();

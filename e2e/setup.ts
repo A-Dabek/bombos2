@@ -153,10 +153,29 @@ export function addAllowanceTransactionSql(type: string, description: string, am
 
 export function clearGroceries() {
   const db = new Database(DB_PATH);
+  db.prepare("DELETE FROM groceries_item_aisles").run();
+  db.prepare("DELETE FROM groceries_product_aisles").run();
+  db.prepare("DELETE FROM groceries_completed_aisles").run();
   db.prepare("DELETE FROM groceries_items").run();
-  db.prepare("DELETE FROM groceries_product_categories").run();
-  db.prepare("DELETE FROM groceries_completed_categories").run();
+  db.prepare("DELETE FROM shop_aisles").run();
+  db.prepare("DELETE FROM shops").run();
+  db.prepare("DELETE FROM settings WHERE key = 'active_shop'").run();
+  db.prepare("INSERT INTO shops (id, name) VALUES (1, 'Lidl')").run();
+  db.prepare(
+    "INSERT INTO settings (key, user_email, value) VALUES ('active_shop', 'default', '1')",
+  ).run();
   db.close();
+}
+
+export function seedAisle(name: string, shopId = 1): number {
+  const db = new Database(DB_PATH);
+  const id = db
+    .prepare(
+      "INSERT INTO shop_aisles (shop_id, name, sort_order) VALUES (?, ?, (SELECT COALESCE(MAX(sort_order), -1) + 1 FROM shop_aisles WHERE shop_id = ?))",
+    )
+    .run(shopId, name, shopId).lastInsertRowid as number;
+  db.close();
+  return id;
 }
 
 export function clearFlows() {
@@ -174,6 +193,9 @@ export function clearAll() {
   db.prepare("DELETE FROM allowance_transactions").run();
   db.prepare("DELETE FROM allowance_config").run();
   db.prepare("DELETE FROM bills_automatic_payments").run();
+  db.prepare("DELETE FROM groceries_item_aisles").run();
+  db.prepare("DELETE FROM groceries_product_aisles").run();
+  db.prepare("DELETE FROM groceries_completed_aisles").run();
   db.prepare("DELETE FROM groceries_items").run();
   db.prepare("DELETE FROM money_flows").run();
   db.prepare("DELETE FROM settings").run();

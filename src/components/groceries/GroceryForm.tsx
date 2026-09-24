@@ -2,6 +2,9 @@ import { component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
 import TextInput from "~/components/shared/TextInput";
 import TextArea from "~/components/shared/TextArea";
 import Checkbox from "~/components/shared/Checkbox";
+import type { Aisle } from "~/db/shops";
+
+type AisleSource = "none" | "auto" | "manual";
 
 interface GroceryFormProps {
   mode: "add" | "edit";
@@ -10,14 +13,17 @@ interface GroceryFormProps {
   initialUrgent?: boolean;
   initialAmount?: number;
   initialUnit?: string;
-  initialCategory?: string;
+  initialAisleId?: number | null;
+  aisles: Aisle[];
+  shopId: number | null;
   onSave$: (
     name: string,
     description: string,
     urgent: boolean,
     amount: number,
     unit: string,
-    category: string | null,
+    aisleId: number | null,
+    aisleManual: boolean,
   ) => void;
   onNext$?: (
     name: string,
@@ -25,7 +31,8 @@ interface GroceryFormProps {
     urgent: boolean,
     amount: number,
     unit: string,
-    category: string | null,
+    aisleId: number | null,
+    aisleManual: boolean,
   ) => void;
   onCancel$: () => void;
 }
@@ -38,7 +45,9 @@ export default component$(
     initialUrgent = false,
     initialAmount,
     initialUnit = "x",
-    initialCategory = "",
+    initialAisleId = null,
+    aisles,
+    shopId,
     onSave$,
     onNext$,
     onCancel$,
@@ -48,39 +57,39 @@ export default component$(
     const formUrgent = useSignal(initialUrgent);
     const formAmount = useSignal<number | null>(initialAmount ?? null);
     const formUnit = useSignal(initialUnit);
-    const formCategory = useSignal(initialCategory);
+    const formAisleId = useSignal<number | null>(initialAisleId);
+    const aisleSource = useSignal<AisleSource>("none");
     const lastAddedName = useSignal("");
-    const allCategories = useSignal<string[]>([]);
-
-    useVisibleTask$(async () => {
-      try {
-        const response = await fetch("/api/groceries/categories");
-        if (response.ok) {
-          allCategories.value = await response.json();
-        }
-      } catch (error) {
-        console.error("Failed to fetch categories:", error);
-      }
-    });
 
     useVisibleTask$(({ track }) => {
       const name = track(() => formName.value);
-      if (mode === "add" && name.trim().length > 2) {
-        const timer = setTimeout(async () => {
-          try {
-            const response = await fetch(`/api/groceries/suggest-category?name=${encodeURIComponent(name)}`);
-            if (response.ok) {
-              const { category } = await response.json();
-              if (category && !formCategory.value) {
-                formCategory.value = category;
-              }
-            }
-          } catch (error) {
-            console.error("Failed to fetch suggested category:", error);
-          }
-        }, 500);
-        return () => clearTimeout(timer);
+      if (mode !== "add" || shopId === null) return;
+      if (aisleSource.value === "manual") return;
+
+      // A previously auto-suggested aisle is stale once the name changes.
+      if (aisleSource.value === "auto") {
+        formAisleId.value = null;
+        aisleSource.value = "none";
       }
+
+      if (name.trim().length <= 2) return;
+      const timer = setTimeout(async () => {
+        try {
+          const response = await fetch(
+            `/api/groceries/suggest-aisle?name=${encodeURIComponent(name)}&shop=${shopId}`,
+          );
+          if (response.ok) {
+            const { aisleId } = await response.json();
+            if (aisleId != null && aisleSource.value !== "manual") {
+              formAisleId.value = aisleId;
+              aisleSource.value = "auto";
+            }
+          }
+        } catch (error) {
+          console.error("Failed to fetch suggested aisle:", error);
+        }
+      }, 500);
+      return () => clearTimeout(timer);
     });
 
     useVisibleTask$(({ track }) => {
@@ -96,6 +105,16 @@ export default component$(
       }, 300);
       return () => clearTimeout(timer);
     });
+
+    const resetForm = () => {
+      formName.value = "";
+      formDescription.value = "";
+      formUrgent.value = false;
+      formAmount.value = null;
+      formUnit.value = "x";
+      formAisleId.value = null;
+      aisleSource.value = "none";
+    };
 
     return (
       <div
@@ -150,6 +169,7 @@ export default component$(
                 onChange$={(e) =>
                   (formUnit.value = (e.target as HTMLSelectElement).value)
                 }
+                data-testid="unit-select"
                 class="w-full p-2 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="x">x</option>
@@ -161,22 +181,30 @@ export default component$(
           </div>
           <div class="flex items-end space-x-3">
             <div class="flex-1">
-              <TextInput
-                label="Kategoria"
-                value={formCategory.value}
-                onInput$={(e) =>
-                  (formCategory.value = (e.target as HTMLInputElement).value)
-                }
-                maxLength={50}
-                class="w-full"
-                list="categories-list"
-                placeholder="np. Owoce, Nabiał..."
-              />
-              <datalist id="categories-list">
-                {allCategories.value.map((cat) => (
-                  <option key={cat} value={cat} />
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Alejka
+              </label>
+              <select
+                value={formAisleId.value?.toString() ?? ""}
+                onChange$={(e) => {
+                  const value = (e.target as HTMLSelectElement).value;
+                  if (value === "") {
+                    formAisleId.value = null;
+                  } else {
+                    formAisleId.value = Number(value);
+                  }
+                  aisleSource.value = "manual";
+                }}
+                data-testid="aisle-select"
+                class="w-full p-2 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Bez alejki</option>
+                {aisles.map((aisle) => (
+                  <option key={aisle.id} value={aisle.id.toString()}>
+                    {aisle.name}
+                  </option>
                 ))}
-              </datalist>
+              </select>
             </div>
             <div class="pb-3">
               <Checkbox
@@ -212,7 +240,8 @@ export default component$(
                   formUrgent.value,
                   formAmount.value ?? 1.0,
                   formUnit.value,
-                  formCategory.value,
+                  formAisleId.value,
+                  aisleSource.value === "manual",
                 )
               }
               data-testid="form-save-btn"
@@ -230,14 +259,10 @@ export default component$(
                     formUrgent.value,
                     formAmount.value ?? 1.0,
                     formUnit.value,
-                    formCategory.value,
+                    formAisleId.value,
+                    aisleSource.value === "manual",
                   );
-                  formName.value = "";
-                  formDescription.value = "";
-                  formUrgent.value = false;
-                  formAmount.value = null;
-                  formUnit.value = "x";
-                  formCategory.value = "";
+                  resetForm();
                   // Focus back on name input
                   const input = document.querySelector<HTMLElement>(
                     '[data-testid="edit-form-add"] input',

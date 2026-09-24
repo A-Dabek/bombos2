@@ -12,37 +12,13 @@ export interface GroceryItem {
   created_at: number;
   amount: number;
   unit: string;
-  category: string | null;
+  aisleId?: number | null;
 }
 
-export function getGroceryItems(db?: Database.Database): GroceryItem[] {
-  const dbConn = db ?? getDb();
-  const rows = dbConn.prepare(
-    "SELECT id, name, description, urgent, bought, created_at, amount, unit, category FROM groceries_items ORDER BY id",
-  ).raw(true).all() as unknown[][];
-  return rows.map((row) => ({
-    id: row[0] as number,
-    name: row[1] as string,
-    description: row[2] as string | null,
-    urgent: (row[3] as number) === 1,
-    bought: (row[4] as number) === 1,
-    created_at: row[5] as number,
-    amount: row[6] as number,
-    unit: row[7] as string,
-    category: row[8] as string | null,
-  }));
-}
+const ITEM_COLUMNS =
+  "id, name, description, urgent, bought, created_at, amount, unit";
 
-export function getGroceryItemById(
-  id: number,
-  db?: Database.Database,
-): GroceryItem | undefined {
-  const dbConn = db ?? getDb();
-  const rows = dbConn.prepare(
-    "SELECT id, name, description, urgent, bought, created_at, amount, unit, category FROM groceries_items WHERE id = ?",
-  ).raw(true).all(id) as unknown[][];
-  if (rows.length === 0) return undefined;
-  const row = rows[0];
+function rowToItem(row: unknown[]): GroceryItem {
   return {
     id: row[0] as number,
     name: row[1] as string,
@@ -52,8 +28,29 @@ export function getGroceryItemById(
     created_at: row[5] as number,
     amount: row[6] as number,
     unit: row[7] as string,
-    category: row[8] as string | null,
   };
+}
+
+export function getGroceryItems(db?: Database.Database): GroceryItem[] {
+  const dbConn = db ?? getDb();
+  const rows = dbConn
+    .prepare(`SELECT ${ITEM_COLUMNS} FROM groceries_items ORDER BY id`)
+    .raw(true)
+    .all() as unknown[][];
+  return rows.map(rowToItem);
+}
+
+export function getGroceryItemById(
+  id: number,
+  db?: Database.Database,
+): GroceryItem | undefined {
+  const dbConn = db ?? getDb();
+  const rows = dbConn
+    .prepare(`SELECT ${ITEM_COLUMNS} FROM groceries_items WHERE id = ?`)
+    .raw(true)
+    .all(id) as unknown[][];
+  if (rows.length === 0) return undefined;
+  return rowToItem(rows[0]);
 }
 
 export function createGroceryItem(
@@ -62,18 +59,14 @@ export function createGroceryItem(
   urgent: boolean,
   amount: number,
   unit: string,
-  category: string | null,
   db?: Database.Database,
 ): number {
   const dbConn = db ?? getDb();
-  const result = dbConn.prepare(
-    "INSERT INTO groceries_items (name, description, urgent, amount, unit, category) VALUES (?, ?, ?, ?, ?, ?)",
-  ).run(name, description, urgent ? 1 : 0, amount, unit, category);
-  
-  if (category) {
-    saveProductCategory(name, category, dbConn);
-  }
-
+  const result = dbConn
+    .prepare(
+      "INSERT INTO groceries_items (name, description, urgent, amount, unit) VALUES (?, ?, ?, ?, ?)",
+    )
+    .run(name, description, urgent ? 1 : 0, amount, unit);
   return result.lastInsertRowid as number;
 }
 
@@ -84,18 +77,14 @@ export function updateGroceryItem(
   urgent: boolean,
   amount: number,
   unit: string,
-  category: string | null,
   db?: Database.Database,
 ): boolean {
   const dbConn = db ?? getDb();
-  const result = dbConn.prepare(
-    "UPDATE groceries_items SET name = ?, description = ?, urgent = ?, amount = ?, unit = ?, category = ? WHERE id = ?",
-  ).run(name, description, urgent ? 1 : 0, amount, unit, category, id);
-
-  if (category) {
-    saveProductCategory(name, category, dbConn);
-  }
-
+  const result = dbConn
+    .prepare(
+      "UPDATE groceries_items SET name = ?, description = ?, urgent = ?, amount = ?, unit = ? WHERE id = ?",
+    )
+    .run(name, description, urgent ? 1 : 0, amount, unit, id);
   return result.changes > 0;
 }
 
@@ -105,9 +94,9 @@ export function setGroceryItemBought(
   db?: Database.Database,
 ): boolean {
   const dbConn = db ?? getDb();
-  const result = dbConn.prepare(
-    "UPDATE groceries_items SET bought = ? WHERE id = ?",
-  ).run(bought ? 1 : 0, id);
+  const result = dbConn
+    .prepare("UPDATE groceries_items SET bought = ? WHERE id = ?")
+    .run(bought ? 1 : 0, id);
   return result.changes > 0;
 }
 
@@ -117,9 +106,9 @@ export function updateGroceryItemAmount(
   db?: Database.Database,
 ): boolean {
   const dbConn = db ?? getDb();
-  const result = dbConn.prepare(
-    "UPDATE groceries_items SET amount = ? WHERE id = ?",
-  ).run(amount, id);
+  const result = dbConn
+    .prepare("UPDATE groceries_items SET amount = ? WHERE id = ?")
+    .run(amount, id);
   return result.changes > 0;
 }
 
@@ -129,101 +118,36 @@ export function deleteGroceryItem(id: number, db?: Database.Database): boolean {
   if (item && item.bought) {
     incrementGroceryItemCount(item.name, dbConn);
   }
+  dbConn.prepare("DELETE FROM groceries_item_aisles WHERE item_id = ?").run(id);
   const result = dbConn.prepare("DELETE FROM groceries_items WHERE id = ?").run(id);
   return result.changes > 0;
 }
 
 export function deleteAllGroceryItems(db?: Database.Database): number {
   const dbConn = db ?? getDb();
+  dbConn.prepare("DELETE FROM groceries_item_aisles").run();
   const result = dbConn.prepare("DELETE FROM groceries_items").run();
-  clearCompletedCategories(dbConn);
   return result.changes;
 }
 
 export function deleteBoughtGroceryItems(db?: Database.Database): number {
   const dbConn = db ?? getDb();
   const boughtItems = dbConn
-    .prepare("SELECT name FROM groceries_items WHERE bought = 1")
-    .all() as { name: string }[];
+    .prepare("SELECT id, name FROM groceries_items WHERE bought = 1")
+    .all() as { id: number; name: string }[];
   for (const item of boughtItems) {
     incrementGroceryItemCount(item.name, dbConn);
   }
-  const result = dbConn.prepare("DELETE FROM groceries_items WHERE bought = 1").run();
-  clearCompletedCategories(dbConn);
-  return result.changes;
-}
-
-export function getCompletedCategories(db?: Database.Database): string[] {
-  const dbConn = db ?? getDb();
-  const rows = dbConn
-    .prepare("SELECT category FROM groceries_completed_categories")
-    .raw(true)
-    .all() as string[][];
-  return rows.map((row) => row[0]);
-}
-
-export function setCategoryCompleted(
-  category: string,
-  completed: boolean,
-  db?: Database.Database,
-): void {
-  const dbConn = db ?? getDb();
-  if (completed) {
+  if (boughtItems.length > 0) {
+    const placeholders = boughtItems.map(() => "?").join(", ");
     dbConn
       .prepare(
-        "INSERT OR IGNORE INTO groceries_completed_categories (category) VALUES (?)",
+        `DELETE FROM groceries_item_aisles WHERE item_id IN (${placeholders})`,
       )
-      .run(category);
-  } else {
-    dbConn
-      .prepare("DELETE FROM groceries_completed_categories WHERE category = ?")
-      .run(category);
+      .run(...boughtItems.map((item) => item.id));
   }
-}
-
-export function clearCompletedCategories(db?: Database.Database): void {
-  const dbConn = db ?? getDb();
-  dbConn.prepare("DELETE FROM groceries_completed_categories").run();
-}
-
-
-export function getSuggestedCategory(
-  name: string,
-  db?: Database.Database,
-): string | null {
-  const dbConn = db ?? getDb();
-  const normalized = normalizeProductName(name);
-  const row = dbConn
-    .prepare(
-      "SELECT category FROM groceries_product_categories WHERE normalized_name = ?",
-    )
-    .get(normalized) as { category: string } | undefined;
-  return row?.category ?? null;
-}
-
-export function saveProductCategory(
-  name: string,
-  category: string,
-  db?: Database.Database,
-): void {
-  const dbConn = db ?? getDb();
-  const normalized = normalizeProductName(name);
-  dbConn
-    .prepare(
-      "INSERT INTO groceries_product_categories (normalized_name, category) VALUES (?, ?) ON CONFLICT(normalized_name) DO UPDATE SET category = EXCLUDED.category",
-    )
-    .run(normalized, category);
-}
-
-export function getAllCategories(db?: Database.Database): string[] {
-  const dbConn = db ?? getDb();
-  const rows = dbConn
-    .prepare(
-      "SELECT DISTINCT category FROM groceries_product_categories ORDER BY category",
-    )
-    .raw(true)
-    .all() as string[][];
-  return rows.map((row) => row[0]);
+  const result = dbConn.prepare("DELETE FROM groceries_items WHERE bought = 1").run();
+  return result.changes;
 }
 
 export function incrementGroceryItemCount(
@@ -246,16 +170,11 @@ export function incrementGroceryItemCount(
 export function getTopGrocerySuggestions(
   limit: number = 10,
   db?: Database.Database,
-): { name: string; buy_count: number; category: string | null }[] {
+): { name: string; buy_count: number }[] {
   const dbConn = db ?? getDb();
-  const rows = dbConn
+  return dbConn
     .prepare(
       "SELECT name, buy_count FROM groceries_product_counts ORDER BY buy_count DESC LIMIT ?",
     )
     .all(limit) as { name: string; buy_count: number }[];
-
-  return rows.map((row) => ({
-    ...row,
-    category: getSuggestedCategory(row.name, dbConn),
-  }));
 }

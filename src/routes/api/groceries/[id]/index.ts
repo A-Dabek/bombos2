@@ -1,5 +1,13 @@
 import type { RequestHandler } from "@builder.io/qwik-city";
-import { getGroceryItemById, updateGroceryItem, setGroceryItemBought, deleteGroceryItem, updateGroceryItemAmount } from "~/db/groceries";
+import {
+  getGroceryItemById,
+  updateGroceryItem,
+  setGroceryItemBought,
+  deleteGroceryItem,
+  updateGroceryItemAmount,
+} from "~/db/groceries";
+import { getActiveShop } from "~/db/settings";
+import { setItemAisle, clearItemAisle, saveProductAisle } from "~/db/shops";
 
 export const onPatch: RequestHandler = async ({ params, json, parseBody }) => {
   const id = parseInt(params.id, 10);
@@ -21,17 +29,32 @@ export const onPatch: RequestHandler = async ({ params, json, parseBody }) => {
   const bought = (body as { bought?: boolean })?.bought;
   const amount = (body as { amount?: number })?.amount;
   const unit = (body as { unit?: string })?.unit;
-  const category = (body as { category?: string })?.category;
+  const shopIdInput = (body as { shopId?: unknown })?.shopId;
+  const hasAisle = Object.prototype.hasOwnProperty.call(body, "aisleId");
+  const aisleId = (body as { aisleId?: number | null })?.aisleId;
+  const aisleManual = (body as { aisleManual?: boolean })?.aisleManual;
+
+  if (hasAisle && aisleId !== null && !Number.isInteger(aisleId)) {
+    json(400, { error: "aisleId must be an integer or null" });
+    return;
+  }
+
+  const noOtherFields =
+    name === undefined &&
+    description === undefined &&
+    urgent === undefined &&
+    unit === undefined &&
+    !hasAisle;
 
   // If only bought is being updated
-  if (bought !== undefined && name === undefined && description === undefined && urgent === undefined && amount === undefined && unit === undefined && category === undefined) {
+  if (bought !== undefined && amount === undefined && noOtherFields) {
     setGroceryItemBought(id, bought);
     json(200, { success: true });
     return;
   }
 
   // If only amount is being updated
-  if (amount !== undefined && name === undefined && description === undefined && urgent === undefined && bought === undefined && unit === undefined && category === undefined) {
+  if (amount !== undefined && bought === undefined && noOtherFields) {
     updateGroceryItemAmount(id, amount);
     json(200, { success: true });
     return;
@@ -42,7 +65,6 @@ export const onPatch: RequestHandler = async ({ params, json, parseBody }) => {
   const newUrgent = urgent !== undefined ? urgent : item.urgent;
   const newAmount = amount !== undefined ? amount : item.amount;
   const newUnit = unit !== undefined ? unit : item.unit;
-  const newCategory = category !== undefined ? category : item.category;
 
   if (typeof newName !== "string" || newName.trim().length === 0) {
     json(400, { error: "Name is required" });
@@ -59,15 +81,25 @@ export const onPatch: RequestHandler = async ({ params, json, parseBody }) => {
     return;
   }
 
-  if (newCategory && newCategory.length > 50) {
-    json(400, { error: "Category must be 50 characters or less" });
-    return;
-  }
+  updateGroceryItem(id, newName.trim(), newDescription ?? null, newUrgent, newAmount, newUnit);
 
-  updateGroceryItem(id, newName.trim(), newDescription ?? null, newUrgent, newAmount, newUnit, newCategory?.trim() || null);
-  
   if (bought !== undefined) {
     setGroceryItemBought(id, bought);
+  }
+
+  if (hasAisle) {
+    const shopId =
+      typeof shopIdInput === "number" && Number.isInteger(shopIdInput)
+        ? shopIdInput
+        : getActiveShop();
+    if (shopId !== null) {
+      if (aisleId === null) {
+        clearItemAisle(id, shopId);
+      } else if (typeof aisleId === "number") {
+        setItemAisle(id, shopId, aisleId);
+        saveProductAisle(newName.trim(), shopId, aisleId, !!aisleManual);
+      }
+    }
   }
 
   json(200, { success: true });

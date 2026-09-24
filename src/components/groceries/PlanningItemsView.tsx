@@ -2,13 +2,15 @@ import { component$, type PropFunction } from "@builder.io/qwik";
 import Loader from "~/components/shared/Loader";
 import { HiPlusOutline } from "@qwikest/icons/heroicons";
 import type { GroceryItem } from "~/db/groceries";
+import type { Aisle } from "~/db/shops";
 import GroceryItemRow from "./GroceryItemRow";
 import DoubleConfirmButton from "../shared/DoubleConfirmButton";
 
 interface PlanningItemsViewProps {
   items: GroceryItem[];
-  manuallyCompletedCategories: string[];
-  suggestions: { name: string; category: string | null }[];
+  aisles: Aisle[];
+  manuallyCompletedAisles: number[];
+  suggestions: { name: string; buy_count: number }[];
   isLoading: boolean;
   activeItemId: number | null;
   lastAddedId: number | null;
@@ -17,7 +19,7 @@ interface PlanningItemsViewProps {
   onRemove$: PropFunction<(itemId: number) => void>;
   onAmountChange$: PropFunction<(itemId: number, newAmount: number) => void>;
   onAddClick$: PropFunction<() => void>;
-  onAddSuggestion$: PropFunction<(name: string, category: string | null) => void>;
+  onAddSuggestion$: PropFunction<(name: string) => void>;
   onRemoveAll$: PropFunction<() => void>;
   onRemoveBought$: PropFunction<() => void>;
 }
@@ -25,7 +27,8 @@ interface PlanningItemsViewProps {
 export default component$(
   ({
     items,
-    manuallyCompletedCategories,
+    aisles,
+    manuallyCompletedAisles,
     suggestions,
     isLoading,
     activeItemId,
@@ -39,29 +42,42 @@ export default component$(
     onRemoveAll$,
     onRemoveBought$,
   }: PlanningItemsViewProps) => {
-    const groupedItems = items.reduce(
-      (acc, item) => {
-        const cat = item.category || "Inne";
-        if (!acc[cat]) acc[cat] = [];
-        acc[cat].push(item);
-        return acc;
-      },
-      {} as Record<string, GroceryItem[]>,
-    );
+    const unassigned: GroceryItem[] = [];
+    const byAisle = new Map<number, GroceryItem[]>();
+    const knownAisles = new Set(aisles.map((a) => a.id));
+    for (const item of items) {
+      if (item.aisleId == null || !knownAisles.has(item.aisleId)) {
+        unassigned.push(item);
+      } else {
+        const list = byAisle.get(item.aisleId) ?? [];
+        list.push(item);
+        byAisle.set(item.aisleId, list);
+      }
+    }
 
-    const sortedCategories = Object.keys(groupedItems).sort((a, b) => {
+    const groups: { key: number | null; name: string; items: GroceryItem[] }[] = [];
+    for (const aisle of aisles) {
+      const list = byAisle.get(aisle.id);
+      if (list && list.length > 0) {
+        groups.push({ key: aisle.id, name: aisle.name, items: list });
+      }
+    }
+    if (unassigned.length > 0) {
+      groups.push({ key: null, name: "Bez alejki", items: unassigned });
+    }
+
+    const sortedGroups = [...groups].sort((a, b) => {
       const aDone =
-        manuallyCompletedCategories.includes(a) ||
-        (groupedItems[a].length > 0 && groupedItems[a].every((i) => i.bought));
+        (a.key !== null && manuallyCompletedAisles.includes(a.key)) ||
+        (a.items.length > 0 && a.items.every((i) => i.bought));
       const bDone =
-        manuallyCompletedCategories.includes(b) ||
-        (groupedItems[b].length > 0 && groupedItems[b].every((i) => i.bought));
+        (b.key !== null && manuallyCompletedAisles.includes(b.key)) ||
+        (b.items.length > 0 && b.items.every((i) => i.bought));
 
       if (aDone !== bDone) return aDone ? 1 : -1;
-
-      if (a === "Inne") return 1;
-      if (b === "Inne") return -1;
-      return a.localeCompare(b);
+      if (a.key === null) return 1;
+      if (b.key === null) return -1;
+      return 0;
     });
 
     return (
@@ -104,13 +120,13 @@ export default component$(
             ) : (
               <div class="starting:opacity-0 opacity-100 transition-opacity duration-300">
                 <div class="space-y-6">
-                  {sortedCategories.map((category) => (
-                    <div key={category} class="space-y-2">
+                  {sortedGroups.map((group) => (
+                    <div key={group.key ?? "unassigned"} class="space-y-2">
                       <h3 class="text-sm font-bold text-gray-400 dark:text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800 pb-1">
-                        {category}
+                        {group.name}
                       </h3>
                       <ul class="space-y-2">
-                        {groupedItems[category].map((item) => (
+                        {group.items.map((item) => (
                           <GroceryItemRow
                             key={item.id}
                             item={item}
@@ -149,9 +165,7 @@ export default component$(
                   {suggestions.map((suggestion) => (
                     <button
                       key={suggestion.name}
-                      onClick$={() =>
-                        onAddSuggestion$(suggestion.name, suggestion.category)
-                      }
+                      onClick$={() => onAddSuggestion$(suggestion.name)}
                       class="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm hover:bg-blue-100 dark:hover:bg-blue-950 hover:text-blue-700 dark:hover:text-blue-400 transition-colors border border-gray-200 dark:border-gray-700"
                     >
                       + {suggestion.name}

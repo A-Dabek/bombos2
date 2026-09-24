@@ -3,6 +3,7 @@ import { getDb } from "./connection.ts";
 
 const HIDDEN_TABS_KEY = "hidden_tabs";
 const THEME_KEY = "theme";
+const ACTIVE_SHOP_KEY = "active_shop";
 
 export function getHiddenTabs(email = "default", db?: Database.Database): string[] {
   const dbConn = db ?? getDb();
@@ -84,4 +85,51 @@ export function setTheme(emailOrTheme: string, themeOrDb?: string | Database.Dat
   dbConn.prepare(
     "INSERT INTO settings (key, user_email, value) VALUES (?, ?, ?) ON CONFLICT(key, user_email) DO UPDATE SET value = excluded.value",
   ).run(THEME_KEY, normalizedEmail, JSON.stringify(theme));
+}
+
+export function getActiveShop(
+  email = "default",
+  db?: Database.Database,
+): number | null {
+  const dbConn = db ?? getDb();
+  const normalizedEmail = (email || "default").toLowerCase();
+
+  let row = dbConn
+    .prepare("SELECT value FROM settings WHERE key = ? AND user_email = ?")
+    .get(ACTIVE_SHOP_KEY, normalizedEmail) as { value: string } | undefined;
+  if (!row && normalizedEmail !== "default") {
+    row = dbConn
+      .prepare(
+        "SELECT value FROM settings WHERE key = ? AND user_email IN ('default', '')",
+      )
+      .get(ACTIVE_SHOP_KEY) as { value: string } | undefined;
+  }
+
+  if (row) {
+    try {
+      const parsed = JSON.parse(row.value);
+      if (typeof parsed === "number" && Number.isFinite(parsed)) return parsed;
+    } catch {
+      const parsed = Number(row.value);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+  }
+
+  const shop = dbConn
+    .prepare("SELECT id FROM shops ORDER BY id LIMIT 1")
+    .get() as { id: number } | undefined;
+  if (shop) {
+    setActiveShop(shop.id, dbConn);
+    return shop.id;
+  }
+  return null;
+}
+
+export function setActiveShop(id: number, db?: Database.Database): void {
+  const dbConn = db ?? getDb();
+  dbConn
+    .prepare(
+      "INSERT INTO settings (key, user_email, value) VALUES (?, ?, ?) ON CONFLICT(key, user_email) DO UPDATE SET value = excluded.value",
+    )
+    .run(ACTIVE_SHOP_KEY, "default", JSON.stringify(id));
 }
