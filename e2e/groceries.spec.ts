@@ -9,7 +9,7 @@ test.describe("Groceries Module @groceries", () => {
   });
 
   test("top nav and redirection", async ({ page }) => {
-    await expect(page.getByRole("link", { name: "Zakupy" })).toBeVisible();
+    await expect(page.getByTestId("groceries-nav-link")).toBeVisible();
     await expect(page).toHaveURL(/\/groceries\/planning/);
   });
 
@@ -163,7 +163,7 @@ test.describe("Groceries Module @groceries", () => {
     await expect(page.getByTestId("delete-bought-btn")).not.toBeVisible();
 
     // Mark as bought (go to shopping and back)
-    await page.getByRole("link", { name: "Zakupy" }).click();
+    await page.getByTestId("sub-nav-tab-zakupy").click();
     await expect(page).toHaveURL(/\/groceries\/shopping/);
 
     const shoppingItem = page.getByTestId(/shopping-item-/).filter({ hasText: "Bread" });
@@ -213,7 +213,7 @@ test.describe("Groceries Module @groceries", () => {
     await page.getByTestId("form-save-btn").click();
 
     // Go to shopping
-    await page.getByRole("link", { name: "Zakupy" }).click();
+    await page.getByTestId("sub-nav-tab-zakupy").click();
     await expect(page).toHaveURL(/\/groceries\/shopping/);
 
     const item = page.getByText("Apples", { exact: true });
@@ -235,13 +235,13 @@ test.describe("Groceries Module @groceries", () => {
   });
 
   test("sub-navigation tabs", async ({ page }) => {
-    await expect(page.getByRole("link", { name: "Planowanie" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Zakupy" })).toBeVisible();
+    await expect(page.getByTestId("sub-nav-tab-planowanie")).toBeVisible();
+    await expect(page.getByTestId("sub-nav-tab-zakupy")).toBeVisible();
 
-    await page.getByRole("link", { name: "Zakupy" }).click();
+    await page.getByTestId("sub-nav-tab-zakupy").click();
     await expect(page).toHaveURL(/\/groceries\/shopping/);
 
-    await page.getByRole("link", { name: "Planowanie" }).click();
+    await page.getByTestId("sub-nav-tab-planowanie").click();
     await expect(page).toHaveURL(/\/groceries\/planning/);
   });
 
@@ -297,7 +297,7 @@ test.describe("Groceries Module @groceries", () => {
       await page.getByTestId("form-save-btn").click();
 
       // Go to shopping
-      await page.getByRole("link", { name: "Zakupy" }).click();
+      await page.getByTestId("sub-nav-tab-zakupy").click();
 
       // Default "All" view shows both
       await expect(page.getByRole("button", { name: "Dairy" })).toBeVisible();
@@ -340,7 +340,7 @@ test.describe("Groceries Module @groceries", () => {
       await page.getByTestId("form-save-btn").click();
 
       // Go to shopping
-      await page.getByRole("link", { name: "Zakupy" }).click();
+      await page.getByTestId("sub-nav-tab-zakupy").click();
 
       const milk = page.getByTestId(/shopping-item-/).filter({ hasText: "Milk" });
       const apple = page.getByTestId(/shopping-item-/).filter({ hasText: "Apple" });
@@ -378,7 +378,7 @@ test.describe("Groceries Module @groceries", () => {
       await page.getByTestId("form-save-btn").click();
 
       // Go to shopping
-      await page.getByRole("link", { name: "Zakupy" }).click();
+      await page.getByTestId("sub-nav-tab-zakupy").click();
 
       await expect(page.getByRole("heading", { name: "Dairy" })).toBeVisible();
       await expect(page.getByText("Milk", { exact: true })).toBeVisible();
@@ -408,7 +408,7 @@ test.describe("Groceries Module @groceries", () => {
     await page.getByTestId("form-save-btn").click();
 
     // Mark as bought
-    await page.getByRole("link", { name: "Zakupy" }).click();
+    await page.getByTestId("sub-nav-tab-zakupy").click();
     const shoppingItem = page.getByTestId(/shopping-item-/).filter({ hasText: "Milk" }).filter({ has: page.locator(".text-lg") });
     await shoppingItem.click();
     await expect(shoppingItem).toHaveClass(/bg-gray-100/);
