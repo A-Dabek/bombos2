@@ -102,10 +102,10 @@ export default component$(
         class="p-4 bg-white dark:bg-gray-900 min-h-full"
         data-testid={mode === "add" ? "edit-form-add" : "edit-form-edit"}
       >
-        <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+        <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-3">
           {mode === "add" ? "Dodaj pozycję" : "Edytuj pozycję"}
         </h2>
-        <div class="space-y-4">
+        <div class="space-y-3">
           <TextInput
             label="Nazwa *"
             value={formName.value}
@@ -123,7 +123,7 @@ export default component$(
               (formDescription.value = (e.target as HTMLTextAreaElement).value)
             }
             maxLength={300}
-            rows={3}
+            autoResize
             class="w-full"
           />
           <div class="flex space-x-4">
