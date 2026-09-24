@@ -30,6 +30,8 @@ export default component$<TransactionFormProps>(
         val = -Math.abs(val);
       }
       onSubmit$(description.value, val);
+      description.value = "";
+      amount.value = "";
     });
 
     return (
