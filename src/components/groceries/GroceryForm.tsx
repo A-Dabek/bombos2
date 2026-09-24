@@ -159,33 +159,35 @@ export default component$(
               </select>
             </div>
           </div>
-          <div class="w-full">
-            <TextInput
-              label="Kategoria"
-              value={formCategory.value}
-              onInput$={(e) =>
-                (formCategory.value = (e.target as HTMLInputElement).value)
-              }
-              maxLength={50}
-              class="w-full"
-              list="categories-list"
-              placeholder="np. Owoce, Nabiał..."
-            />
-            <datalist id="categories-list">
-              {allCategories.value.map((cat) => (
-                <option key={cat} value={cat} />
-              ))}
-            </datalist>
-          </div>
-          <div class="flex justify-end">
-            <Checkbox
-              label="Pilne"
-              checked={formUrgent.value}
-              onChange$={(e) =>
-                (formUrgent.value = (e.target as HTMLInputElement).checked)
-              }
-              class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
-            />
+          <div class="flex items-end space-x-3">
+            <div class="flex-1">
+              <TextInput
+                label="Kategoria"
+                value={formCategory.value}
+                onInput$={(e) =>
+                  (formCategory.value = (e.target as HTMLInputElement).value)
+                }
+                maxLength={50}
+                class="w-full"
+                list="categories-list"
+                placeholder="np. Owoce, Nabiał..."
+              />
+              <datalist id="categories-list">
+                {allCategories.value.map((cat) => (
+                  <option key={cat} value={cat} />
+                ))}
+              </datalist>
+            </div>
+            <div class="pb-3">
+              <Checkbox
+                label="Pilne"
+                checked={formUrgent.value}
+                onChange$={(e) =>
+                  (formUrgent.value = (e.target as HTMLInputElement).checked)
+                }
+                class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+              />
+            </div>
           </div>
 
           {lastAddedName.value && (
@@ -250,6 +252,8 @@ export default component$(
             )}
           </div>
         </div>
+        {/* Spacer: adds scroll room below the form so the auto-focused name field can scroll to the top of the viewport */}
+        <div class="h-[60vh]" aria-hidden="true" />
       </div>
     );
   },
