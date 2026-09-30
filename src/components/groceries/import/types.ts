@@ -4,6 +4,8 @@ export interface ImportMatch {
   type: "existing" | "new" | "possible";
   name: string | null;
   confidence: number;
+  amount?: number;
+  unit?: ImportUnit;
 }
 
 export interface ImportInventory {
@@ -16,6 +18,7 @@ export interface ImportDraftItem {
   amount: number;
   unit: ImportUnit;
   description: string;
+  raw: string;
   match: ImportMatch;
   inventory: ImportInventory | null;
   sourceName: string;

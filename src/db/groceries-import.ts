@@ -83,6 +83,27 @@ export function resolveCanonical(
   return row?.canonical_name ?? null;
 }
 
+export function isKnownProduct(name: string, db?: Database.Database): boolean {
+  const dbConn = db ?? getDb();
+  const normalized = normalizeProductName(name);
+  if (!normalized) return false;
+
+  const count = dbConn
+    .prepare("SELECT 1 FROM groceries_product_counts WHERE normalized_name = ?")
+    .get(normalized);
+  if (count) return true;
+
+  const items = dbConn.prepare("SELECT name FROM groceries_items").all() as {
+    name: string;
+  }[];
+  if (items.some((item) => normalizeProductName(item.name) === normalized)) return true;
+
+  const alias = dbConn
+    .prepare("SELECT 1 FROM groceries_ingredient_aliases WHERE normalized_alias = ?")
+    .get(normalized);
+  return Boolean(alias);
+}
+
 export function buildCatalog(db?: Database.Database): CatalogEntry[] {
   const dbConn = db ?? getDb();
   const seen = new Set<string>();

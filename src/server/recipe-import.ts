@@ -1,12 +1,13 @@
 import Database from "better-sqlite3";
 import { extractIngredients, type ExtractedIngredient, type Unit } from "./llm.ts";
 import { getDb } from "../db/connection.ts";
-import { createGroceryItem, getGroceryItems } from "../db/groceries.ts";
+import { createGroceryItem, getGroceryItems, type GroceryItem } from "../db/groceries.ts";
 import { getActiveShop, getInventoryWindowDays } from "../db/settings.ts";
 import { setItemAisle, saveProductAisle, getSuggestedAisle } from "../db/shops.ts";
 import {
   findProductMatches,
   getRecentlyBought,
+  isKnownProduct,
   resolveCanonical,
   saveIngredientAlias,
 } from "../db/groceries-import.ts";
@@ -21,6 +22,8 @@ export interface DraftMatch {
   type: MatchType;
   name: string | null;
   confidence: number;
+  amount?: number;
+  unit?: Unit;
 }
 
 export interface DraftInventory {
@@ -33,6 +36,7 @@ export interface DraftItem {
   amount: number;
   unit: Unit;
   description: string;
+  raw: string;
   match: DraftMatch;
   inventory: DraftInventory | null;
   sourceName: string;
@@ -57,6 +61,7 @@ interface WorkingItem {
   amount: number;
   unit: Unit;
   description: string;
+  raw: string;
   sourceName: string;
 }
 
@@ -76,9 +81,14 @@ function toWorkingItem(ingredient: ExtractedIngredient, db?: Database.Database):
     name: canonical,
     amount: hasAmount ? (ingredient.amount as number) : 1,
     unit,
-    description: (ingredient.description ?? "").slice(0, DESCRIPTION_LIMIT),
+    description: singleLine(ingredient.description),
+    raw: singleLine(ingredient.raw),
     sourceName: rawName,
   };
+}
+
+function singleLine(value: string | undefined): string {
+  return (value ?? "").replace(/\s+/g, " ").trim().slice(0, DESCRIPTION_LIMIT);
 }
 
 function mergeItems(items: WorkingItem[]): WorkingItem[] {
@@ -101,11 +111,13 @@ function mergeItems(items: WorkingItem[]): WorkingItem[] {
       : group.reduce((sum, item) => sum + item.amount * BASE_UNITS[item.unit].factor, 0);
 
     const descriptions = [...new Set(group.map((item) => item.description).filter(Boolean))];
+    const raws = [...new Set(group.map((item) => item.raw).filter(Boolean))];
     merged.push({
       name: group[0].name,
       amount: Math.round(amount * 1000) / 1000,
       unit: sameUnit ? group[0].unit : base.unit,
       description: descriptions.join("; ").slice(0, DESCRIPTION_LIMIT),
+      raw: raws.join(" | ").slice(0, DESCRIPTION_LIMIT),
       sourceName: group[0].sourceName,
     });
   }
@@ -124,9 +136,9 @@ export async function parseIngredients(
   const merged = mergeItems(extracted.map((item) => toWorkingItem(item, db)));
   if (merged.length === 0) return [];
 
-  const currentNames = new Map<string, string>();
+  const currentItems = new Map<string, GroceryItem>();
   for (const item of getGroceryItems(db)) {
-    currentNames.set(normalizeProductName(item.name), item.name);
+    currentItems.set(normalizeProductName(item.name), item);
   }
 
   const recent = getRecentlyBought(
@@ -138,16 +150,32 @@ export async function parseIngredients(
 
   return merged.map((item) => {
     const normalized = normalizeProductName(item.name);
-    const existingName = currentNames.get(normalized);
+    const current = currentItems.get(normalized);
 
     let match: DraftMatch;
-    if (existingName) {
-      match = { type: "existing", name: existingName, confidence: 1 };
+    if (current) {
+      match = {
+        type: "existing",
+        name: current.name,
+        confidence: 1,
+        amount: current.amount,
+        unit: current.unit as Unit,
+      };
     } else {
       const matches = findProductMatches(item.name, db);
-      match = matches.length
-        ? { type: "possible", name: matches[0].name, confidence: matches[0].confidence }
-        : { type: "new", name: null, confidence: 0 };
+      if (matches.length) {
+        const candidate = currentItems.get(normalizeProductName(matches[0].name));
+        match = {
+          type: "possible",
+          name: matches[0].name,
+          confidence: matches[0].confidence,
+          ...(candidate
+            ? { amount: candidate.amount, unit: candidate.unit as Unit }
+            : {}),
+        };
+      } else {
+        match = { type: "new", name: null, confidence: 0 };
+      }
     }
 
     const boughtAt = recent.get(normalized);
@@ -161,6 +189,7 @@ export async function parseIngredients(
       amount: item.amount,
       unit: item.unit,
       description: item.description,
+      raw: item.raw,
       match,
       inventory,
       sourceName: item.sourceName,
@@ -196,6 +225,12 @@ export function confirmImport(
 
   const run = db.transaction(() => {
     for (const item of items) {
+      const source = item.sourceName ? normalizeProductName(item.sourceName) : "";
+      const shouldLearnAlias =
+        Boolean(source) &&
+        source !== normalizeProductName(item.name) &&
+        isKnownProduct(item.name, db);
+
       const id = createGroceryItem(
         item.name,
         item.description?.trim() || null,
@@ -219,11 +254,8 @@ export function confirmImport(
         }
       }
 
-      if (item.sourceName) {
-        const source = normalizeProductName(item.sourceName);
-        if (source && source !== normalizeProductName(item.name)) {
-          saveIngredientAlias(item.sourceName, item.name, db);
-        }
+      if (shouldLearnAlias && item.sourceName) {
+        saveIngredientAlias(item.sourceName, item.name, db);
       }
     }
   });

@@ -87,7 +87,13 @@ test("parseIngredients classifies existing, possible and new matches", async () 
     db,
     extract: fakeExtract([{ name: "Cebula", amount: 1, unit: "x" }]),
   });
-  expect(existing.match).toEqual({ type: "existing", name: "cebula", confidence: 1 });
+  expect(existing.match).toMatchObject({
+    type: "existing",
+    name: "cebula",
+    confidence: 1,
+    amount: 1,
+    unit: "x",
+  });
 
   const [possible] = await parseIngredients("ignored", {
     db,
@@ -167,13 +173,28 @@ test("extractIngredients retries once when content is empty", async () => {
   expect(items).toEqual([{ name: "cebula" }]);
 });
 
+test("parseIngredients carries raw source text and merges it", async () => {
+  const db = freshDb();
+  const items = await parseIngredients("ignored", {
+    db,
+    extract: fakeExtract([
+      { name: "cebula", amount: 200, unit: "g", raw: "2duże cebule\n(po 100 g)" },
+      { name: "cebula", amount: 100, unit: "g", raw: "cebula\n100 g" },
+    ]),
+  });
+
+  expect(items).toHaveLength(1);
+  expect(items[0].raw).toBe("2duże cebule (po 100 g) | cebula 100 g");
+  db.close();
+});
+
 test("extractIngredients validates and normalizes LLM items", async () => {
   const items = await extractIngredients("ocr", {
     apiKey: "test",
     fetchImpl: fakeFetchQueue([
       JSON.stringify({
         items: [
-          { name: "  Cebula ", amount: 200, unit: "g", description: "x" },
+          { name: "  Cebula ", amount: 200, unit: "g", description: "x", raw: "Cebula 200 g" },
           { name: "zły", amount: "dużo", unit: "łyżka" },
           { amount: 5 },
           { name: "sól" },
@@ -183,17 +204,17 @@ test("extractIngredients validates and normalizes LLM items", async () => {
   });
 
   expect(items).toEqual([
-    { name: "Cebula", amount: 200, unit: "g", description: "x" },
+    { name: "Cebula", amount: 200, unit: "g", description: "x", raw: "Cebula 200 g" },
     { name: "zły" },
     { name: "sól" },
   ]);
 });
 
-test("confirmImport creates items and learns aliases", () => {
+test("confirmImport creates items", () => {
   const db = freshDb();
   const { created } = confirmImport(
     [
-      { name: "cebula", amount: 200, unit: "g", sourceName: "cebule" },
+      { name: "cebula", amount: 200, unit: "g" },
       { name: "sól", amount: 1, unit: "x" },
     ],
     { db, shopId: null },
@@ -201,7 +222,30 @@ test("confirmImport creates items and learns aliases", () => {
 
   expect(created).toHaveLength(2);
   expect(getGroceryItems(db).map((item) => item.name)).toEqual(["cebula", "sól"]);
+  db.close();
+});
+
+test("confirmImport learns aliases only for known products", () => {
+  const db = freshDb();
+  createGroceryItem("cebula", null, false, 1, "x", db);
+
+  confirmImport(
+    [{ name: "cebula", amount: 200, unit: "g", sourceName: "cebule" }],
+    { db, shopId: null },
+  );
+
   expect(resolveCanonical("cebule", db)).toBe("cebula");
+  db.close();
+});
+
+test("confirmImport does not learn aliases for free-form renames", () => {
+  const db = freshDb();
+  confirmImport(
+    [{ name: "cebula edytowana", amount: 1, unit: "x", sourceName: "cebule" }],
+    { db, shopId: null },
+  );
+
+  expect(resolveCanonical("cebule", db)).toBeNull();
   db.close();
 });
 

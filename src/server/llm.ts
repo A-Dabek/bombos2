@@ -5,6 +5,7 @@ export interface ExtractedIngredient {
   amount?: number;
   unit?: Unit;
   description?: string;
+  raw?: string;
 }
 
 export interface ExtractOptions {
@@ -29,14 +30,15 @@ ZASADY:
 6. "unit": jedno z "x", "g", "kg", "l", "ml". Dla sztuk/liczb użyj "x". Dla miar nieprzeliczalnych (łyżka, łyżeczka, pęczek, garść, opakowanie, ząbek, szczypta) użyj "x" i opisz miarę w "description".
 7. Jeśli ilości nie da się ustalić, POMIŃ "amount" i "unit" — wtedy surowy fragment z ilością wpisz do "description".
 8. "description": tylko ważne dane, które nie mieszczą się w name/amount/unit (wariant, % zawartości, wielkość, przygotowanie, niejasna ilość, oryginalna miara). Maks. 300 znaków. Nie powtarzaj samej nazwy. Możesz je pominąć.
-9. Nie wymyślaj danych, których nie ma w tekście.
+9. "raw": dokładny fragment tekstu OCR, z którego powstała ta pozycja — przepisz wiernie, bez poprawiania i bez skracania, w jednej linii (zamień znaki nowej linii na spacje). Maks. 300 znaków.
+10. Nie wymyślaj danych, których nie ma w tekście.
 
 PRZYKŁAD FORMATU:
 {
   "items": [
-    { "name": "cebula", "amount": 200, "unit": "g", "description": "2 duże cebule po 100 g" },
-    { "name": "szczypiorek", "description": "% pęczka szczypiorku" },
-    { "name": "sól" }
+    { "name": "cebula", "amount": 200, "unit": "g", "description": "2 duże cebule po 100 g", "raw": "2duże cebule (po 100 g)" },
+    { "name": "szczypiorek", "description": "% pęczka szczypiorku", "raw": "% pęczka szczypiorku" },
+    { "name": "sól", "raw": "| |'sól" }
   ]
 }`;
 
@@ -135,6 +137,11 @@ export async function extractIngredients(
     if (typeof record.description === "string") {
       const description = record.description.trim();
       if (description) result.description = description.slice(0, 300);
+    }
+
+    if (typeof record.raw === "string") {
+      const raw = record.raw.trim();
+      if (raw) result.raw = raw.slice(0, 300);
     }
 
     return [result];

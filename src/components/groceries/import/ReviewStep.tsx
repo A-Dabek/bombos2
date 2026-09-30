@@ -10,15 +10,16 @@ interface ReviewRow extends ImportDraftItem {
 }
 
 function matchBadge(match: ImportDraftItem["match"]): { label: string; class: string } {
+  const qty = match.amount !== undefined ? ` ${match.amount} ${match.unit ?? "x"}` : "";
   if (match.type === "existing") {
     return {
-      label: "Masz na liście",
+      label: qty ? `Masz na liście:${qty}` : "Masz na liście",
       class: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
     };
   }
   if (match.type === "possible") {
     return {
-      label: `Może: ${match.name ?? ""}`,
+      label: `Może: ${match.name ?? ""}${qty ? ` (${qty.trim()})` : ""}`,
       class: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
     };
   }
@@ -98,6 +99,16 @@ export default component$(
                     <HiTrashOutline class="h-5 w-5" />
                   </button>
                 </div>
+
+                {row.raw && (
+                  <p
+                    class="mt-1 truncate text-xs text-gray-400 dark:text-gray-500"
+                    data-testid={`import-raw-${index}`}
+                    title={row.raw}
+                  >
+                    {row.raw}
+                  </p>
+                )}
 
                 <div class="mt-2 flex items-center gap-2">
                   <input
