@@ -1,0 +1,188 @@
+import { test, expect } from "vitest";
+import Database from "better-sqlite3";
+import { runMigrations } from "../db/migrations.ts";
+import { createGroceryItem, incrementGroceryItemCount } from "../db/groceries.ts";
+import {
+  logPurchase,
+  saveIngredientAlias,
+} from "../db/groceries-import.ts";
+import { extractIngredients, type ExtractedIngredient } from "./llm.ts";
+import { parseIngredients } from "./recipe-import.ts";
+
+function freshDb(): Database.Database {
+  const db = new Database(":memory:");
+  runMigrations(db);
+  return db;
+}
+
+function fakeExtract(items: ExtractedIngredient[]) {
+  return async () => items;
+}
+
+test("parseIngredients merges duplicates and defaults missing amounts", async () => {
+  const db = freshDb();
+  const items = await parseIngredients("ignored", {
+    db,
+    windowDays: 15,
+    extract: fakeExtract([
+      { name: "cebula", amount: 200, unit: "g", description: "2 duże cebule po 100 g" },
+      { name: "cebula", amount: 300, unit: "g" },
+      { name: "jajka", amount: 4, unit: "x" },
+      { name: "jajka", amount: 4, unit: "x", description: "wielkość M" },
+      { name: "szczypiorek", description: "% pęczka szczypiorku" },
+      { name: "mleko", amount: 1, unit: "l" },
+    ]),
+  });
+
+  const byName = Object.fromEntries(items.map((i) => [i.name, i]));
+  expect(items).toHaveLength(4);
+  expect(byName["cebula"]).toMatchObject({ amount: 500, unit: "g" });
+  expect(byName["cebula"].description).toBe("2 duże cebule po 100 g");
+  expect(byName["jajka"]).toMatchObject({ amount: 8, unit: "x", description: "wielkość M" });
+  expect(byName["szczypiorek"]).toMatchObject({ amount: 1, unit: "x" });
+  expect(byName["mleko"]).toMatchObject({ amount: 1, unit: "l" });
+  db.close();
+});
+
+test("parseIngredients converts units when merging g with kg", async () => {
+  const db = freshDb();
+  const items = await parseIngredients("ignored", {
+    db,
+    extract: fakeExtract([
+      { name: "mąka", amount: 500, unit: "g" },
+      { name: "mąka", amount: 1, unit: "kg" },
+    ]),
+  });
+
+  expect(items).toHaveLength(1);
+  expect(items[0]).toMatchObject({ name: "mąka", amount: 1500, unit: "g" });
+  db.close();
+});
+
+test("parseIngredients applies ingredient aliases before merging", async () => {
+  const db = freshDb();
+  saveIngredientAlias("cebule", "cebula", db);
+
+  const items = await parseIngredients("ignored", {
+    db,
+    extract: fakeExtract([
+      { name: "cebule", amount: 100, unit: "g" },
+      { name: "cebula", amount: 100, unit: "g" },
+    ]),
+  });
+
+  expect(items).toHaveLength(1);
+  expect(items[0]).toMatchObject({ name: "cebula", amount: 200, unit: "g" });
+  db.close();
+});
+
+test("parseIngredients classifies existing, possible and new matches", async () => {
+  const db = freshDb();
+  createGroceryItem("cebula", null, false, 1, "x", db);
+  incrementGroceryItemCount("Marchewka", db);
+
+  const [existing] = await parseIngredients("ignored", {
+    db,
+    extract: fakeExtract([{ name: "Cebula", amount: 1, unit: "x" }]),
+  });
+  expect(existing.match).toEqual({ type: "existing", name: "cebula", confidence: 1 });
+
+  const [possible] = await parseIngredients("ignored", {
+    db,
+    extract: fakeExtract([{ name: "marchewki", amount: 1, unit: "x" }]),
+  });
+  expect(possible.match.type).toBe("possible");
+  expect(possible.match.name).toBe("Marchewka");
+
+  const [fresh] = await parseIngredients("ignored", {
+    db,
+    extract: fakeExtract([{ name: "egzotyczny owoc", amount: 1, unit: "x" }]),
+  });
+  expect(fresh.match).toEqual({ type: "new", name: null, confidence: 0 });
+  db.close();
+});
+
+test("parseIngredients attaches inventory within the recency window", async () => {
+  const db = freshDb();
+  logPurchase("Cebula", db);
+
+  const now = Math.floor(Date.now() / 1000);
+  db.prepare(
+    "INSERT INTO groceries_purchase_log (name, normalized_name, bought_at) VALUES (?, ?, ?)",
+  ).run("Chleb", "chleb", now - 40 * 86400);
+
+  const [cebula] = await parseIngredients("ignored", {
+    db,
+    windowDays: 15,
+    extract: fakeExtract([{ name: "cebula", amount: 1, unit: "x" }]),
+  });
+  expect(cebula.inventory).not.toBeNull();
+  expect(cebula.inventory!.daysAgo).toBe(0);
+
+  const [chleb] = await parseIngredients("ignored", {
+    db,
+    windowDays: 15,
+    extract: fakeExtract([{ name: "chleb", amount: 1, unit: "x" }]),
+  });
+  expect(chleb.inventory).toBeNull();
+
+  const [chlebWide] = await parseIngredients("ignored", {
+    db,
+    windowDays: 60,
+    extract: fakeExtract([{ name: "chleb", amount: 1, unit: "x" }]),
+  });
+  expect(chlebWide.inventory).not.toBeNull();
+  db.close();
+});
+
+function fakeFetchQueue(contents: (string | null)[]): typeof fetch {
+  let index = 0;
+  const impl = async () => {
+    const content = contents[Math.min(index, contents.length - 1)];
+    index++;
+    return new Response(
+      JSON.stringify({ choices: [{ message: { content }, finish_reason: "stop" }] }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    );
+  };
+  return impl as unknown as typeof fetch;
+}
+
+test("extractIngredients throws on invalid JSON content", async () => {
+  await expect(
+    extractIngredients("ocr", {
+      apiKey: "test",
+      fetchImpl: fakeFetchQueue(["not json"]),
+    }),
+  ).rejects.toThrow(/not valid JSON/);
+});
+
+test("extractIngredients retries once when content is empty", async () => {
+  const items = await extractIngredients("ocr", {
+    apiKey: "test",
+    fetchImpl: fakeFetchQueue(["", JSON.stringify({ items: [{ name: "cebula" }] })]),
+  });
+  expect(items).toEqual([{ name: "cebula" }]);
+});
+
+test("extractIngredients validates and normalizes LLM items", async () => {
+  const items = await extractIngredients("ocr", {
+    apiKey: "test",
+    fetchImpl: fakeFetchQueue([
+      JSON.stringify({
+        items: [
+          { name: "  Cebula ", amount: 200, unit: "g", description: "x" },
+          { name: "zły", amount: "dużo", unit: "łyżka" },
+          { amount: 5 },
+          { name: "sól" },
+        ],
+      }),
+    ]),
+  });
+
+  expect(items).toEqual([
+    { name: "Cebula", amount: 200, unit: "g", description: "x" },
+    { name: "zły" },
+    { name: "sól" },
+  ]);
+});

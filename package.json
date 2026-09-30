@@ -16,6 +16,7 @@
     "e2e.groceries": "pnpm exec playwright test --grep @groceries",
     "serve": "node server/entry.fastify",
     "test.db": "vitest run src/db",
+    "test.server": "vitest run src/server",
     "reset.db": "node scripts/reset-db.mjs"
   },
   "dependencies": {
