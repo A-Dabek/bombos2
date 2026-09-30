@@ -65,6 +65,12 @@ interface WorkingItem {
   sourceName: string;
 }
 
+function capitalizeName(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return trimmed;
+  return trimmed.charAt(0).toLocaleUpperCase("pl") + trimmed.slice(1);
+}
+
 function toWorkingItem(ingredient: ExtractedIngredient, db?: Database.Database): WorkingItem {
   const rawName = ingredient.name.trim();
   const canonical =
@@ -78,7 +84,7 @@ function toWorkingItem(ingredient: ExtractedIngredient, db?: Database.Database):
       ? ingredient.unit
       : "x";
   return {
-    name: canonical,
+    name: capitalizeName(canonical),
     amount: hasAmount ? (ingredient.amount as number) : 1,
     unit,
     description: singleLine(ingredient.description),

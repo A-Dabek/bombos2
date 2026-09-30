@@ -21,7 +21,7 @@ test.describe("Groceries recipe import @groceries", () => {
 
     // Stub returns 5 items, each with original raw text and a match badge.
     await expect(page.getByTestId("import-row-4")).toBeVisible();
-    await expect(page.getByTestId("import-name-0")).toHaveValue("cebula");
+    await expect(page.getByTestId("import-name-0")).toHaveValue("Cebula");
     await expect(page.getByTestId("import-raw-0")).toBeVisible();
     await expect(page.getByTestId("import-match-0")).toHaveText("Nowe");
 

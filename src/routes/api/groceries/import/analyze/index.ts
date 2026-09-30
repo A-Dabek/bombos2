@@ -6,7 +6,7 @@ const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
 export const STUB_ITEMS: DraftItem[] = [
   {
-    name: "cebula",
+    name: "Cebula",
     amount: 200,
     unit: "g",
     description: "2 duże cebule po 100 g",
@@ -16,7 +16,7 @@ export const STUB_ITEMS: DraftItem[] = [
     sourceName: "cebula",
   },
   {
-    name: "jajka",
+    name: "Jajka",
     amount: 4,
     unit: "x",
     description: "wielkość M",
@@ -26,7 +26,7 @@ export const STUB_ITEMS: DraftItem[] = [
     sourceName: "jajka",
   },
   {
-    name: "śmietana",
+    name: "Śmietana",
     amount: 250,
     unit: "ml",
     description: "schłodzona, 30% tł.",
@@ -36,7 +36,7 @@ export const STUB_ITEMS: DraftItem[] = [
     sourceName: "śmietana",
   },
   {
-    name: "szczypiorek",
+    name: "Szczypiorek",
     amount: 1,
     unit: "x",
     description: "% pęczka szczypiorku",
@@ -46,7 +46,7 @@ export const STUB_ITEMS: DraftItem[] = [
     sourceName: "szczypiorek",
   },
   {
-    name: "sól",
+    name: "Sól",
     amount: 1,
     unit: "x",
     description: "",

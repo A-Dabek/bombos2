@@ -38,11 +38,26 @@ test("parseIngredients merges duplicates and defaults missing amounts", async ()
 
   const byName = Object.fromEntries(items.map((i) => [i.name, i]));
   expect(items).toHaveLength(4);
-  expect(byName["cebula"]).toMatchObject({ amount: 500, unit: "g" });
-  expect(byName["cebula"].description).toBe("2 duże cebule po 100 g");
-  expect(byName["jajka"]).toMatchObject({ amount: 8, unit: "x", description: "wielkość M" });
-  expect(byName["szczypiorek"]).toMatchObject({ amount: 1, unit: "x" });
-  expect(byName["mleko"]).toMatchObject({ amount: 1, unit: "l" });
+  expect(byName["Cebula"]).toMatchObject({ amount: 500, unit: "g" });
+  expect(byName["Cebula"].description).toBe("2 duże cebule po 100 g");
+  expect(byName["Jajka"]).toMatchObject({ amount: 8, unit: "x", description: "wielkość M" });
+  expect(byName["Szczypiorek"]).toMatchObject({ amount: 1, unit: "x" });
+  expect(byName["Mleko"]).toMatchObject({ amount: 1, unit: "l" });
+  db.close();
+});
+
+test("parseIngredients capitalizes the first letter of names", async () => {
+  const db = freshDb();
+  const items = await parseIngredients("ignored", {
+    db,
+    extract: fakeExtract([
+      { name: "natka pietruszki", amount: 1, unit: "x" },
+      { name: "sól", amount: 1, unit: "x" },
+    ]),
+  });
+
+  const names = items.map((item) => item.name).sort();
+  expect(names).toEqual(["Natka pietruszki", "Sól"]);
   db.close();
 });
 
@@ -57,7 +72,7 @@ test("parseIngredients converts units when merging g with kg", async () => {
   });
 
   expect(items).toHaveLength(1);
-  expect(items[0]).toMatchObject({ name: "mąka", amount: 1500, unit: "g" });
+  expect(items[0]).toMatchObject({ name: "Mąka", amount: 1500, unit: "g" });
   db.close();
 });
 
@@ -74,7 +89,7 @@ test("parseIngredients applies ingredient aliases before merging", async () => {
   });
 
   expect(items).toHaveLength(1);
-  expect(items[0]).toMatchObject({ name: "cebula", amount: 200, unit: "g" });
+  expect(items[0]).toMatchObject({ name: "Cebula", amount: 200, unit: "g" });
   db.close();
 });
 
