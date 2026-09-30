@@ -1,7 +1,7 @@
 ---
 type: SQLite Schema
 title: Groceries Database Schemas
-description: Table schemas for groceries_items, groceries_product_categories, groceries_product_counts, and groceries_completed_categories.
+description: Table schemas for groceries_items, groceries_product_counts, groceries_purchase_log, groceries_ingredient_aliases, and the per-shop aisle tables.
 resource: /src/db/migrations/021_groceries.sql
 tags: [database, schema, groceries, sqlite]
 sources:
@@ -11,22 +11,31 @@ sources:
   - id: migration-023
     resource: /src/db/migrations/023_add_groceries_amount_unit.sql
     title: Add amount and unit to groceries_items
-  - id: migration-024
-    resource: /src/db/migrations/024_groceries_categories.sql
-    title: Add groceries_product_categories table
-  - id: migration-025
-    resource: /src/db/migrations/025_groceries_completed_categories.sql
-    title: Add groceries_completed_categories table
   - id: migration-029
     resource: /src/db/migrations/029_groceries_stats.sql
     title: Add groceries_product_counts table
-generated: { by: agent:junie, at: 2026-08-04T17:30:00Z }
+  - id: migration-032
+    resource: /src/db/migrations/032_shops.sql
+    title: Per-shop aisles (see ADR-034)
+  - id: migration-034
+    resource: /src/db/migrations/034_groceries_purchase_log.sql
+    title: Add groceries_purchase_log table
+  - id: migration-035
+    resource: /src/db/migrations/035_groceries_ingredient_aliases.sql
+    title: Add groceries_ingredient_aliases table
+  - id: adr-035
+    resource: /docs/adr-035-recipe-import.md
+    title: Recipe screenshot import
+generated: { by: agent:opencode, at: 2026-09-30T00:00:00Z }
 status: stable
 ---
 
 # Groceries Schemas
 
-The groceries module manages shopping list items, product category mappings, autocomplete purchase frequency counters, and completed category tracking.
+The groceries module manages shopping list items, purchase-frequency counters, a
+purchase-event log for recency hints, ingredient aliases, and per-shop aisle
+placement. (`category` was retired in favour of per-shop aisles — see
+[ADR-034](/docs/adr-034-shop-scoped-groceries-aisles.md).)
 
 ## Tables
 
@@ -43,52 +52,29 @@ CREATE TABLE groceries_items (
   bought INTEGER NOT NULL DEFAULT 0,
   created_at INTEGER NOT NULL DEFAULT (unixepoch()),
   amount REAL NOT NULL DEFAULT 1.0,
-  unit TEXT NOT NULL DEFAULT 'x',
-  category TEXT
+  unit TEXT NOT NULL DEFAULT 'x'
 );
 ```
-
-#### Columns
 
 | Column | Type | Constraints | Description |
 |---|---|---|---|
 | `id` | `INTEGER` | `PRIMARY KEY AUTOINCREMENT` | Unique item ID. |
 | `name` | `TEXT` | `NOT NULL` | Item product name. |
-| `description` | `TEXT` | `NULL` | Optional item notes/description. |
-| `urgent` | `INTEGER` | `NOT NULL DEFAULT 0` | 1 if high priority/urgent; 0 otherwise. |
-| `bought` | `INTEGER` | `NOT NULL DEFAULT 0` | 1 if checked off/purchased; 0 if active on list. |
+| `description` | `TEXT` | `NULL` | Optional notes/description (max 300 chars via API). |
+| `urgent` | `INTEGER` | `NOT NULL DEFAULT 0` | 1 if high priority; 0 otherwise. |
+| `bought` | `INTEGER` | `NOT NULL DEFAULT 0` | 1 if checked off; 0 if active. |
 | `created_at` | `INTEGER` | `NOT NULL DEFAULT (unixepoch())` | Unix creation timestamp. |
-| `amount` | `REAL` | `NOT NULL DEFAULT 1.0` | Quantity (number/weight). |
-| `unit` | `TEXT` | `NOT NULL DEFAULT 'x'` | Measurement unit (e.g. `x`, `kg`, `g`, `l`, `ml`, `pack`). |
-| `category` | `TEXT` | `NULL` | Assigned category label (e.g., Produce, Dairy, Bakery). |
+| `amount` | `REAL` | `NOT NULL DEFAULT 1.0` | Quantity. |
+| `unit` | `TEXT` | `NOT NULL DEFAULT 'x'` | One of `x`, `g`, `kg`, `l`, `ml`. |
+
+The retired `category` column (migration `031`/`033`) is replaced by per-shop
+placement in `groceries_item_aisles`.
 
 ---
 
-### 2. `groceries_product_categories`
+### 2. `groceries_product_counts`
 
-Normalizes product names to store learned category defaults for automatic classification.
-
-```sql
-CREATE TABLE groceries_product_categories (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    normalized_name TEXT UNIQUE NOT NULL,
-    category TEXT NOT NULL
-);
-```
-
-#### Columns
-
-| Column | Type | Constraints | Description |
-|---|---|---|---|
-| `id` | `INTEGER` | `PRIMARY KEY AUTOINCREMENT` | Unique ID. |
-| `normalized_name` | `TEXT` | `UNIQUE NOT NULL` | Lowercased, trimmed product name key. |
-| `category` | `TEXT` | `NOT NULL` | Associated default category. |
-
----
-
-### 3. `groceries_product_counts`
-
-Tracks total purchase occurrences per product for smart autocomplete and suggestions.
+Total purchase occurrences per product for autocomplete/suggestions.
 
 ```sql
 CREATE TABLE groceries_product_counts (
@@ -99,33 +85,77 @@ CREATE TABLE groceries_product_counts (
 );
 ```
 
-#### Columns
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| `id` | `INTEGER` | `PRIMARY KEY AUTOINCREMENT` | Unique ID. |
+| `name` | `TEXT` | `NOT NULL` | Original display name (first one seen wins). |
+| `normalized_name` | `TEXT` | `UNIQUE NOT NULL` | `normalizeProductName(name)`. |
+| `buy_count` | `INTEGER` | `NOT NULL DEFAULT 0` | Times the item was cleared while bought. |
+
+Stores no amount/unit — only a name and a count.
+
+---
+
+### 3. `groceries_purchase_log`
+
+Append-only purchase-event log used for the recipe-import recency hint.
+
+```sql
+CREATE TABLE groceries_purchase_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  normalized_name TEXT NOT NULL,
+  bought_at INTEGER NOT NULL DEFAULT (unixepoch())
+);
+
+CREATE INDEX idx_purchase_log_norm ON groceries_purchase_log(normalized_name, bought_at DESC);
+```
 
 | Column | Type | Constraints | Description |
 |---|---|---|---|
 | `id` | `INTEGER` | `PRIMARY KEY AUTOINCREMENT` | Unique ID. |
-| `name` | `TEXT` | `NOT NULL` | Original product display name. |
-| `normalized_name` | `TEXT` | `UNIQUE NOT NULL` | Unique normalized name key. |
-| `buy_count` | `INTEGER` | `NOT NULL DEFAULT 0` | Total number of times item was marked bought. |
+| `name` | `TEXT` | `NOT NULL` | Product name at purchase time. |
+| `normalized_name` | `TEXT` | `NOT NULL` | `normalizeProductName(name)`. |
+| `bought_at` | `INTEGER` | `NOT NULL DEFAULT (unixepoch())` | Event timestamp. |
+
+A row is written by `logPurchase` inside `incrementGroceryItemCount`
+(`src/db/groceries.ts`), i.e. when a bought item is **cleared** from the list —
+the same event that increments `buy_count`.
 
 ---
 
-### 4. `groceries_completed_categories`
+### 4. `groceries_ingredient_aliases`
 
-Tracks category sections collapsed/completed by the user in the UI.
+Maps noisy ingredient names to a canonical product name for import.
 
 ```sql
-CREATE TABLE groceries_completed_categories (
-    category TEXT PRIMARY KEY
+CREATE TABLE groceries_ingredient_aliases (
+  normalized_alias TEXT PRIMARY KEY,
+  canonical_name TEXT NOT NULL,
+  updated_at INTEGER NOT NULL DEFAULT (unixepoch())
 );
 ```
 
-#### Columns
-
 | Column | Type | Constraints | Description |
 |---|---|---|---|
-| `category` | `TEXT` | `PRIMARY KEY` | Category name string currently marked completed. |
+| `normalized_alias` | `TEXT` | `PRIMARY KEY` | `normalizeProductName(alias)`. |
+| `canonical_name` | `TEXT` | `NOT NULL` | Target display name. |
+| `updated_at` | `INTEGER` | `NOT NULL DEFAULT (unixepoch())` | Last write time. |
+
+Separate from `normalizeProductName` (which is persisted in other tables and must
+not change). Learned only for already-known products — see
+[ADR-035](/docs/adr-035-recipe-import.md).
+
+---
+
+### 5. Per-shop aisle tables
+
+`shops`, `shop_aisles`, `groceries_item_aisles`, `groceries_product_aisles`, and
+`groceries_completed_aisles` model where each product lives, per shop. See
+[ADR-034](/docs/adr-034-shop-scoped-groceries-aisles.md) and
+`src/db/migrations/032_shops.sql`.
 
 ## Related Concepts
 
 * [Groceries DB Module](/knowledge/db/modules/groceries.md)
+* [Recipe Import (ADR-035)](/docs/adr-035-recipe-import.md)

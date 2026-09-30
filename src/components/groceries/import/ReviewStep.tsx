@@ -49,8 +49,7 @@ export default component$(
     const draft = useSignal<ReviewRow[]>(
       items.map((item) => ({ ...item, aisleId: undefined })),
     );
-
-    const hasInvalidName = () => draft.value.some((row) => row.name.trim().length === 0);
+    const localError = useSignal<string | null>(null);
 
     return (
       <div class="mx-auto max-w-md">
@@ -199,6 +198,15 @@ export default component$(
           </p>
         )}
 
+        {localError.value && (
+          <p
+            class="mt-4 text-sm text-red-600 dark:text-red-400"
+            data-testid="import-review-error"
+          >
+            {localError.value}
+          </p>
+        )}
+
         <div class="mt-5 flex gap-2">
           <button
             onClick$={onBack$}
@@ -210,6 +218,7 @@ export default component$(
           </button>
           <button
             onClick$={() => {
+              localError.value = null;
               const rows = draft.value
                 .map((row) => ({
                   name: row.name.trim(),
@@ -220,9 +229,17 @@ export default component$(
                   sourceName: row.sourceName,
                 }))
                 .filter((row) => row.name.length > 0);
+              if (rows.length === 0) {
+                localError.value = "Brak pozycji do zaimportowania.";
+                return;
+              }
+              if (rows.length !== draft.value.length) {
+                localError.value = "Uzupełnij nazwy wszystkich pozycji.";
+                return;
+              }
               onConfirm$(rows);
             }}
-            disabled={confirming || draft.value.length === 0 || hasInvalidName()}
+            disabled={confirming || draft.value.length === 0}
             data-testid="import-confirm-btn"
             class="flex-1 rounded bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 disabled:opacity-50"
           >
