@@ -1,6 +1,7 @@
 import Database from "better-sqlite3";
 import { getDb } from "./connection.ts";
 import { normalizeProductName } from "../utils/groceries.ts";
+import { logPurchase } from "./groceries-import.ts";
 export { normalizeProductName };
 
 export interface GroceryItem {
@@ -165,6 +166,7 @@ export function incrementGroceryItemCount(
   `,
     )
     .run(name, normalized);
+  logPurchase(name, dbConn);
 }
 
 export function getTopGrocerySuggestions(

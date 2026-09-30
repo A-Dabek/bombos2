@@ -8,7 +8,21 @@ export default extendConfig(baseConfig, () => {
       ssr: true,
       rollupOptions: {
         input: ["src/entry.fastify.tsx", "@qwik-city-plan"],
+        external: [
+          "tesseract.js",
+          "tesseract.js-core",
+          "wasm-feature-detect",
+          "regenerator-runtime",
+        ],
       },
+    },
+    ssr: {
+      external: [
+        "tesseract.js",
+        "tesseract.js-core",
+        "wasm-feature-detect",
+        "regenerator-runtime",
+      ],
     },
     plugins: [nodeServerAdapter({ name: "fastify" })],
   };

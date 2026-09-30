@@ -8,7 +8,7 @@ test("runMigrations applies new migrations", () => {
   runMigrations(db);
 
   const rows = db.prepare("SELECT name FROM _migrations").raw(true).all() as string[][];
-  expect(rows.length).toBe(34);
+  expect(rows.length).toBe(36);
   expect(rows[0][0]).toBe("001_init.sql");
   expect(rows[1][0]).toBe("002_parcels.sql");
   expect(rows[2][0]).toBe("003_parcels_completed_at.sql");
@@ -43,6 +43,8 @@ test("runMigrations applies new migrations", () => {
   expect(rows[31][0]).toBe("031_clear_groceries_categories.sql");
   expect(rows[32][0]).toBe("032_shops.sql");
   expect(rows[33][0]).toBe("033_retire_groceries_categories.sql");
+  expect(rows[34][0]).toBe("034_groceries_purchase_log.sql");
+  expect(rows[35][0]).toBe("035_groceries_ingredient_aliases.sql");
 
   db.close();
 });
@@ -53,7 +55,7 @@ test("runMigrations skips already applied migrations", () => {
   runMigrations(db);
 
   const rows = db.prepare("SELECT name FROM _migrations").raw(true).all() as string[][];
-  expect(rows.length).toBe(34);
+  expect(rows.length).toBe(36);
 
   db.close();
 });
@@ -67,7 +69,7 @@ test("runMigrations applies custom migration files", async () => {
     runMigrations(db);
 
     const rows = db.prepare("SELECT name FROM _migrations ORDER BY name").raw(true).all() as string[][];
-    expect(rows.length).toBe(35);
+    expect(rows.length).toBe(37);
     expect(rows[0][0]).toBe("001_init.sql");
     expect(rows[1][0]).toBe("002_parcels.sql");
     expect(rows[2][0]).toBe("003_parcels_completed_at.sql");
@@ -103,6 +105,8 @@ test("runMigrations applies custom migration files", async () => {
     expect(rows[32][0]).toBe("031_clear_groceries_categories.sql");
     expect(rows[33][0]).toBe("032_shops.sql");
     expect(rows[34][0]).toBe("033_retire_groceries_categories.sql");
+    expect(rows[35][0]).toBe("034_groceries_purchase_log.sql");
+    expect(rows[36][0]).toBe("035_groceries_ingredient_aliases.sql");
 
     const tableCheck = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='test_table'").raw(true).all() as unknown[][];
     expect(tableCheck.length).toBe(1);
@@ -128,7 +132,7 @@ test("runMigrations does not record failed migrations", async () => {
     expect(errorCaught).toBe(true);
 
     const rows = db.prepare("SELECT name FROM _migrations").raw(true).all() as string[][];
-    expect(rows.length).toBe(34);
+    expect(rows.length).toBe(36);
     expect(rows[0][0]).toBe("001_init.sql");
     expect(rows[1][0]).toBe("002_parcels.sql");
     expect(rows[2][0]).toBe("003_parcels_completed_at.sql");
@@ -163,6 +167,8 @@ test("runMigrations does not record failed migrations", async () => {
     expect(rows[31][0]).toBe("031_clear_groceries_categories.sql");
     expect(rows[32][0]).toBe("032_shops.sql");
     expect(rows[33][0]).toBe("033_retire_groceries_categories.sql");
+    expect(rows[34][0]).toBe("034_groceries_purchase_log.sql");
+    expect(rows[35][0]).toBe("035_groceries_ingredient_aliases.sql");
   } finally {
     await rm(tempFile).catch(() => {});
     db.close();

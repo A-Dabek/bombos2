@@ -18,7 +18,13 @@ export default defineConfig(({ command, mode }): UserConfig => {
     optimizeDeps: {
       // Put problematic deps that break bundling here, mostly those with binaries.
       // For example ['better-sqlite3'] if you use that in server functions.
-      exclude: ["better-sqlite3"],
+      exclude: [
+        "better-sqlite3",
+        "tesseract.js",
+        "tesseract.js-core",
+        "wasm-feature-detect",
+        "regenerator-runtime",
+      ],
     },
 
     /**

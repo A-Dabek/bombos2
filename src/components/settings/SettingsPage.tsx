@@ -14,6 +14,7 @@ export default component$(() => {
   const settings = useSettings();
   const hiddenTabs = useSignal<string[]>(settings.value.hiddenTabs);
   const theme = useSignal<"dark" | "light">(settings.value.theme);
+  const inventoryWindowDays = useSignal<number>(settings.value.inventoryWindowDays);
   const saving = useSignal(false);
   const error = useSignal<string | null>(null);
 
@@ -82,6 +83,25 @@ export default component$(() => {
   const handleLogout = $(async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     window.location.href = "/login";
+  });
+
+  const saveInventoryWindow = $(async () => {
+    saving.value = true;
+    error.value = null;
+    try {
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ inventoryWindowDays: inventoryWindowDays.value }),
+      });
+      if (!res.ok) throw new Error("Failed to save settings");
+      const data = await res.json();
+      inventoryWindowDays.value = data.inventoryWindowDays;
+    } catch (e: any) {
+      error.value = e.message;
+    } finally {
+      saving.value = false;
+    }
   });
 
   return (
@@ -164,6 +184,40 @@ export default component$(() => {
             );
           })}
         </ul>
+      </section>
+
+      <section class="mb-8">
+        <h2 class="mb-3 text-sm font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          Import ze zdjęcia
+        </h2>
+        <div class="flex items-center rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3">
+          <label for="inventory-window-days" class="flex-1 text-sm font-medium text-gray-800 dark:text-gray-200">
+            Okno świeżości (dni)
+          </label>
+          <input
+            id="inventory-window-days"
+            type="number"
+            min={1}
+            max={15}
+            value={inventoryWindowDays.value}
+            onInput$={(e) =>
+              (inventoryWindowDays.value = Number((e.target as HTMLInputElement).value))
+            }
+            data-testid="inventory-window-days"
+            class="w-20 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-2 py-1 text-sm text-gray-800 dark:text-gray-100"
+          />
+          <button
+            onClick$={saveInventoryWindow}
+            disabled={saving.value}
+            data-testid="save-inventory-window"
+            class="ml-3 rounded bg-blue-500 px-3 py-1 text-sm font-medium text-white hover:bg-blue-600 disabled:opacity-50"
+          >
+            Zapisz
+          </button>
+        </div>
+        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          Produkty kupione w tym okresie będą oznaczone jako „prawdopodobnie masz”.
+        </p>
       </section>
 
       <section>

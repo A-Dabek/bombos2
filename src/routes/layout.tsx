@@ -5,7 +5,7 @@ import { streamPlanUrgent } from "../utils/plan-urgent-stream";
 import { streamBillsUrgent } from "../utils/bills-urgent-stream";
 import Ping from "~/components/shared/Ping";
 import { RefreshContext } from "~/constants/refresh";
-import { getHiddenTabs, getTheme } from "~/db/settings";
+import { getHiddenTabs, getTheme, getInventoryWindowDays } from "~/db/settings";
 import {
   HiCubeOutline,
   HiFireOutline,
@@ -28,6 +28,7 @@ export const useSettings = routeLoader$(({ sharedMap }) => {
   return {
     hiddenTabs: getHiddenTabs(email),
     theme: getTheme(email),
+    inventoryWindowDays: getInventoryWindowDays(email),
   };
 });
 
