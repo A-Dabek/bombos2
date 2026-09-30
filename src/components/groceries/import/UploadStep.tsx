@@ -36,7 +36,6 @@ export default component$(({ uploading, error, onFile$ }: UploadStepProps) => {
         <input
           type="file"
           accept="image/*"
-          capture="environment"
           class="hidden"
           disabled={uploading}
           data-testid="import-file-input"
