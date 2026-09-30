@@ -1,15 +1,55 @@
 import type { RequestHandler } from "@builder.io/qwik-city";
 import { recognizeText } from "~/server/ocr";
-import { extractIngredients, type ExtractedIngredient } from "~/server/llm";
+import { parseIngredients, type DraftItem } from "~/server/recipe-import";
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
-const STUB_ITEMS: ExtractedIngredient[] = [
-  { name: "cebula", amount: 200, unit: "g", description: "2 duże cebule po 100 g" },
-  { name: "jajka", amount: 4, unit: "x", description: "wielkość M" },
-  { name: "śmietana", amount: 250, unit: "ml", description: "schłodzona, 30% tł." },
-  { name: "szczypiorek", description: "% pęczka szczypiorku" },
-  { name: "sól" },
+export const STUB_ITEMS: DraftItem[] = [
+  {
+    name: "cebula",
+    amount: 200,
+    unit: "g",
+    description: "2 duże cebule po 100 g",
+    match: { type: "new", name: null, confidence: 0 },
+    inventory: null,
+    sourceName: "cebula",
+  },
+  {
+    name: "jajka",
+    amount: 4,
+    unit: "x",
+    description: "wielkość M",
+    match: { type: "new", name: null, confidence: 0 },
+    inventory: null,
+    sourceName: "jajka",
+  },
+  {
+    name: "śmietana",
+    amount: 250,
+    unit: "ml",
+    description: "schłodzona, 30% tł.",
+    match: { type: "new", name: null, confidence: 0 },
+    inventory: null,
+    sourceName: "śmietana",
+  },
+  {
+    name: "szczypiorek",
+    amount: 1,
+    unit: "x",
+    description: "% pęczka szczypiorku",
+    match: { type: "new", name: null, confidence: 0 },
+    inventory: null,
+    sourceName: "szczypiorek",
+  },
+  {
+    name: "sól",
+    amount: 1,
+    unit: "x",
+    description: "",
+    match: { type: "new", name: null, confidence: 0 },
+    inventory: null,
+    sourceName: "sól",
+  },
 ];
 
 function isStub(): boolean {
@@ -51,7 +91,7 @@ export const onPost: RequestHandler = async ({ request, json }) => {
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
     const ocr = await recognizeText(buffer);
-    const items = await extractIngredients(ocr.text);
+    const items = await parseIngredients(ocr.text);
     json(200, { items, ocrConfidence: ocr.confidence });
   } catch (error) {
     console.error("recipe import analyze failed:", error instanceof Error ? error.message : error);

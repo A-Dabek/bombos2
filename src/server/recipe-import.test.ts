@@ -1,13 +1,15 @@
 import { test, expect } from "vitest";
 import Database from "better-sqlite3";
 import { runMigrations } from "../db/migrations.ts";
-import { createGroceryItem, incrementGroceryItemCount } from "../db/groceries.ts";
+import { createGroceryItem, incrementGroceryItemCount, getGroceryItems } from "../db/groceries.ts";
 import {
   logPurchase,
   saveIngredientAlias,
+  resolveCanonical,
 } from "../db/groceries-import.ts";
+import { createShop, createAisle, getItemAisleMap } from "../db/shops.ts";
 import { extractIngredients, type ExtractedIngredient } from "./llm.ts";
-import { parseIngredients } from "./recipe-import.ts";
+import { parseIngredients, confirmImport } from "./recipe-import.ts";
 
 function freshDb(): Database.Database {
   const db = new Database(":memory:");
@@ -185,4 +187,41 @@ test("extractIngredients validates and normalizes LLM items", async () => {
     { name: "zły" },
     { name: "sól" },
   ]);
+});
+
+test("confirmImport creates items and learns aliases", () => {
+  const db = freshDb();
+  const { created } = confirmImport(
+    [
+      { name: "cebula", amount: 200, unit: "g", sourceName: "cebule" },
+      { name: "sól", amount: 1, unit: "x" },
+    ],
+    { db, shopId: null },
+  );
+
+  expect(created).toHaveLength(2);
+  expect(getGroceryItems(db).map((item) => item.name)).toEqual(["cebula", "sól"]);
+  expect(resolveCanonical("cebule", db)).toBe("cebula");
+  db.close();
+});
+
+test("confirmImport assigns item aisle and remembers the product aisle", () => {
+  const db = freshDb();
+  const shopId = createShop("Test", db);
+  const aisleId = createAisle(shopId, "Warzywa", db);
+
+  const { created } = confirmImport(
+    [{ name: "cebula", amount: 1, unit: "x", aisleId }],
+    { db, shopId },
+  );
+
+  const map = getItemAisleMap(shopId, db);
+  expect(map.get(created[0])).toBe(aisleId);
+  const row = db
+    .prepare(
+      "SELECT aisle_id FROM groceries_product_aisles WHERE normalized_name = ? AND shop_id = ?",
+    )
+    .get("cebula", shopId) as { aisle_id: number } | undefined;
+  expect(row?.aisle_id).toBe(aisleId);
+  db.close();
 });

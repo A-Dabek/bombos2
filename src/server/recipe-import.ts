@@ -1,15 +1,18 @@
 import Database from "better-sqlite3";
 import { extractIngredients, type ExtractedIngredient, type Unit } from "./llm.ts";
-import { getGroceryItems } from "../db/groceries.ts";
-import { getInventoryWindowDays } from "../db/settings.ts";
+import { getDb } from "../db/connection.ts";
+import { createGroceryItem, getGroceryItems } from "../db/groceries.ts";
+import { getActiveShop, getInventoryWindowDays } from "../db/settings.ts";
+import { setItemAisle, saveProductAisle } from "../db/shops.ts";
 import {
   findProductMatches,
   getRecentlyBought,
   resolveCanonical,
+  saveIngredientAlias,
 } from "../db/groceries-import.ts";
 import { normalizeProductName } from "../utils/groceries.ts";
 
-const VALID_UNITS: ReadonlySet<string> = new Set(["x", "g", "kg", "l", "ml"]);
+export const VALID_UNITS: ReadonlySet<string> = new Set(["x", "g", "kg", "l", "ml"]);
 const DESCRIPTION_LIMIT = 300;
 
 export type MatchType = "existing" | "new" | "possible";
@@ -32,6 +35,7 @@ export interface DraftItem {
   description: string;
   match: DraftMatch;
   inventory: DraftInventory | null;
+  sourceName: string;
 }
 
 export interface ParseIngredientsOptions {
@@ -53,6 +57,7 @@ interface WorkingItem {
   amount: number;
   unit: Unit;
   description: string;
+  sourceName: string;
 }
 
 function toWorkingItem(ingredient: ExtractedIngredient, db?: Database.Database): WorkingItem {
@@ -72,6 +77,7 @@ function toWorkingItem(ingredient: ExtractedIngredient, db?: Database.Database):
     amount: hasAmount ? (ingredient.amount as number) : 1,
     unit,
     description: (ingredient.description ?? "").slice(0, DESCRIPTION_LIMIT),
+    sourceName: rawName,
   };
 }
 
@@ -100,6 +106,7 @@ function mergeItems(items: WorkingItem[]): WorkingItem[] {
       amount: Math.round(amount * 1000) / 1000,
       unit: sameUnit ? group[0].unit : base.unit,
       description: descriptions.join("; ").slice(0, DESCRIPTION_LIMIT),
+      sourceName: group[0].sourceName,
     });
   }
   return merged;
@@ -156,6 +163,63 @@ export async function parseIngredients(
       description: item.description,
       match,
       inventory,
+      sourceName: item.sourceName,
     };
   });
+}
+
+export interface ConfirmItemInput {
+  name: string;
+  amount: number;
+  unit: Unit;
+  description?: string;
+  aisleId?: number | null;
+  sourceName?: string;
+}
+
+export interface ConfirmImportOptions {
+  db?: Database.Database;
+  shopId?: number | null;
+}
+
+export interface ConfirmImportResult {
+  created: number[];
+}
+
+export function confirmImport(
+  items: ConfirmItemInput[],
+  options: ConfirmImportOptions = {},
+): ConfirmImportResult {
+  const db = options.db ?? getDb();
+  const shopId = options.shopId !== undefined ? options.shopId : getActiveShop("default", db);
+  const created: number[] = [];
+
+  const run = db.transaction(() => {
+    for (const item of items) {
+      const id = createGroceryItem(
+        item.name,
+        item.description?.trim() || null,
+        false,
+        item.amount,
+        item.unit,
+        db,
+      );
+      created.push(id);
+
+      if (shopId !== null && item.aisleId !== undefined && item.aisleId !== null) {
+        setItemAisle(id, shopId, item.aisleId, db);
+        saveProductAisle(item.name, shopId, item.aisleId, true, db);
+      }
+
+      if (item.sourceName) {
+        const source = normalizeProductName(item.sourceName);
+        if (source && source !== normalizeProductName(item.name)) {
+          saveIngredientAlias(item.sourceName, item.name, db);
+        }
+      }
+    }
+  });
+  run();
+
+  return { created };
 }
