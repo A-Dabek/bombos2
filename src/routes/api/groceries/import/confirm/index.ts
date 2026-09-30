@@ -60,13 +60,15 @@ export const onPost: RequestHandler = async ({ parseBody, json }) => {
     const unit: Unit =
       typeof item.unit === "string" && VALID_UNITS.has(item.unit) ? (item.unit as Unit) : "x";
 
-    let aisleId: number | null = null;
+    let aisleId: number | null | undefined = undefined;
     if (item.aisleId !== undefined && item.aisleId !== null) {
       if (!Number.isInteger(item.aisleId)) {
         json(400, { error: `items[${index}].aisleId must be an integer or null` });
         return;
       }
       aisleId = item.aisleId as number;
+    } else if (item.aisleId === null) {
+      aisleId = null;
     }
 
     const sourceName =

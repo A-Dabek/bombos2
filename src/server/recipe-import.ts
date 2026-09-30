@@ -3,7 +3,7 @@ import { extractIngredients, type ExtractedIngredient, type Unit } from "./llm.t
 import { getDb } from "../db/connection.ts";
 import { createGroceryItem, getGroceryItems } from "../db/groceries.ts";
 import { getActiveShop, getInventoryWindowDays } from "../db/settings.ts";
-import { setItemAisle, saveProductAisle } from "../db/shops.ts";
+import { setItemAisle, saveProductAisle, getSuggestedAisle } from "../db/shops.ts";
 import {
   findProductMatches,
   getRecentlyBought,
@@ -206,9 +206,17 @@ export function confirmImport(
       );
       created.push(id);
 
-      if (shopId !== null && item.aisleId !== undefined && item.aisleId !== null) {
-        setItemAisle(id, shopId, item.aisleId, db);
-        saveProductAisle(item.name, shopId, item.aisleId, true, db);
+      if (shopId !== null) {
+        if (item.aisleId === undefined) {
+          const suggested = getSuggestedAisle(item.name, shopId, db);
+          if (suggested !== null) {
+            setItemAisle(id, shopId, suggested, db);
+            saveProductAisle(item.name, shopId, suggested, false, db);
+          }
+        } else if (item.aisleId !== null) {
+          setItemAisle(id, shopId, item.aisleId, db);
+          saveProductAisle(item.name, shopId, item.aisleId, true, db);
+        }
       }
 
       if (item.sourceName) {

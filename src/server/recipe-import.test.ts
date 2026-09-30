@@ -7,7 +7,7 @@ import {
   saveIngredientAlias,
   resolveCanonical,
 } from "../db/groceries-import.ts";
-import { createShop, createAisle, getItemAisleMap } from "../db/shops.ts";
+import { createShop, createAisle, getItemAisleMap, saveProductAisle } from "../db/shops.ts";
 import { extractIngredients, type ExtractedIngredient } from "./llm.ts";
 import { parseIngredients, confirmImport } from "./recipe-import.ts";
 
@@ -223,5 +223,20 @@ test("confirmImport assigns item aisle and remembers the product aisle", () => {
     )
     .get("cebula", shopId) as { aisle_id: number } | undefined;
   expect(row?.aisle_id).toBe(aisleId);
+  db.close();
+});
+
+test("confirmImport auto-resolves aisle from learned product aisles", () => {
+  const db = freshDb();
+  const shopId = createShop("Test", db);
+  const aisleId = createAisle(shopId, "Warzywa", db);
+  saveProductAisle("cebula", shopId, aisleId, true, db);
+
+  const { created } = confirmImport([{ name: "cebula", amount: 1, unit: "x" }], {
+    db,
+    shopId,
+  });
+
+  expect(getItemAisleMap(shopId, db).get(created[0])).toBe(aisleId);
   db.close();
 });

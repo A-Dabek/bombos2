@@ -1,6 +1,7 @@
 import { component$, type PropFunction } from "@builder.io/qwik";
+import { Link } from "@builder.io/qwik-city";
 import Loader from "~/components/shared/Loader";
-import { HiPlusOutline } from "@qwikest/icons/heroicons";
+import { HiPlusOutline, HiCameraOutline } from "@qwikest/icons/heroicons";
 import type { GroceryItem } from "~/db/groceries";
 import type { Aisle } from "~/db/shops";
 import GroceryItemRow from "./GroceryItemRow";
@@ -154,6 +155,17 @@ export default component$(
                 <HiPlusOutline class="w-5 h-5 mr-1" />
                 <span>Dodaj nową</span>
               </button>
+            </div>
+
+            <div class="mt-2">
+              <Link
+                href="/groceries/import"
+                data-testid="import-recipe-btn"
+                class="flex items-center px-3 py-2 bg-white dark:bg-gray-800 border border-blue-500 text-blue-600 dark:text-blue-400 rounded hover:bg-blue-50 dark:hover:bg-blue-950 w-full justify-center"
+              >
+                <HiCameraOutline class="w-5 h-5 mr-1" />
+                <span>Import ze zdjęcia</span>
+              </Link>
             </div>
 
             {suggestions.length > 0 && (
