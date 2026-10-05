@@ -44,7 +44,35 @@ When new items are created or edited:
 2. `getSuggestedCategory` uses this lookup table to automatically pre-assign categories to new items.
 3. Marking items as bought increments `buy_count` in `groceries_product_counts`, powering `getTopGrocerySuggestions`.
 
+## Merge Duplicates Module (`/src/db/groceries-merge.ts`)
+
+| Function | Parameters | Return Type | Description |
+|---|---|---|---|
+| `listMergeCandidates(db?)` | `db?: Database` | `MergeCandidate[]` | Union of `groceries_product_counts`, distinct `groceries_items.name`, and distinct `groceries_ingredient_aliases.canonical_name`, deduped by `normalizeProductName`. Display-name preference is counts > items > alias canonical; `buyCount` comes from the counts row (else 0), `onList` is true when the normalized name is on the list. Sorted by `buyCount` DESC then `name.localeCompare(..., "pl")`. |
+| `mergeGroceryProducts(targetName, sourceNames, db?)` | `targetName: string, sourceNames: string[], db?: Database` | `{ merged, target }` | Transactionally unifies duplicate products into the existing target. |
+
+Merge semantics (one transaction):
+
+1. **Counts** — sum source `buy_count` onto the target row (insert one if the
+   target has no history), then delete the source rows.
+2. **Purchase log** — rewrite source `normalized_name` to the target, so
+   `getRecentlyBought` sees the max `bought_at`.
+3. **Aisles** — per shop, keep the target's mapping (deleting source rows for
+   that shop); otherwise keep the most recently used source mapping, re-key it
+   to the target, and delete the rest. Avoids PK `(normalized_name, shop_id)`
+   collisions.
+4. **Aliases** — `saveIngredientAlias(sourceName, targetName)` for each source
+   display name, then re-point any existing alias whose `canonical_name`
+   normalized matches a source.
+5. **Items** — rename matching active `groceries_items.name` only; amount and
+   unit are untouched.
+
+The target MUST be an existing candidate (enforced by
+`POST /api/groceries/admin`). The module never touches `groceries_item_aisles`,
+which is id-keyed and survives the rename.
+
 ## Related Concepts
 
 * [Groceries Schemas](/knowledge/db/schemas/groceries.md)
 * [Database Architecture](/knowledge/db/architecture.md)
+* [Product Merge (ADR-036)](/docs/adr-036-groceries-product-merge.md)

@@ -35,7 +35,20 @@ ingredient list from a screenshot.
      window setting), and aisle resolution.
    - `GROCERIES_IMPORT_STUB=true` returns canned draft items for E2E.
 
-See [ADR-035: Recipe Screenshot Import](/docs/adr-035-recipe-import.md).
+5. **Merge Duplicates (admin)**: `/groceries/admin` lists every known product
+   name (purchase counts, list items, alias canonicals) and lets the user pick a
+   target via dropdown and toggle duplicates as rows. A two-click confirm calls
+   `POST /api/groceries/admin`, which transactionally sums `buy_count`, rewrites
+   the purchase log, re-keys per-shop aisle mappings, creates aliases from the
+   source names, re-points existing aliases, and renames active list items
+   (amounts/units untouched).
+
+6. **Manual-add canonicalization**: Adding an item manually resolves it through
+   `groceries_ingredient_aliases` first, so an alias (`onions`) is stored as its
+   canonical name (`onion`) silently. Renaming an item stays literal.
+
+See [ADR-035: Recipe Screenshot Import](/docs/adr-035-recipe-import.md) and
+[ADR-036: Groceries Product Merge](/docs/adr-036-groceries-product-merge.md).
 
 ## Related Concepts
 
@@ -43,3 +56,4 @@ See [ADR-035: Recipe Screenshot Import](/docs/adr-035-recipe-import.md).
 * [Groceries Data Access Module](/knowledge/db/modules/groceries.md)
 * [Groceries Schema](/knowledge/db/schemas/groceries.md)
 * [Recipe Import (ADR-035)](/docs/adr-035-recipe-import.md)
+* [Product Merge (ADR-036)](/docs/adr-036-groceries-product-merge.md)

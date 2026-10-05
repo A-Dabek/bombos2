@@ -23,6 +23,22 @@ Groceries UI components support grocery planning view, shopping list execution, 
 | `PlanningItemsView.tsx` | Planned items | JSX.Element | List view of planned items with buy counts and suggestions. |
 | `CategoryFilter.tsx` | Categories, selected | JSX.Element | Category filter bar for grocery items. |
 | `GroceriesSubNav.tsx` | Active tab | JSX.Element | Navigation between Planning and Shopping modes. |
+| `admin/GroceriesAdmin.tsx` | (none) | JSX.Element | Merge-duplicates admin view (`/groceries/admin`): target dropdown, click-to-check duplicate rows, live search, two-click confirm, success/error feedback and Loader/empty states. |
+
+## Merge Duplicates Admin (`/groceries/admin`)
+
+`GroceriesAdmin` loads `GET /api/groceries/admin` and renders candidates with
+`data-testid="groceries-admin"`. The entry point is the floating `AdminButton`
+on `/groceries/planning`.
+
+- Target is chosen from a `select` (`admin-merge-target`); candidates are toggled
+  by clicking rows (`admin-merge-row` / `admin-merge-checkbox-<normalized>`).
+- The selected target is filtered out of the toggle list.
+- `admin-merge-submit` is a two-click button (arms red for 2s, then confirms)
+  and posts `{ target, sources }`.
+- Success renders `admin-merge-success`; failures render `admin-merge-error`.
+- All row markup is inline (no child `component$`) so array replacement
+  re-renders correctly.
 
 ## Domain Logic & User Interaction
 

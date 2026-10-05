@@ -178,6 +178,35 @@ export function seedAisle(name: string, shopId = 1): number {
   return id;
 }
 
+export function clearGroceryCatalog() {
+  const db = new Database(DB_PATH);
+  db.prepare("DELETE FROM groceries_product_counts").run();
+  db.prepare("DELETE FROM groceries_purchase_log").run();
+  db.prepare("DELETE FROM groceries_ingredient_aliases").run();
+  db.close();
+}
+
+export function seedProductCount(name: string, count: number) {
+  const db = new Database(DB_PATH);
+  const n = name.toLowerCase().replace(/\s+/g, "");
+  db.prepare(
+    "INSERT INTO groceries_product_counts (name, normalized_name, buy_count) VALUES (?, ?, ?) ON CONFLICT(normalized_name) DO UPDATE SET buy_count = excluded.buy_count",
+  ).run(name, n, count);
+  db.prepare(
+    "INSERT INTO groceries_purchase_log (name, normalized_name, bought_at) VALUES (?, ?, ?)",
+  ).run(name, n, Math.floor(Date.now() / 1000));
+  db.close();
+}
+
+export function seedIngredientAlias(alias: string, canonicalName: string) {
+  const db = new Database(DB_PATH);
+  const n = alias.toLowerCase().replace(/\s+/g, "");
+  db.prepare(
+    "INSERT INTO groceries_ingredient_aliases (normalized_alias, canonical_name, updated_at) VALUES (?, ?, unixepoch()) ON CONFLICT(normalized_alias) DO UPDATE SET canonical_name = excluded.canonical_name, updated_at = unixepoch()",
+  ).run(n, canonicalName);
+  db.close();
+}
+
 export function clearFlows() {
   const db = new Database(DB_PATH);
   db.prepare("DELETE FROM money_flows").run();

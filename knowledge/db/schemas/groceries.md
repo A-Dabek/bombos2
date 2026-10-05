@@ -155,7 +155,23 @@ not change). Learned only for already-known products — see
 [ADR-034](/docs/adr-034-shop-scoped-groceries-aisles.md) and
 `src/db/migrations/032_shops.sql`.
 
+## Product Merge Is Data-Only
+
+The merge-duplicates feature (see
+[ADR-036](/docs/adr-036-groceries-product-merge.md)) introduces **no schema
+change**. It mutates rows in the name-keyed tables above (and renames
+`groceries_items.name`), constrained by the existing primary keys:
+
+- `groceries_product_counts.normalized_name` UNIQUE — sources deleted, target
+  upserted.
+- `groceries_ingredient_aliases.normalized_alias` PRIMARY KEY — source aliases
+  upserted, conflicting canonicals re-pointed.
+- `groceries_product_aisles` PK `(normalized_name, shop_id)` — per-shop dedupe
+  before re-keying avoids collisions.
+- `groceries_item_aisles` is id-keyed and untouched by a rename.
+
 ## Related Concepts
 
 * [Groceries DB Module](/knowledge/db/modules/groceries.md)
 * [Recipe Import (ADR-035)](/docs/adr-035-recipe-import.md)
+* [Product Merge (ADR-036)](/docs/adr-036-groceries-product-merge.md)

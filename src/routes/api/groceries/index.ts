@@ -4,7 +4,9 @@ import {
   createGroceryItem,
   deleteAllGroceryItems,
   deleteBoughtGroceryItems,
+  normalizeProductName,
 } from "~/db/groceries";
+import { resolveCanonical } from "~/db/groceries-import";
 import { getActiveShop } from "~/db/settings";
 import { getItemAisleMap, setItemAisle, clearItemAisle, saveProductAisle } from "~/db/shops";
 
@@ -63,8 +65,10 @@ export const onPost: RequestHandler = async ({ json, parseBody }) => {
   }
 
   const trimmedName = name.trim();
+  const canonicalName =
+    resolveCanonical(normalizeProductName(trimmedName)) ?? trimmedName;
   const id = createGroceryItem(
-    trimmedName,
+    canonicalName,
     description || null,
     !!urgent,
     amount,
@@ -77,7 +81,7 @@ export const onPost: RequestHandler = async ({ json, parseBody }) => {
       clearItemAisle(id, shopId);
     } else {
       setItemAisle(id, shopId, aisleId);
-      saveProductAisle(trimmedName, shopId, aisleId, !!aisleManual);
+      saveProductAisle(canonicalName, shopId, aisleId, !!aisleManual);
     }
   }
 
