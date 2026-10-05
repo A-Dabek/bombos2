@@ -31,9 +31,17 @@ screenshot is processed in memory and discarded — it is never persisted.
 
 ### OCR is server-side tesseract.js
 
-`src/server/ocr.ts` preprocesses with `sharp` (grayscale → normalize → 2×
-upscale, no threshold) and runs `tesseract.js` with the Polish model at
-`PSM 6` (`SINGLE_BLOCK`), `cacheMethod: "none"`. Traineddata comes from the
+`src/server/ocr.ts` preprocesses with `sharp` (grayscale → invert when
+light-on-dark → normalize → lanczos3 upscale → optional threshold) and runs
+`tesseract.js` with the Polish model at `PSM 6` (`SINGLE_BLOCK`),
+`preserve_interword_spaces: 1`, `user_defined_dpi: 300`, `cacheMethod: "none"`.
+`sharpen` is intentionally not applied: measured on real screenshots it
+destabilised digits (`12 g` → `129`, `350 g` → `550 g`), whereas
+`normalize`+resize was the most accurate across both a low- and a high-res
+screenshot. Tuning is env-driven via `src/server/ocr-options.ts`: `OCR_SCALE`
+(1–4), `OCR_PSM` (name or number), `OCR_BINARIZE`, and `OCR_STRIP_SPURIOUS_9`
+(opt-in removal of a misread `9` before a unit, e.g. `109 g` → `10 g`).
+Traineddata comes from the
 jsDelivr CDN by default (the `4.0.0_best_int` model scored higher than the
 system model) or from a local directory via `TESSDATA_PATH`. `tesseract.js`,
 `tesseract.js-core`, `wasm-feature-detect`, and `regenerator-runtime` are
@@ -56,8 +64,10 @@ response is empty or truncated by `finish_reason: "length"`.
 - default a missing/non-positive amount to `1 x`;
 - merge duplicates by normalized name, converting `g`↔`kg` and `l`↔`ml` only
   when units differ, and join the source `raw` fragments;
-- classify each item as `existing` (exact match on the current list), `possible`
-  (fuzzy/alias match against history + list), or `new`;
+- classify each item as `existing` (exact match on the current list), `known`
+  (exact catalog hit — already bought, whole-DB match), `possible` (fuzzy/alias
+  match against history + list), or `new`; a `possible` badge is clickable and
+  applies the suggested name;
 - attach recency (`Prawdopodobnie masz`) from the purchase log within the configured
   window;
 - resolve aisles server-side from the learned product-aisle map, exactly like a

@@ -24,12 +24,15 @@ ingredient list from a screenshot.
 4. **Recipe Screenshot Import**: Upload a screenshot of a recipe/shopping list;
    OCR + an LLM extract ingredients into a **mandatory review** screen where the
    user edits/merges/deletes, then confirms. No items are written before confirm.
-   - OCR: server-side `tesseract.js` (`pol`, PSM 6) with `sharp` preprocessing.
+   - OCR: server-side `tesseract.js` (`pol`, PSM 6 `SINGLE_BLOCK`) with `sharp`
+     preprocessing; tunable via `OCR_SCALE`/`OCR_PSM`/`OCR_BINARIZE`/
+     `OCR_STRIP_SPURIOUS_9`.
    - Extraction: OpenRouter JSON mode; the LLM returns only
      `name`/`amount`/`unit`/`description`/`raw`.
    - Backend does the deterministic work: alias canonicalization, duplicate
-     merge, unit defaults, match classification (`existing`/`possible`/`new`),
-     recency (`Prawdopodobnie masz`, window setting), and aisle resolution.
+     merge, unit defaults, match classification
+     (`existing`/`known`/`possible`/`new`), recency (`Prawdopodobnie masz`,
+     window setting), and aisle resolution.
    - `GROCERIES_IMPORT_STUB=true` returns canned draft items for E2E.
 
 See [ADR-035: Recipe Screenshot Import](/docs/adr-035-recipe-import.md).

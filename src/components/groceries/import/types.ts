@@ -1,7 +1,7 @@
 export type ImportUnit = "x" | "g" | "kg" | "l" | "ml";
 
 export interface ImportMatch {
-  type: "existing" | "new" | "possible";
+  type: "existing" | "new" | "possible" | "known";
   name: string | null;
   confidence: number;
   amount?: number;
@@ -22,6 +22,10 @@ export interface ImportDraftItem {
   match: ImportMatch;
   inventory: ImportInventory | null;
   sourceName: string;
+}
+
+export interface ImportReviewRow extends ImportDraftItem {
+  aisleId: number | null | undefined;
 }
 
 export interface ImportConfirmItem {

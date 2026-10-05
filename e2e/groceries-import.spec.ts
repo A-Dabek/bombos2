@@ -19,17 +19,17 @@ test.describe("Groceries recipe import @groceries", () => {
   test("import screenshot -> review -> confirm -> items on planning", async ({ page }) => {
     await openReview(page);
 
-    // Stub returns 5 items, each with original raw text and a match badge.
+    // Stub returns 6 items, each with original raw text and a match badge.
     await expect(page.getByTestId("import-row-4")).toBeVisible();
     await expect(page.getByTestId("import-name-0")).toHaveValue("Cebula");
     await expect(page.getByTestId("import-raw-0")).toBeVisible();
     await expect(page.getByTestId("import-match-0")).toHaveText("Nowe");
 
-    // Edit name + unit, delete the last row.
+    // Edit name + unit, delete the salt row.
     await page.getByTestId("import-name-0").fill("cebula e2e");
     await page.getByTestId("import-unit-0").selectOption("kg");
     await page.getByTestId("import-delete-4").click();
-    await expect(page.getByTestId("import-row-4")).not.toBeVisible();
+    await expect(page.getByTestId("import-row-5")).not.toBeVisible();
 
     // Confirm -> POST then redirect to planning.
     const confirmResponse = page.waitForResponse(
@@ -43,6 +43,15 @@ test.describe("Groceries recipe import @groceries", () => {
     await expect(page).toHaveURL(/\/groceries\/planning/);
     await expect(page.getByText("cebula e2e", { exact: true })).toBeVisible();
     await expect(page.getByText("sól", { exact: true })).not.toBeVisible();
+  });
+
+  test("clicking a 'Może' suggestion renames the item", async ({ page }) => {
+    await openReview(page);
+
+    await expect(page.getByTestId("import-match-5")).toHaveText(/^Może: Cebula/);
+    await page.getByTestId("import-match-5").click();
+    await expect(page.getByTestId("import-name-5")).toHaveValue("Cebula");
+    await expect(page.getByTestId("import-match-5")).not.toBeVisible();
   });
 
   test("back button returns to the upload step", async ({ page }) => {

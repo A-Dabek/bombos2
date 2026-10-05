@@ -125,6 +125,18 @@ test("parseIngredients classifies existing, possible and new matches", async () 
   db.close();
 });
 
+test("parseIngredients classifies exact catalog hits as known", async () => {
+  const db = freshDb();
+  incrementGroceryItemCount("Marchewka", db);
+
+  const [known] = await parseIngredients("ignored", {
+    db,
+    extract: fakeExtract([{ name: "marchewka", amount: 1, unit: "x" }]),
+  });
+  expect(known.match).toEqual({ type: "known", name: "Marchewka", confidence: 1 });
+  db.close();
+});
+
 test("parseIngredients attaches inventory within the recency window", async () => {
   const db = freshDb();
   logPurchase("Cebula", db);

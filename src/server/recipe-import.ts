@@ -16,7 +16,7 @@ import { normalizeProductName } from "../utils/groceries.ts";
 export const VALID_UNITS: ReadonlySet<string> = new Set(["x", "g", "kg", "l", "ml"]);
 const DESCRIPTION_LIMIT = 300;
 
-export type MatchType = "existing" | "new" | "possible";
+export type MatchType = "existing" | "new" | "possible" | "known";
 
 export interface DraftMatch {
   type: MatchType;
@@ -169,7 +169,10 @@ export async function parseIngredients(
       };
     } else {
       const matches = findProductMatches(item.name, db);
-      if (matches.length) {
+      const exact = matches.find((m) => m.confidence === 1);
+      if (exact) {
+        match = { type: "known", name: exact.name, confidence: 1 };
+      } else if (matches.length) {
         const candidate = currentItems.get(normalizeProductName(matches[0].name));
         match = {
           type: "possible",

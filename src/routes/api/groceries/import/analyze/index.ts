@@ -55,6 +55,16 @@ export const STUB_ITEMS: DraftItem[] = [
     inventory: null,
     sourceName: "sól",
   },
+  {
+    name: "Cebule",
+    amount: 1,
+    unit: "x",
+    description: "",
+    raw: "cebule",
+    match: { type: "possible", name: "Cebula", confidence: 0.8, amount: 1, unit: "x" },
+    inventory: null,
+    sourceName: "cebule",
+  },
 ];
 
 function isStub(): boolean {
