@@ -40,18 +40,25 @@ test.describe("Groceries admin product merge @groceries", () => {
     await expect(page).toHaveURL(/\/groceries\/admin/);
     await expect(page.getByTestId("groceries-admin")).toBeVisible();
 
-    await page.getByTestId("admin-merge-target").selectOption(TARGET);
+    const resultRow = (name: string) =>
+      page.locator(
+        `[data-testid="admin-merge-result-row"][data-name="${name}"]`,
+      );
+    const stagedRow = (name: string) =>
+      page.locator(
+        `[data-testid="admin-merge-staged-row"][data-name="${name}"]`,
+      );
 
-    const rowA = page.locator(
-      `[data-testid="admin-merge-row"][data-name="${SOURCE_A}"]`,
-    );
-    const rowB = page.locator(
-      `[data-testid="admin-merge-row"][data-name="${SOURCE_B}"]`,
-    );
-    await rowA.click();
-    await rowB.click();
-    await expect(rowA.locator("input[type=checkbox]")).toBeChecked();
-    await expect(rowB.locator("input[type=checkbox]")).toBeChecked();
+    await resultRow(TARGET).click();
+    await resultRow(SOURCE_A).click();
+    await resultRow(SOURCE_B).click();
+
+    await expect(stagedRow(TARGET)).toBeVisible();
+    await expect(stagedRow(SOURCE_A)).toBeVisible();
+    await expect(stagedRow(SOURCE_B)).toBeVisible();
+    await expect(
+      stagedRow(TARGET).getByTestId("admin-merge-target-badge"),
+    ).toBeVisible();
 
     const submit = page.getByTestId("admin-merge-submit");
     const mergeResponse = page.waitForResponse(

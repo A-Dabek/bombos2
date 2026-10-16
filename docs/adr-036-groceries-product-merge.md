@@ -28,11 +28,15 @@ exists under two spellings.
 ### An admin-only merge tool over existing candidate names
 
 `/groceries/admin` (reachable from a floating `AdminButton` on
-`/groceries/planning`) offers a **merge target chosen from a dropdown** and
-**duplicates toggled by clicking rows**. The target MUST be an existing
-candidate — no brand-new typed name — because the merge cannot invent a display
-name or history. Confirmation is a **two-click button** (first click arms, second
-confirms) to prevent destructive mis-clicks.
+`/groceries/planning`) uses a **staged selection flow** suited to large
+catalogs: a **search field** filters a results list, clicking a result **adds it
+to a staging list** above, clicking a staged row **selects it as the target**
+(representative), and a **two-click button** confirms. The **first** added item
+becomes the target automatically; removing the target falls back to the next
+staged item. The target MUST be an existing candidate — no brand-new typed name —
+because the merge cannot invent a display name or history. Staged rows carry a
+per-row remove control. Confirmation is a **two-click button** (first click arms,
+second confirms) to prevent destructive mis-clicks.
 
 `listMergeCandidates` builds the candidate set as the union of
 `groceries_product_counts.name`, distinct `groceries_items.name`, and distinct
@@ -67,8 +71,10 @@ and drops any equal to the target, then runs a single `db.transaction`:
 - `POST /api/groceries/admin` accepts `{ target, sources }`, validates both
   against the current candidates, and returns `201 { merged, target }`. Errors
   return `{ message }` (not `{ error }`) so `apiRequest` surfaces the text.
-- The component renders rows inline (no child `component$` in the mapped list),
-  keeps a stable JSX tree, and reassigns signals immutably.
+- The component renders rows inline (no child `component$` in the mapped lists),
+  keeps a stable JSX tree, and reassigns signals immutably. The staging list sits
+  above the search field and all-products results list; results exclude already
+  staged names.
 
 ### Manual-add canonicalization
 

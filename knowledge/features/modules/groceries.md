@@ -36,8 +36,9 @@ ingredient list from a screenshot.
    - `GROCERIES_IMPORT_STUB=true` returns canned draft items for E2E.
 
 5. **Merge Duplicates (admin)**: `/groceries/admin` lists every known product
-   name (purchase counts, list items, alias canonicals) and lets the user pick a
-   target via dropdown and toggle duplicates as rows. A two-click confirm calls
+   name (purchase counts, list items, alias canonicals) and lets the user search,
+   stage candidates, pick the target by clicking a staged row, and confirm with a
+   two-click button. A two-click confirm calls
    `POST /api/groceries/admin`, which transactionally sums `buy_count`, rewrites
    the purchase log, re-keys per-shop aisle mappings, creates aliases from the
    source names, re-points existing aliases, and renames active list items

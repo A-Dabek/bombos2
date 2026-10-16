@@ -1,4 +1,5 @@
 import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
+import { HiTrashOutline } from "@qwikest/icons/heroicons";
 import { apiRequest, jsonPost } from "~/lib/api";
 import BackButton from "~/components/shared/BackButton";
 import Loader from "~/components/shared/Loader";
@@ -16,7 +17,7 @@ export default component$(() => {
   const isLoading = useSignal(true);
   const error = useSignal<string | null>(null);
   const target = useSignal<string>("");
-  const selected = useSignal<string[]>([]);
+  const staged = useSignal<string[]>([]);
   const search = useSignal("");
   const merging = useSignal(false);
   const confirming = useSignal(false);
@@ -47,14 +48,24 @@ export default component$(() => {
     });
   });
 
-  const toggle = $((name: string) => {
-    selected.value = selected.value.includes(name)
-      ? selected.value.filter((n) => n !== name)
-      : [...selected.value, name];
+  const addToStaged = $((name: string) => {
+    if (staged.value.includes(name)) return;
+    staged.value = [...staged.value, name];
+    if (target.value === "") target.value = name;
+  });
+
+  const setTarget = $((name: string) => {
+    target.value = name;
+  });
+
+  const removeStaged = $((name: string) => {
+    staged.value = staged.value.filter((n) => n !== name);
+    if (target.value === name) target.value = staged.value[0] ?? "";
   });
 
   const handleMergeClick = $(async () => {
-    if (!target.value || selected.value.length === 0 || merging.value) return;
+    const sources = staged.value.filter((n) => n !== target.value);
+    if (!target.value || sources.length === 0 || merging.value) return;
 
     if (!confirming.value) {
       confirming.value = true;
@@ -76,11 +87,11 @@ export default component$(() => {
     try {
       const data = await apiRequest<{ merged: number; target: string }>(
         "/api/groceries/admin",
-        jsonPost({ target: target.value, sources: selected.value }),
+        jsonPost({ target: target.value, sources }),
       );
       result.value = data;
       target.value = "";
-      selected.value = [];
+      staged.value = [];
       await load();
     } catch (e: any) {
       error.value = e.message;
@@ -90,13 +101,13 @@ export default component$(() => {
   });
 
   const query = search.value.trim().toLowerCase();
-  const filtered = products.value.filter(
+  const results = products.value.filter(
     (p) =>
-      p.name !== target.value &&
+      !staged.value.includes(p.name) &&
       (query === "" || p.name.toLowerCase().includes(query)),
   );
   const canMerge =
-    target.value !== "" && selected.value.length > 0 && !merging.value;
+    staged.value.length >= 2 && target.value !== "" && !merging.value;
 
   return (
     <div
@@ -146,83 +157,111 @@ export default component$(() => {
 
       {products.value.length > 0 && (
         <div class="space-y-4">
-          <div class="flex flex-col sm:flex-row gap-3">
-            <div class="sm:w-1/2">
-              <label
-                for="admin-merge-target"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Produkt docelowy
-              </label>
-              <select
-                id="admin-merge-target"
-                data-testid="admin-merge-target"
-                aria-label="Produkt docelowy"
-                value={target.value}
-                onChange$={(e) => {
-                  const value = (e.target as HTMLSelectElement).value;
-                  target.value = value;
-                  selected.value = selected.value.filter((n) => n !== value);
-                }}
-                class="w-full p-2 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="">Wybierz produkt docelowy…</option>
-                {products.value.map((p) => (
-                  <option key={p.normalized} value={p.name}>
-                    {`${p.name} (${p.buyCount})`}
-                  </option>
-                ))}
-              </select>
+          {staged.value.length > 0 && (
+            <div data-testid="admin-merge-staged">
+              <h2 class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Wybrane do scalenia
+              </h2>
+              <p class="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                Kliknij produkt, aby wybrać nazwę główną. Pozostałe zostaną
+                scalone do niej.
+              </p>
+              <ul class="space-y-2">
+                {staged.value.map((name) => {
+                  const candidate = products.value.find(
+                    (p) => p.name === name,
+                  );
+                  const isTarget = name === target.value;
+                  return (
+                    <li
+                      key={name}
+                      data-testid="admin-merge-staged-row"
+                      data-name={name}
+                      class={[
+                        "rounded border",
+                        isTarget
+                          ? "border-green-500 ring-2 ring-green-500"
+                          : "border-gray-200 dark:border-gray-700",
+                      ]}
+                    >
+                      <div class="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick$={() => setTarget(name)}
+                          data-testid={`admin-merge-staged-select-${candidate?.normalized ?? name}`}
+                          aria-pressed={isTarget}
+                          class="flex flex-1 items-center gap-3 p-3 text-left bg-white dark:bg-gray-800 rounded-l cursor-pointer"
+                        >
+                          {isTarget && (
+                            <span
+                              data-testid="admin-merge-target-badge"
+                              class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-950 dark:text-green-300"
+                            >
+                              Nazwa główna
+                            </span>
+                          )}
+                          <span class="flex-1 text-gray-800 dark:text-gray-200">
+                            {name}
+                          </span>
+                          <span class="text-xs text-gray-500 dark:text-gray-400">
+                            {candidate?.buyCount ?? 0} zakupów
+                            {candidate?.onList ? " • na liście" : ""}
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick$={() => removeStaged(name)}
+                          aria-label="Usuń pozycję"
+                          data-testid={`admin-merge-remove-${candidate?.normalized ?? name}`}
+                          class="mr-2 rounded p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-950"
+                        >
+                          <HiTrashOutline class="h-5 w-5" />
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
-            <div class="sm:w-1/2">
-              <TextInput
-                label="Szukaj"
-                data-testid="admin-merge-search"
-                placeholder="Szukaj…"
-                value={search.value}
-                onInput$={(e) =>
-                  (search.value = (e.target as HTMLInputElement).value)
-                }
-                containerClass="w-full"
-                class="w-full"
-              />
-            </div>
-          </div>
+          )}
 
-          {filtered.length === 0 ? (
+          <TextInput
+            label="Szukaj"
+            data-testid="admin-merge-search"
+            placeholder="Szukaj…"
+            value={search.value}
+            onInput$={(e) =>
+              (search.value = (e.target as HTMLInputElement).value)
+            }
+            containerClass="w-full"
+            class="w-full"
+          />
+
+          {results.length === 0 ? (
             <p class="text-gray-500 dark:text-gray-400">Brak wyników.</p>
           ) : (
             <ul class="space-y-2">
-              {filtered.map((p) => {
-                const checked = selected.value.includes(p.name);
-                return (
-                  <li
-                    key={p.normalized}
-                    data-testid="admin-merge-row"
-                    data-name={p.name}
-                    class={[
-                      "rounded border border-gray-200 dark:border-gray-700",
-                      checked ? "ring-2 ring-blue-500" : "",
-                    ]}
+              {results.map((p) => (
+                <li
+                  key={p.normalized}
+                  data-testid="admin-merge-result-row"
+                  data-name={p.name}
+                  class="rounded border border-gray-200 dark:border-gray-700"
+                >
+                  <button
+                    type="button"
+                    onClick$={() => addToStaged(p.name)}
+                    class="flex w-full items-center gap-3 p-3 text-left bg-white dark:bg-gray-800 rounded cursor-pointer"
                   >
-                    <label class="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange$={() => toggle(p.name)}
-                        data-testid={`admin-merge-checkbox-${p.normalized}`}
-                        class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                      <span class="flex-1 text-gray-800 dark:text-gray-200">
-                        {p.name}
-                      </span>
-                      <span class="text-xs text-gray-500 dark:text-gray-400">
-                        {p.buyCount} zakupów{p.onList ? " • na liście" : ""}
-                      </span>
-                    </label>
-                  </li>
-                );
-              })}
+                    <span class="flex-1 text-gray-800 dark:text-gray-200">
+                      {p.name}
+                    </span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">
+                      {p.buyCount} zakupów{p.onList ? " • na liście" : ""}
+                    </span>
+                  </button>
+                </li>
+              ))}
             </ul>
           )}
 
