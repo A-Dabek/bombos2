@@ -77,8 +77,14 @@ test.describe("parcels journeys", () => {
   test("Outgoing Parcel Journey", async ({ page }) => {
     // 1. Land on incoming and switch to outgoing
     await page.goto("/parcels");
+    // The incoming page stays mounted and interactive until the outgoing route
+    // finishes its data fetch, so wait for that fetch before interacting.
+    const outgoingReady = page.waitForResponse(
+      (res) => res.url().includes("/api/parcels/outgoing") && res.request().method() === "GET",
+    );
     await page.getByTestId("sub-nav-tab-outgoing").click();
     await expect(page).toHaveURL(/\/parcels\/outgoing\/?$/);
+    await outgoingReady;
 
     // 2. Wait for loading to finish
     const loader = page.getByTestId("loader");

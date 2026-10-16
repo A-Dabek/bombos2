@@ -70,8 +70,8 @@ importers:
         version: 6.1.1(typescript@5.4.5)(vite@7.3.2(@types/node@24.12.0)(jiti@2.6.1)(lightningcss@1.32.0))
     devDependencies:
       '@playwright/test':
-        specifier: 1.61.1
-        version: 1.61.1
+        specifier: 1.64.0
+        version: 1.64.0
       '@types/better-sqlite3':
         specifier: 7.6.12
         version: 7.6.12
@@ -82,8 +82,8 @@ importers:
         specifier: 3.0.11
         version: 3.0.11
       playwright:
-        specifier: 1.61.1
-        version: 1.61.1
+        specifier: 1.64.0
+        version: 1.64.0
       typescript:
         specifier: 5.4.5
         version: 5.4.5
@@ -483,9 +483,9 @@ packages:
   '@pinojs/redact@0.4.0':
     resolution: {integrity: sha512-k2ENnmBugE/rzQfEcdWHcCY+/FM3VLzH9cYEsbdsoqrvzAKRhUZeRNhAZvB8OitQJ1TBed3yqWtdjzS6wJKBwg==}
 
-  '@playwright/test@1.61.1':
-    resolution: {integrity: sha512-8nKv6+0RJSL9FE4jYOEGXnPeM/Hg12qZpmqzZjRh3qM0Y7c3z1mrOTfFLids72RDQYVh9WpLEfR5WdpNX4fkig==}
-    engines: {node: '>=18'}
+  '@playwright/test@1.64.0':
+    resolution: {integrity: sha512-oTN9FNYuN6bqQMwiho6jJKLCG2/QOYCixGXuCjRmzOq23eODeukuY2XiAVoVpAECbuezMt1MHQjAiQxK8F+Y+g==}
+    engines: {node: '>=20'}
     hasBin: true
 
   '@qwikest/icons@0.0.13':
@@ -641,8 +641,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@rollup/wasm-node@4.63.5':
-    resolution: {integrity: sha512-RRgnG3u8+hOCkgvgXDZDR1Vfg8IerYgltlJYWeKSuv2npISR+ED1E7qcq8+PyzftjdVCufsmgbg2idwmhvs/4w==}
+  '@rollup/wasm-node@4.64.7':
+    resolution: {integrity: sha512-Gra9DXbfD1a9R9l3abxr/9fgqB2sc681w0RaYGrkFL9jMi8yr2kPPSlpFlxXN6YO0FC3hQSTW9rlKX7ZxdiicA==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
@@ -1161,11 +1161,6 @@ packages:
   fs-constants@1.0.0:
     resolution: {integrity: sha512-y6OAwoSIf7FyjMIv94u+b5rdheZEjzR63GTyZJm5qh4Bi+2YgwLCcI/fPFZkL5PSixOt6ZNKm+w+Hfp/Bciwow==}
 
-  fsevents@2.3.2:
-    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
-    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
-    os: [darwin]
-
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
@@ -1590,14 +1585,14 @@ packages:
     resolution: {integrity: sha512-8OEwKp5juEvb/MjpIc4hjqfgCNysrS94RIOMXYvpYCdm/jglrKEiAYmiumbmGhCvs+IcInsphYDFwqrjr7398w==}
     hasBin: true
 
-  playwright-core@1.61.1:
-    resolution: {integrity: sha512-h7Qlt6m4REp25qvIdvbDtVmD4LqVXfpRxhORv9L0jzETM05p4fuPJ3dKyuSXQxDSbXnmS79HAgi9589lGSpLkg==}
-    engines: {node: '>=18'}
+  playwright-core@1.64.0:
+    resolution: {integrity: sha512-T9r+MZkTECl2+oUcZ26YgZzTrYidTsIhYYkJix+6iDOymOb1FB2RLLSOxRGnZGv5DStt+aduIVbt+E8WygXYpg==}
+    engines: {node: '>=20'}
     hasBin: true
 
-  playwright@1.61.1:
-    resolution: {integrity: sha512-DWnY5o3YbLWK4GovuAVwpqL+1VwGNdUGrRr++8j8PtQQzvAVZUIMjKQ90fY689sEJZJBbZVw1rXaOKSTitkzPQ==}
-    engines: {node: '>=18'}
+  playwright@1.64.0:
+    resolution: {integrity: sha512-kVzTnYFYEyQ9RGzBjNCd2+yEqWmVbxl3AHPynv3qQ6JTjv4a+kwRcnqQwIpuP3NnrnIrE/Q6wWAIAvMfIE2/Yg==}
+    engines: {node: '>=20'}
     hasBin: true
 
   postcss@8.5.10:
@@ -2092,7 +2087,7 @@ snapshots:
     dependencies:
       csstype: 3.2.3
       launch-editor: 2.13.2
-      rollup: '@rollup/wasm-node@4.63.5'
+      rollup: '@rollup/wasm-node@4.64.7'
       vite: 7.3.2(@types/node@24.12.0)(jiti@2.6.1)(lightningcss@1.32.0)
 
   '@emnapi/runtime@1.10.0':
@@ -2383,9 +2378,9 @@ snapshots:
 
   '@pinojs/redact@0.4.0': {}
 
-  '@playwright/test@1.61.1':
+  '@playwright/test@1.64.0':
     dependencies:
-      playwright: 1.61.1
+      playwright: 1.64.0
 
   '@qwikest/icons@0.0.13(@builder.io/qwik@1.19.2(vite@7.3.2(@types/node@24.12.0)(jiti@2.6.1)(lightningcss@1.32.0)))':
     dependencies:
@@ -2474,7 +2469,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.60.2':
     optional: true
 
-  '@rollup/wasm-node@4.63.5':
+  '@rollup/wasm-node@4.64.7':
     dependencies:
       '@types/estree': 1.0.9
     optionalDependencies:
@@ -3002,9 +2997,6 @@ snapshots:
       safe-regex2: 5.1.1
 
   fs-constants@1.0.0: {}
-
-  fsevents@2.3.2:
-    optional: true
 
   fsevents@2.3.3:
     optional: true
@@ -3615,13 +3607,11 @@ snapshots:
       sonic-boom: 4.2.1
       thread-stream: 3.1.0
 
-  playwright-core@1.61.1: {}
+  playwright-core@1.64.0: {}
 
-  playwright@1.61.1:
+  playwright@1.64.0:
     dependencies:
-      playwright-core: 1.61.1
-    optionalDependencies:
-      fsevents: 2.3.2
+      playwright-core: 1.64.0
 
   postcss@8.5.10:
     dependencies:
@@ -4110,7 +4100,7 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
       postcss: 8.5.10
-      rollup: '@rollup/wasm-node@4.63.5'
+      rollup: '@rollup/wasm-node@4.64.7'
       tinyglobby: 0.2.16
     optionalDependencies:
       '@types/node': 24.12.0
