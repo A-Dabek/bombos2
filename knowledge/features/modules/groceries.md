@@ -46,7 +46,11 @@ ingredient list from a screenshot.
 
 6. **Manual-add canonicalization**: Adding an item manually resolves it through
    `groceries_ingredient_aliases` first, so an alias (`onions`) is stored as its
-   canonical name (`onion`) silently. Renaming an item stays literal.
+   canonical name (`onion`) silently. Renaming an item stays literal. Aisle
+   lookup is alias-aware, and `POST /api/groceries` retries the learned aisle
+   when the client sends none (e.g. the form was saved before the debounced
+   suggestion resolved). An explicit manual "Bez alejki" leaves the item
+   unassigned without deleting the learned mapping.
 
 See [ADR-035: Recipe Screenshot Import](/docs/adr-035-recipe-import.md) and
 [ADR-036: Groceries Product Merge](/docs/adr-036-groceries-product-merge.md).

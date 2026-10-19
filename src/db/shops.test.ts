@@ -22,6 +22,7 @@ import {
   setAisleCompleted,
 } from "./shops.ts";
 import { getActiveShop, setActiveShop } from "./settings.ts";
+import { saveIngredientAlias } from "./groceries-import.ts";
 import {
   deleteGroceryItem,
   deleteAllGroceryItems,
@@ -187,6 +188,32 @@ test("suggest-aisle learns per shop and auto never overwrites", () => {
   saveProductAisle("Milk", shopB, aisleB, true, db);
   expect(getSuggestedAisle("Milk", shopB, db)).toBe(aisleB);
   expect(getSuggestedAisle("Milk", shopA.id, db)).toBe(otherA);
+
+  db.close();
+});
+
+test("suggest-aisle resolves ingredient aliases to the canonical product", () => {
+  const db = new Database(":memory:");
+  runMigrations(db);
+  const shop = getShops(db)[0];
+  const dairy = createAisle(shop.id, "Nabiał", db);
+  const canonical = "Pierś z kurczaka";
+  const alias = "kurczak";
+
+  saveProductAisle(canonical, shop.id, dairy, true, db);
+  saveIngredientAlias(alias, canonical, db);
+
+  expect(getSuggestedAisle(alias, shop.id, db)).toBe(dairy);
+  expect(getSuggestedAisle("  KURCZAK ", shop.id, db)).toBe(dairy);
+
+  // A direct mapping for the alias spelling wins over the canonical one.
+  const other = createAisle(shop.id, "Mięso", db);
+  saveProductAisle(alias, shop.id, other, true, db);
+  expect(getSuggestedAisle(alias, shop.id, db)).toBe(other);
+
+  // Alias learning stays scoped per shop.
+  const shopB = createShop("Biedronka", db);
+  expect(getSuggestedAisle(alias, shopB, db)).toBeNull();
 
   db.close();
 });

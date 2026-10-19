@@ -315,6 +315,28 @@ test.describe("Groceries Module @groceries", () => {
       });
     });
 
+    test("assigns remembered aisle when the client sends none", async ({ page }) => {
+      const aisleId = seedAisle("Dairy");
+      await page.reload();
+
+      // Learn the aisle from a manual pick.
+      await addItem(page, "Milk", { aisleId });
+
+      // Simulate a save that happens before the debounced suggestion resolves.
+      await page.route("**/api/groceries/suggest-aisle*", (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ aisleId: null }),
+        }),
+      );
+
+      await addItem(page, "Milk");
+
+      await expect(page.getByRole("heading", { name: "Dairy" })).toBeVisible();
+      await expect(page.getByText("Milk", { exact: true })).toHaveCount(2);
+    });
+
     test("clears stale auto-suggestion when name changes", async ({ page }) => {
       const aisleId = seedAisle("Dairy");
       await page.reload();

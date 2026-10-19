@@ -67,6 +67,13 @@ Merge semantics (one transaction):
 5. **Items** — rename matching active `groceries_items.name` only; amount and
    unit are untouched.
 
+Aisle lookup (`getSuggestedAisle` in `src/db/shops.ts`) is alias-aware: it tries
+the typed normalized name first, then resolves the canonical name through
+`groceries_ingredient_aliases` and tries that. This keeps source spellings
+pointing at the target's aisle after a merge. `POST /api/groceries` also retries
+the learned aisle when the client sends no aisle and did not make a manual pick;
+an explicit manual "Bez alejki" does not retry or delete the learned mapping.
+
 The target MUST be an existing candidate (enforced by
 `POST /api/groceries/admin`). The module never touches `groceries_item_aisles`,
 which is id-keyed and survives the rename.

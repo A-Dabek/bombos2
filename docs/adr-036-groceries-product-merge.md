@@ -106,6 +106,13 @@ explicit user intent and must not be silently rewritten.
 - No migration: the feature is data-only and constrained by existing keys.
 - Purchase counts become correct after historical merges; recency hints and
   per-shop aisle suggestions follow the merged name.
+- Aisle lookup is alias-aware: `getSuggestedAisle` first tries the typed
+  normalized name, then the resolved canonical name. Source spellings therefore
+  keep suggesting the target's aisle after a merge.
+- Manual add retries the learned aisle server-side when the client sends no
+  aisle (for example, the form was submitted before the debounced suggestion
+  resolved). An explicit manual "no aisle" does not retry and does not delete
+  the learned mapping.
 - Source spellings become aliases, so imports and manual adds of those spellings
   land on the target; manual renames remain literal.
 - The merge is destructive for the source rows and irreversible from the UI. The

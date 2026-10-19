@@ -73,6 +73,7 @@ export default component$(
       }
 
       if (name.trim().length <= 2) return;
+      const requestedName = name;
       const timer = setTimeout(async () => {
         try {
           const response = await fetch(
@@ -80,6 +81,8 @@ export default component$(
           );
           if (response.ok) {
             const { aisleId } = await response.json();
+            // Ignore a late response for a name the user has already changed.
+            if (formName.value !== requestedName) return;
             if (aisleId != null && aisleSource.value !== "manual") {
               formAisleId.value = aisleId;
               aisleSource.value = "auto";

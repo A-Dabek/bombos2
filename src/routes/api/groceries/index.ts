@@ -8,7 +8,7 @@ import {
 } from "~/db/groceries";
 import { resolveCanonical } from "~/db/groceries-import";
 import { getActiveShop } from "~/db/settings";
-import { getItemAisleMap, setItemAisle, clearItemAisle, saveProductAisle } from "~/db/shops";
+import { getItemAisleMap, setItemAisle, getSuggestedAisle, saveProductAisle } from "~/db/shops";
 
 function resolveShopId(value: unknown): number | null {
   if (typeof value === "number" && Number.isInteger(value)) return value;
@@ -76,12 +76,17 @@ export const onPost: RequestHandler = async ({ json, parseBody }) => {
   );
 
   const shopId = resolveShopId(shopIdInput);
-  if (shopId !== null && aisleId !== undefined) {
-    if (aisleId === null) {
-      clearItemAisle(id, shopId);
-    } else {
+  if (shopId !== null) {
+    if (typeof aisleId === "number") {
       setItemAisle(id, shopId, aisleId);
       saveProductAisle(canonicalName, shopId, aisleId, !!aisleManual);
+    } else if (!aisleManual) {
+      // The client may have saved before the debounced suggestion arrived;
+      // retry the learned aisle now that the canonical name is known.
+      const suggested = getSuggestedAisle(canonicalName, shopId);
+      if (suggested !== null) {
+        setItemAisle(id, shopId, suggested);
+      }
     }
   }
 

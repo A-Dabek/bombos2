@@ -7,7 +7,7 @@ import {
   normalizeProductName,
 } from "./groceries.ts";
 import { getRecentlyBought, saveIngredientAlias, resolveCanonical } from "./groceries-import.ts";
-import { createShop } from "./shops.ts";
+import { createShop, createAisle, saveProductAisle, setItemAisle, getItemAisleMap, getSuggestedAisle } from "./shops.ts";
 import { listMergeCandidates, mergeGroceryProducts } from "./groceries-merge.ts";
 
 const TARGET = "Pierś z kurczaka";
@@ -149,6 +149,23 @@ test("merge keeps target aisle and dedupes per-shop source aisles", () => {
     )
     .get(aNorm, bNorm) as { n: number };
   expect(leftover.n).toBe(0);
+  db.close();
+});
+
+test("merge preserves item placements and alias spelling resolves the target aisle", () => {
+  const db = freshDb();
+  const shopId = createShop("Biedronka", db);
+  const dairy = createAisle(shopId, "Nabiał", db);
+  const itemId = createGroceryItem(SOURCE_A, null, false, 1, "x", db);
+
+  setItemAisle(itemId, shopId, dairy, db);
+  saveProductAisle(TARGET, shopId, dairy, true, db);
+
+  mergeGroceryProducts(TARGET, [SOURCE_A], db);
+
+  expect(getGroceryItemById(itemId, db)?.name).toBe(TARGET);
+  expect(getItemAisleMap(shopId, db).get(itemId)).toBe(dairy);
+  expect(getSuggestedAisle(SOURCE_A, shopId, db)).toBe(dairy);
   db.close();
 });
 

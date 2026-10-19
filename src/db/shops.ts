@@ -1,6 +1,7 @@
 import Database from "better-sqlite3";
 import { getDb } from "./connection.ts";
 import { normalizeProductName } from "../utils/groceries.ts";
+import { resolveCanonical } from "./groceries-import.ts";
 import { getActiveShop, setActiveShop } from "./settings.ts";
 
 export interface Shop {
@@ -246,11 +247,26 @@ export function getSuggestedAisle(
 ): number | null {
   const dbConn = db ?? getDb();
   const normalized = normalizeProductName(name);
-  const row = dbConn
-    .prepare(
-      "SELECT aisle_id FROM groceries_product_aisles WHERE normalized_name = ? AND shop_id = ?",
-    )
-    .get(normalized, shopId) as { aisle_id: number } | undefined;
+  if (!normalized) return null;
+
+  const lookup = dbConn.prepare(
+    "SELECT aisle_id FROM groceries_product_aisles WHERE normalized_name = ? AND shop_id = ?",
+  );
+  const direct = lookup.get(normalized, shopId) as
+    | { aisle_id: number }
+    | undefined;
+  if (direct) return direct.aisle_id;
+
+  // Aisle memory is keyed by normalized name, but manual adds and merges may
+  // store it under the canonical product name while the user types an alias.
+  const canonical = resolveCanonical(normalized, dbConn);
+  if (!canonical) return null;
+  const canonicalNorm = normalizeProductName(canonical);
+  if (!canonicalNorm || canonicalNorm === normalized) return null;
+
+  const row = lookup.get(canonicalNorm, shopId) as
+    | { aisle_id: number }
+    | undefined;
   return row?.aisle_id ?? null;
 }
 
