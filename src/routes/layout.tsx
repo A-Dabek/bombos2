@@ -8,17 +8,17 @@ import { RefreshContext } from "~/constants/refresh";
 import { getHiddenTabs, getTheme, getInventoryWindowDays } from "~/db/settings";
 import {
   HiCubeOutline,
-  HiFireOutline,
   HiListBulletOutline,
   HiBanknotesOutline,
   HiShoppingCartOutline,
   HiCog6ToothOutline,
 } from "@qwikest/icons/heroicons";
+import { TbCooker } from "@qwikest/icons/tablericons";
 
 const TABS = [
   { label: "Zakupy", path: "/groceries", Icon: HiShoppingCartOutline, testId: "groceries-nav-link" },
   { label: "Listy", path: "/plan", Icon: HiListBulletOutline, testId: "plan-nav-link" },
-  { label: "Posiłki", path: "/meals", Icon: HiFireOutline, testId: "meals-nav-link" },
+  { label: "Posiłki", path: "/meals", Icon: TbCooker, testId: "meals-nav-link" },
   { label: "Finanse", path: "/money", Icon: HiBanknotesOutline, testId: "money-nav-link" },
   { label: "Paczki", path: "/parcels", Icon: HiCubeOutline, testId: "parcels-nav-link" },
 ];
@@ -163,7 +163,10 @@ export default component$(() => {
                     : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
                 ]}
               >
-                <Icon class="h-5 w-5" />
+                {/* Tabler icons pin width/height=1em and their own class, so size the svg via CSS. */}
+                <span class="flex h-5 w-5 items-center justify-center [&>svg]:h-5 [&>svg]:w-5">
+                  <Icon class="h-5 w-5" />
+                </span>
                 {tab.path === "/parcels" && parcelCount.value > 0 && (
                   <Ping
                     class="absolute -right-1 top-1 flex h-3 w-3"
