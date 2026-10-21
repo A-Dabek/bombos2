@@ -13,12 +13,12 @@ import {
   HiShoppingCartOutline,
   HiCog6ToothOutline,
 } from "@qwikest/icons/heroicons";
-import { TbCooker } from "@qwikest/icons/tablericons";
+import { TbChefHat } from "@qwikest/icons/tablericons";
 
 const TABS = [
   { label: "Zakupy", path: "/groceries", Icon: HiShoppingCartOutline, testId: "groceries-nav-link" },
   { label: "Listy", path: "/plan", Icon: HiListBulletOutline, testId: "plan-nav-link" },
-  { label: "Posiłki", path: "/meals", Icon: TbCooker, testId: "meals-nav-link" },
+  { label: "Posiłki", path: "/meals", Icon: TbChefHat, testId: "meals-nav-link" },
   { label: "Finanse", path: "/money", Icon: HiBanknotesOutline, testId: "money-nav-link" },
   { label: "Paczki", path: "/parcels", Icon: HiCubeOutline, testId: "parcels-nav-link" },
 ];
