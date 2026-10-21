@@ -48,7 +48,7 @@ When new items are created or edited:
 
 | Function | Parameters | Return Type | Description |
 |---|---|---|---|
-| `listMergeCandidates(db?)` | `db?: Database` | `MergeCandidate[]` | Union of `groceries_product_counts`, distinct `groceries_items.name`, and distinct `groceries_ingredient_aliases.canonical_name`, deduped by `normalizeProductName`. Display-name preference is counts > items > alias canonical; `buyCount` comes from the counts row (else 0), `onList` is true when the normalized name is on the list. Sorted by `buyCount` DESC then `name.localeCompare(..., "pl")`. |
+| `listMergeCandidates(db?)` | `db?: Database` | `MergeCandidate[]` | Union of `groceries_product_counts`, distinct `groceries_items.name`, and distinct `groceries_ingredient_aliases.canonical_name`, deduped by `normalizeProductName`. Display-name preference is counts > items > alias canonical; `buyCount` comes from the counts row (else 0), `onList` is true when the normalized name is on the list. Sorted alphabetically via `name.localeCompare(..., "pl", { sensitivity: "base" })`, then `normalized` ASC, then `buyCount` DESC as a deterministic tiebreak; `buyCount` does not drive the primary order. |
 | `mergeGroceryProducts(targetName, sourceNames, db?)` | `targetName: string, sourceNames: string[], db?: Database` | `{ merged, target }` | Transactionally unifies duplicate products into the existing target. |
 
 Merge semantics (one transaction):

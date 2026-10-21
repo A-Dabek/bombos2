@@ -26,7 +26,7 @@ function addCount(db: Database.Database, name: string, count: number): void {
   ).run(name, normalizeProductName(name), count);
 }
 
-test("listMergeCandidates dedupes across sources and sorts by buy count", () => {
+test("listMergeCandidates dedupes across sources and sorts alphabetically (pl, case-insensitive)", () => {
   const db = freshDb();
   addCount(db, TARGET, 5);
   addCount(db, SOURCE_B, 1);
@@ -37,7 +37,10 @@ test("listMergeCandidates dedupes across sources and sorts by buy count", () => 
   const normalized = candidates.map((c) => c.normalized);
 
   expect(new Set(normalized).size).toBe(normalized.length);
-  expect(candidates[0]).toMatchObject({ name: TARGET, buyCount: 5 });
+  expect(candidates.map((c) => c.name)).toEqual([SOURCE_A, SOURCE_B, TARGET]);
+
+  const target = candidates.find((c) => c.normalized === normalizeProductName(TARGET));
+  expect(target).toMatchObject({ name: TARGET, buyCount: 5 });
 
   const filet = candidates.find((c) => c.normalized === normalizeProductName(SOURCE_A));
   expect(filet).toMatchObject({ name: SOURCE_A, buyCount: 0, onList: true });
@@ -45,8 +48,6 @@ test("listMergeCandidates dedupes across sources and sorts by buy count", () => 
   const aliasCanonical = candidates.find((c) => c.name === TARGET);
   expect(aliasCanonical?.onList).toBe(false);
 
-  const counts = candidates.map((c) => c.buyCount);
-  expect([...counts].sort((a, b) => b - a)).toEqual(counts);
   db.close();
 });
 

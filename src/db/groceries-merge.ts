@@ -75,8 +75,13 @@ export function listMergeCandidates(db?: Database.Database): MergeCandidate[] {
     add(row.canonical_name, 0, false);
   }
 
+  // Alphabetical (Polish locale, case-insensitive) so near-duplicate spellings
+  // sit next to each other. `buyCount` is still reported but no longer orders.
   return [...seen.values()].sort(
-    (a, b) => b.buyCount - a.buyCount || a.name.localeCompare(b.name, "pl"),
+    (a, b) =>
+      a.name.localeCompare(b.name, "pl", { sensitivity: "base" }) ||
+      a.normalized.localeCompare(b.normalized) ||
+      b.buyCount - a.buyCount,
   );
 }
 
