@@ -58,3 +58,6 @@ html-results/
 
 # Junie
 .junie/
+
+# Forge
+.forge/
