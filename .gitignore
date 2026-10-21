@@ -61,3 +61,6 @@ html-results/
 
 # Forge
 .forge/
+
+# OpenCode local state (plans, caches)
+.opencode/
